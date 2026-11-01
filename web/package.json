@@ -13,7 +13,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mts",
     "e2e": "playwright test",
-    "test:integration": "vitest run --config vitest.integration.config.mts"
+    "test:integration": "vitest run --config vitest.integration.config.mts",
+    "test:testnet": "node --env-file=.env.testnet.local node_modules/vitest/vitest.mjs run --config vitest.integration.config.mts test/integration/agent.testnet.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

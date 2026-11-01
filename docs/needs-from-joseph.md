@@ -2,7 +2,7 @@
 
 Everything that's blocked on you, in the order it starts to matter. Each item says **why** and **by when**. Tick items off here, or just tell me in chat.
 
-_Last updated: 2026-11-01_
+_Last updated: 2026-11-01 (after the testnet deploy)_
 
 ---
 
@@ -15,21 +15,11 @@ _Last updated: 2026-11-01_
   ```
 - [ ] **Quit Docker Desktop** if it's still running; we don't use it. PGlite gives us Postgres without Docker.
 
-## Before the testnet deploy: needed for Nov 2–4 work
+## Testnet: deployed ✅ (one step left for you)
 
-- [ ] **Be at the laptop when I deploy the vault to testnet.** The four testnet accounts already exist (10 test NEAR each), with keys in your macOS Keychain:
-  - `houserules-operator.testnet`
-  - `houserules-agent.testnet`
-  - `houserules-owner-1.testnet`
-  - `houserules-cleaner-1.testnet`
+The vault, mock USDC, payees and a settle-only agent key are live on testnet. Details are in [testnet-deployment.md](testnet-deployment.md). No Keychain prompt was needed after all.
 
-  near-cli will trigger a macOS **"allow access to Keychain"** prompt that only you can click. After the deploy I'll:
-  - create `vault.houserules-operator.testnet` and the mock USDC token;
-  - add the agent's restricted `settle`-only key;
-  - run a real payout on testnet.
-
-  Testnet only, no real money.
-- [ ] **Optional:** export the agent's restricted key to an env var when I ask. I'll give you the exact command; the key never goes into the repo.
+- [ ] **Copy the agent key into `web/.env.testnet.local`** (5 minutes, steps in [testnet-deployment.md](testnet-deployment.md#the-agent-key)). It's the `BkN4M…` function-call key from Keychain Access. I don't handle private keys, so this one's yours. Then tell me, and I'll run the app live against the testnet vault.
 
 ## Before the real 1Click payment (spike #2): needed by Nov 5
 
@@ -51,7 +41,7 @@ _Last updated: 2026-11-01_
 
 ## For live payouts (after the testnet deploy)
 
-- [ ] **The agent's function-call key in the server env:** `AGENT_ACCOUNT=houserules-agent.testnet` and `AGENT_PRIVATE_KEY=<the settle-only key>`. I'll create the key during the testnet deploy. The app checks on-chain that this key can only call `vault.settle` and refuses to run otherwise. Never paste a full-access key there.
+- [ ] **The agent's function-call key in the production server env (Vercel):** `AGENT_ACCOUNT` and `AGENT_PRIVATE_KEY` (the settle-only key). The app checks on-chain that this key can only call `vault.settle` and refuses to run otherwise. Never paste a full-access key there.
 - [ ] **For scheduled runs:** add GitHub repo secrets `APP_URL` and `AGENT_RUN_SECRET` (≥32 random chars, the same value as the app's env). The workflow is in `.github/workflows/agent-schedule.yml` and does nothing until both exist. The **Run agent now** button works without them.
 
 ## Hackathon admin
