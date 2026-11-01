@@ -21,7 +21,7 @@ const NAV = [
 export function AppNav({ orientation = "vertical" }: { orientation?: "vertical" | "horizontal" }) {
   const path = usePathname();
   return (
-    <nav aria-label="Main" data-testid={`app-nav-${orientation}`} className={cn(orientation === "vertical" ? "flex flex-col gap-0.5" : "flex gap-1 overflow-x-auto")}>
+    <nav aria-label="Main" data-testid={`app-nav-${orientation}`} className={cn(orientation === "vertical" ? "flex flex-col gap-0.5" : "grid grid-cols-2 gap-1")}>
       {NAV.map(({ href, label, icon: Icon, testid }) => {
         const active = href === "/" ? path === "/" : path.startsWith(href);
         return (

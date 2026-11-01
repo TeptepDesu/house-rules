@@ -81,7 +81,7 @@ async function BookingsContent() {
           <TableBody>
             {sorted.map((r) => (
               <TableRow key={r.id} data-testid={`booking-row-${r.channel}-${r.externalRef}`} data-recon={r.recon.result}>
-                <TableCell className="align-top">
+                <TableCell className="align-top whitespace-normal">
                   <div className="font-medium">{r.guestName}</div>
                   <div className="text-xs text-muted-foreground">
                     {CHANNEL[r.channel]} · <span className="font-mono">{r.externalRef}</span>
@@ -94,14 +94,15 @@ async function BookingsContent() {
                 <TableCell className="text-right align-top">
                   <Money raw={r.recon.collected} />
                 </TableCell>
-                <TableCell className="align-top">
+                {/* wraps on small screens instead of overflowing (shadcn cells default to nowrap) */}
+                <TableCell className="align-top whitespace-normal">
                   {r.settlementStatus === "settled" ? (
                     <StatusPill kind="booking" status="settled" data-testid={`booking-paid-${r.externalRef}`} />
                   ) : (
                     <StatusPill kind="recon" status={r.recon.result} />
                   )}
                   {r.recon.settlementStatus === "blocked" && (
-                    <p className="mt-1 max-w-[260px] text-xs text-muted-foreground" data-testid={`booking-note-${r.externalRef}`}>
+                    <p className="mt-1 max-w-[150px] text-xs text-muted-foreground sm:max-w-[260px]" data-testid={`booking-note-${r.externalRef}`}>
                       {r.recon.note}
                     </p>
                   )}

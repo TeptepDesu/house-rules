@@ -26,10 +26,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Suspense>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center gap-4 border-b px-4 py-2 md:hidden" data-testid="app-topbar">
-            <Wordmark />
-            <AppNav orientation="horizontal" />
-          </div>
+          <details className="group border-b md:hidden" data-testid="app-topbar">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 [&::-webkit-details-marker]:hidden" data-testid="app-menu-toggle">
+              <Wordmark />
+              <span className="rounded-lg border px-2.5 py-1 text-sm">
+                <span className="group-open:hidden">Menu</span>
+                <span className="hidden group-open:inline">Close</span>
+              </span>
+            </summary>
+            <div className="px-3 pb-3">
+              <AppNav orientation="horizontal" />
+            </div>
+          </details>
           <main className="mx-auto w-full max-w-[1120px] flex-1 p-6">{children}</main>
         </div>
       </div>

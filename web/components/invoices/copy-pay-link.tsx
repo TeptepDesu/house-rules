@@ -5,14 +5,14 @@ import { Check, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /** Copies the absolute guest pay link for an invoice. */
-export function CopyPayLink({ publicId }: { publicId: string }) {
+export function CopyPayLink({ publicId, testid }: { publicId: string; testid?: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <Button
       type="button"
       variant="outline"
       size="sm"
-      data-testid={`copy-pay-link-${publicId}`}
+      data-testid={testid ?? `copy-pay-link-${publicId}`}
       onClick={async () => {
         await navigator.clipboard.writeText(`${location.origin}/pay/${publicId}`);
         setCopied(true);

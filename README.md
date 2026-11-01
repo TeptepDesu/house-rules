@@ -163,11 +163,11 @@ Postgres (PGlite locally, any hosted Postgres in production) · Drizzle
 
 | Suite | Command | Count |
 |---|---|---|
-| Contract: unit | `cd contracts && cargo test -p vault --lib` | 32 |
+| Contract: unit | `cd contracts && cargo test -p vault --lib` | 33 |
 | Contract: sandbox | `cd contracts && cargo test -p vault --test sandbox` | 8 |
-| App: unit, property and DB | `pnpm --filter web test` | 312 |
-| App: browser (Playwright) | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 14, plus 1 optional screenshot capture |
-| App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 8 |
+| App: unit, property and DB | `pnpm --filter web test` | 325 |
+| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 15, plus 2 optional screenshot captures |
+| App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 9 |
 
 Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p vault --target wasm32-unknown-unknown -- -D warnings`.
 
@@ -195,7 +195,7 @@ Spike notes and measured numbers: [`docs/notes.md`](docs/notes.md). Design syste
 - **Data and auth:** Drizzle ORM and drizzle-kit, PGlite (local Postgres), node-postgres (`pg`), jose (sessions), bcryptjs, zod.
 - **NEAR:** near-api-js 7.4, @hot-labs/near-connect 0.12 (wallet connection, as recommended in NEAR's web-login docs).
 - **Other:** qrcode.
-- **Tests:** Vitest, fast-check, Playwright.
+- **Tests:** Vitest, fast-check, Playwright, axe-core (`@axe-core/playwright`).
 
 **Contract:**
 - **Contract crates:** near-sdk 5.29.1, near-contract-standards 5.29.1.

@@ -74,13 +74,11 @@ export function ImportFlow() {
 
   return (
     <div className="grid gap-6">
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label="Choose a payout report CSV"
+      {/* a real <label> for a real (visually hidden) file input: accessible name = visible text,
+          keyboard focus on the input shows on the zone, and drag-and-drop still works */}
+      <label
+        htmlFor="import-file"
         data-testid="import-dropzone"
-        onClick={() => input.current?.click()}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && input.current?.click()}
         onDragOver={(e) => {
           e.preventDefault();
           setDragging(true);
@@ -92,22 +90,23 @@ export function ImportFlow() {
           load(e.dataTransfer.files[0]);
         }}
         className={cn(
-          "flex cursor-pointer flex-col items-center gap-2 rounded-[10px] border border-dashed px-6 py-10 text-center transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+          "flex cursor-pointer flex-col items-center gap-2 rounded-[10px] border border-dashed px-6 py-10 text-center transition-colors has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50",
           dragging ? "border-primary bg-primary/5" : "hover:bg-muted/50",
         )}
       >
         <FileUp aria-hidden className="size-6 text-muted-foreground" />
-        <p className="font-medium">{fileName ?? "Drop a payout report here, or click to choose"}</p>
-        <p className="text-sm text-muted-foreground">Airbnb, Booking.com and Guesty exports are detected automatically. CSV, up to 512 KB.</p>
+        <span className="font-medium">{fileName ?? "Drop a payout report here, or click to choose"}</span>
+        <span className="text-sm text-muted-foreground">Airbnb, Booking.com and Guesty exports are detected automatically. CSV, up to 512 KB.</span>
         <input
           ref={input}
+          id="import-file"
           type="file"
           accept=".csv,text/csv"
           className="sr-only"
           data-testid="import-file-input"
           onChange={(e) => load(e.target.files?.[0])}
         />
-      </div>
+      </label>
 
       {previewing && (
         <p className="text-sm text-muted-foreground" data-testid="import-loading">

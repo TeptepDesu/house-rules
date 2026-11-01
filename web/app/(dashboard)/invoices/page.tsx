@@ -77,6 +77,13 @@ async function InvoicesContent() {
                         {i.guestName ?? "No booking"}
                         {i.propertyName && ` · ${i.propertyName}`}
                       </div>
+                      {/* small screens: the link actions live here (the column is hidden) */}
+                      <div className="mt-2 flex items-center gap-3 sm:hidden">
+                        <CopyPayLink publicId={i.publicId} testid={`copy-pay-link-mobile-${i.publicId}`} />
+                        <Link href={`/pay/${i.publicId}`} target="_blank" className="text-sm text-primary underline-offset-4 hover:underline">
+                          Open
+                        </Link>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right align-top">
                       <Money raw={i.amountRaw} />

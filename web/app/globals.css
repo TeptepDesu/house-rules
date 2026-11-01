@@ -10,6 +10,7 @@
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
   --font-heading: var(--font-plex-sans);
+  --color-primary-hover: var(--primary-hover);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -64,6 +65,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.01 60);
   --primary: oklch(0.46 0.085 172);
+  --primary-hover: oklch(0.4 0.08 172); /* darker, never lighter: keeps white text ≥ 4.5:1 */
   --primary-foreground: oklch(0.99 0.003 80);
   --secondary: oklch(0.96 0.006 80);
   --secondary-foreground: oklch(0.25 0.01 60);
@@ -112,6 +114,7 @@
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.72 0.1 172);
+  --primary-hover: oklch(0.78 0.09 172);
   --primary-foreground: oklch(0.18 0.02 172);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
