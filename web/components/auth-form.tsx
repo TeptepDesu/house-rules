@@ -19,6 +19,7 @@ export function AuthForm({ mode, action }: { mode: Mode; action: (s: AuthState, 
   const [state, formAction, pending] = useActionState(action, undefined);
   const c = copy[mode];
   const fe = state?.fieldErrors ?? {};
+  const values: Record<string, string | undefined> = state?.values ?? {};
 
   const field = (name: string, label: string, type: string, autoComplete: string) => (
     <div className="grid gap-1.5">
@@ -31,6 +32,7 @@ export function AuthForm({ mode, action }: { mode: Mode; action: (s: AuthState, 
         aria-invalid={fe[name] ? true : undefined}
         aria-describedby={fe[name] ? `${mode}-${name}-error` : undefined}
         data-testid={`${mode}-${name}-input`}
+        defaultValue={type === "password" ? undefined : values[name]}
         required
       />
       {fe[name] && (

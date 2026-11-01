@@ -9,7 +9,7 @@ Guests pay invoices from any chain via 1Click → exact USDC lands in the vault.
 **Sources of truth, read before working in an area:**
 - `plan.md` — scope, priorities, cut line, timeline. Don't build anything outside the current day's scope without asking.
 - `docs/vault-spec.md` — contract interface, events, error codes.
-- `design.md` — visual system (written before the second page).
+- `design.md` — visual system: palette (stone + ledger green), IBM Plex, components, status map (`web/lib/ui/status.ts`). Written before the second page.
 - `HACKATHON.md` — official rules. Re-read before anything submission-related.
 
 Record exact framework/library versions here at scaffold time. Don't assume versions from memory; check the installed `package.json` / `Cargo.toml`.
@@ -24,7 +24,7 @@ Recorded at scaffold, 2026-11-01. Update when you bump something.
 | Web | Next **16.4.3** (App Router, `cacheComponents` + `partialPrefetching` on, `proxy.ts` replaces `middleware.ts`), React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.3 |
 | UI | shadcn CLI 4.23 (`base-nova` style, **Base UI** primitives `@base-ui/react` 1.9.0, not Radix), `cn` 0.5.1 (shadcn's clsx+tailwind-merge replacement, re-exported from `@/lib/utils`), lucide-react 1.65.0, date-fns 4.4.0 |
 | Data/auth | drizzle-orm 0.45.4, drizzle-kit 0.31.11, pg 8.23.1 (node-postgres, used when `DATABASE_URL` is set), @electric-sql/pglite 0.5.13 (local dev + tests when it isn't), jose 6.2.14, bcryptjs 3.0.3, zod **4**.6.7 |
-| Tests | vitest 5.0.5, fast-check 4.10.2 |
+| Tests | vitest 5.0.5, fast-check 4.10.2, @playwright/test 1.64.1 (Chromium) |
 | NEAR JS | near-api-js **7.4.0** (single package, v7 API: `new Account(id, provider, key)`, `callFunction`, `actions.*`; typed errors in `near-api-js/rpc-errors`). Verified in spike #3, not yet installed in `web/` |
 | Contract | near-sdk 5.29.1; integration tests use **near-sandbox 0.3.16 + near-api 0.8.7 + cargo-near-build 0.11.5** (the current `cargo near new` template), not near-workspaces |
 
@@ -204,7 +204,9 @@ pnpm --filter web typecheck      # next typegen && tsc --noEmit
 pnpm --filter web test           # vitest run (+ fast-check)
 pnpm --filter web db:generate    # drizzle-kit generate → web/drizzle/
 pnpm --filter web db:migrate     # hosted Postgres only: applies web/drizzle/ to DATABASE_URL (from web/.env.local). PGlite migrates itself
-pnpm --filter web e2e            # playwright (not set up yet)
+pnpm --filter web e2e            # Playwright (Chromium): starts `next dev` on :3200 with a fresh PGlite db (.data/e2e), testnet
+SCREENSHOT_DIR=/abs/dir pnpm --filter web e2e   # also saves login/overview/people screenshots for design review
+# first time on a machine: pnpm --filter web exec playwright install chromium
 # re-record real RPC fixtures (web/test/fixtures/rpc) after a contract change; sandbox only:
 #   (cd contracts/vault && cargo near build non-reproducible-wasm); (cd contracts/mock-ft && cargo near build non-reproducible-wasm)
 #   cd web && node scripts/record-rpc-fixtures.mts <near-sandbox-bin> <scratch-dir>
@@ -227,6 +229,13 @@ Auth layout: `web/lib/auth/token.ts` (pure JWT, used by `proxy.ts` and tests), `
 - Local PGlite proves the SQL and migrations, not the hosted database's schema or connection limits. Run `db:migrate` against the hosted database and smoke-test sign-in there before the Nov 10 freeze.
 
 ---
+
+## Next 16 gotchas found the hard way
+
+- **React 19 resets `<form action>` after every action.** Server actions must echo submitted values (`values` in state, never passwords) and fields use `defaultValue={values.x}`, or a validation error wipes the user's input. E2E asserts this.
+- **Session reads call `await connection()`** before time-dependent checks (`lib/auth/session.ts`), or Cache Components flags `Date.now()` during prerender.
+- **A no-JS form POST to a page with `<Suspense>` data only re-renders the static shell.** Verify dashboard forms in a real browser (Playwright), not with curl.
+- **Playwright screenshots inject `caret-color` and trigger a hydration warning.** Pass `caret: "initial"`.
 
 ## Installing the skills
 

@@ -59,3 +59,22 @@ describe("API amounts", () => {
   });
   it("uses 6 decimals", () => expect(USDC_DECIMALS).toBe(6));
 });
+
+describe("percentages", async () => {
+  const { formatBps, parsePercentToBps } = await import("./money");
+  it.each([
+    ["15", 1500],
+    ["15%", 1500],
+    ["12.5", 1250],
+    ["0", 0],
+    ["100", 10_000],
+    ["0.01", 1],
+  ])("%s → %s bps", (s, bps) => expect(parsePercentToBps(s)).toBe(bps));
+  it.each(["", "-1", "100.01", "abc", "1.234", "1000"])("rejects %j", (s) => expect(() => parsePercentToBps(s)).toThrow());
+  it.each([
+    [1500, "15%"],
+    [1250, "12.5%"],
+    [1, "0.01%"],
+    [0, "0%"],
+  ])("%s bps → %s", (bps, s) => expect(formatBps(bps)).toBe(s));
+});

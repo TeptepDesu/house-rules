@@ -44,3 +44,17 @@ export function fromApiAmount(s: string): bigint {
   if (!/^\d+$/.test(s)) throw new Error(`Invalid amount: ${JSON.stringify(s)}`);
   return BigInt(s);
 }
+
+/** "15" or "12.5" (%) → basis points (1500, 1250). 0–100%, at most 2 decimals. */
+export function parsePercentToBps(input: string): number {
+  const m = /^(\d{1,3})(?:\.(\d{1,2}))?%?$/.exec(input.trim());
+  if (!m) throw new Error(`Not a percentage: ${JSON.stringify(input)}`);
+  const bps = Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0"));
+  if (bps > 10_000) throw new Error("Percentage must be 100 or less");
+  return bps;
+}
+
+export function formatBps(bps: number): string {
+  if (bps % 100 === 0) return `${bps / 100}%`;
+  return `${(bps / 100).toFixed(2).replace(/0$/, "")}%`; // 1250 → "12.5%", 1 → "0.01%"
+}

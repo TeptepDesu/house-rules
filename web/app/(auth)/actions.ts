@@ -6,7 +6,10 @@ import { createUser, findUserByEmail, logActivity } from "@/lib/db";
 import { dummyHash, hashPassword, verifyPassword } from "@/lib/auth/password";
 import { createSession, deleteSession } from "@/lib/auth/session";
 
-export type AuthState = { error?: string; fieldErrors?: Record<string, string> } | undefined;
+export type AuthState = { error?: string; fieldErrors?: Record<string, string>; values?: { name?: string; email?: string } } | undefined;
+
+// Echo back what was typed (never the password) so React 19's form reset restores it on errors.
+const echo = (f: FormData) => ({ name: String(f.get("name") ?? ""), email: String(f.get("email") ?? "") });
 
 const email = z.email("Enter a valid email").transform((e) => e.trim().toLowerCase());
 const password = z.string().min(8, "Use at least 8 characters").max(72, "Use at most 72 characters");
@@ -28,26 +31,28 @@ function fieldErrors(err: z.ZodError): Record<string, string> {
 }
 
 export async function login(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const values = echo(formData);
   const parsed = loginSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), values };
 
   try {
     const user = await findUserByEmail(parsed.data.email);
     const ok = await verifyPassword(parsed.data.password, user?.passwordHash ?? (await dummyHash()));
-    if (!user || !ok) return { error: "Email or password is incorrect" };
+    if (!user || !ok) return { error: "Email or password is incorrect", values };
 
     await createSession(user.id);
     await logActivity({ userId: user.id, action: "login", entity: "user", entityId: user.id });
   } catch (e) {
     console.error("[auth.login] failed", e);
-    return { error: "Something went wrong. Try again." };
+    return { error: "Something went wrong. Try again.", values };
   }
   redirect("/");
 }
 
 export async function signup(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const values = echo(formData);
   const parsed = signupSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), values };
 
   try {
     const user = await createUser({
@@ -55,13 +60,13 @@ export async function signup(_prev: AuthState, formData: FormData): Promise<Auth
       name: parsed.data.name,
       passwordHash: await hashPassword(parsed.data.password),
     });
-    if (!user) return { fieldErrors: { email: "An account with this email already exists" } };
+    if (!user) return { fieldErrors: { email: "An account with this email already exists" }, values };
 
     await createSession(user.id);
     await logActivity({ userId: user.id, action: "signup", entity: "user", entityId: user.id });
   } catch (e) {
     console.error("[auth.signup] failed", e);
-    return { error: "Something went wrong. Try again." };
+    return { error: "Something went wrong. Try again.", values };
   }
   redirect("/");
 }

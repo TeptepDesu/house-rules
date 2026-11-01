@@ -1,19 +1,11 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { createDb, type Db } from "./client";
+import { db } from "./conn";
 import * as schema from "./schema";
 
-// Single module every query goes through (CLAUDE.md → Data layer).
-
-let _db: Promise<Db> | undefined;
-function db(): Promise<Db> {
-  // Don't cache a failed connection: the next call retries instead of failing forever.
-  _db ??= createDb().catch((e) => {
-    _db = undefined;
-    throw e;
-  });
-  return _db;
-}
+// All queries go through lib/db (CLAUDE.md → Data layer). Users + activity log live here;
+// feature areas have their own files (people.ts, …) on the same connection.
+export { __resetDbForTests } from "./conn";
 
 export async function findUserByEmail(email: string) {
   const [row] = await (await db()).select().from(schema.users).where(eq(schema.users.email, email)).limit(1);
@@ -49,9 +41,4 @@ export async function logActivity(entry: {
     entityId: entry.entityId,
     metaJson: entry.meta,
   });
-}
-
-/** Test-only: reset the cached client so a test can point PGLITE_DIR somewhere fresh. */
-export function __resetDbForTests() {
-  _db = undefined;
 }

@@ -1,5 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { SESSION_COOKIE, SESSION_TTL_SECONDS, resolveSessionSecret, signSession, verifySession } from "./token";
 
 const sessionSecret = () => resolveSessionSecret();
@@ -20,6 +21,8 @@ export async function deleteSession() {
 }
 
 export async function getSessionUserId(): Promise<string | null> {
+  // Expiry is checked against the current time; tell Cache Components this is request-time work.
+  await connection();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   return verifySession(token, sessionSecret());
 }
