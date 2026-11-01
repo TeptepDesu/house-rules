@@ -8,6 +8,13 @@
       "when": 1793493835922,
       "tag": "0000_curious_the_liberteens",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793503604919,
+      "tag": "0001_complete_warpath",
+      "breakpoints": true
     }
   ]
 }
