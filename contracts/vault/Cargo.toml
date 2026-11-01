@@ -37,25 +37,15 @@ container_build_command = [
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-near-sdk = "5.29"
+near-sdk = { workspace = true }
 
 [dev-dependencies]
-near-sdk = { version = "5.29", features = ["unit-testing"] }
+near-sdk = { workspace = true, features = ["unit-testing"] }
 near-sandbox = "0.3.12"
 near-api = "0.8"
 cargo-near-build = "0.11.0"
 tokio = { version = "1.12.0", features = ["full"] }
 testresult = "0.4.1"
-
-[profile.release]
-codegen-units = 1
-# Tell `rustc` to optimize for small code size.
-opt-level = "z"
-lto = true
-debug = false
-panic = "abort"
-# Opt into extra safety checks on arithmetic operations https://stackoverflow.com/a/64136471/249801
-overflow-checks = true
 
 # `cfg(near)` was introduced in `near-sdk` v5.27.0, and is expected cfg now
 [lints.rust.unexpected_cfgs]

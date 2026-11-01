@@ -47,7 +47,8 @@ Recorded at scaffold, 2026-11-01. Update when you bump something.
 | E2E tests | `web/e2e/` | Playwright |
 | Test fixtures | `web/test/fixtures/` | Synthetic payout reports, recorded RPC responses |
 | Contract | `contracts/vault/src/` | |
-| Contract tests | `contracts/vault/tests/` | near-sandbox + near-api (sandbox) |
+| Contract tests | `contracts/vault/src/tests.rs` (unit), `contracts/vault/tests/sandbox.rs` | near-sandbox + near-api against `contracts/mock-ft` |
+| Mock USDC | `contracts/mock-ft/` | NEP-141/145 via near-contract-standards; unrestricted `mint`, so test-only. Never deploy it to mainnet |
 | Docs | `docs/` | vault spec, schema, edge cases, notes |
 | Agent permissions | `.claude/settings.json` | Committed. Denies reads of `.env*` |
 
@@ -205,10 +206,13 @@ pnpm --filter web db:generate    # drizzle-kit generate → web/drizzle/
 pnpm --filter web db:migrate     # hosted Postgres only: applies web/drizzle/ to DATABASE_URL (from web/.env.local). PGlite migrates itself
 pnpm --filter web e2e            # playwright (not set up yet)
 
-# contract
-cd contracts/vault
-cargo near build non-reproducible-wasm   # → target/near/vault.wasm
-cargo test                               # unit tests + sandbox integration tests (tests/), builds the wasm itself
+# contracts (cargo workspace: vault + mock-ft)
+cd contracts
+cargo test -p vault --lib                                # 32 unit tests: every policy rule, check order, callbacks (<1s)
+cargo test -p vault --test sandbox -- --test-threads=4   # 8 sandbox tests: real wasm + mock USDC (~1 min)
+(cd vault && cargo near build non-reproducible-wasm)     # → contracts/target/near/vault/vault.wasm
+cargo clippy -p vault --target wasm32-unknown-unknown -- -D warnings   # plain `cargo check` errors by design on contracts
+cargo fmt --all --check
 ```
 
 Auth layout: `web/lib/auth/token.ts` (pure JWT, used by `proxy.ts` and tests), `session.ts` (cookie I/O), `dal.ts` (`requireUser()`, the real check), `password.ts` (bcrypt). Server actions in `web/app/(auth)/actions.ts`.
