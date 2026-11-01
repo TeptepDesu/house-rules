@@ -5,6 +5,16 @@ import { SignJWT, jwtVerify } from "jose";
 export const SESSION_COOKIE = "hr_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
+// Used only when SESSION_SECRET is unset outside production, so local dev works with no .env.local.
+export const DEV_SESSION_SECRET = "dev-only-insecure-session-secret-do-not-use-in-prod";
+
+/** SESSION_SECRET, or the dev fallback outside production. Throws in production when unset. */
+export function resolveSessionSecret(env: { SESSION_SECRET?: string; NODE_ENV?: string } = process.env): string {
+  if (env.SESSION_SECRET) return env.SESSION_SECRET;
+  if (env.NODE_ENV === "production") throw new Error("SESSION_SECRET is not set");
+  return DEV_SESSION_SECRET;
+}
+
 function key(secret: string) {
   if (secret.length < 32) throw new Error("SESSION_SECRET must be at least 32 characters");
   return new TextEncoder().encode(secret);

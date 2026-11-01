@@ -1,7 +1,7 @@
 # House Rules — Agent Guide
 
 House Rules is an autonomous back office for short-term rental operators, built for the NEAR HACKATHON (window ends 14 Nov 2026 23:59 UTC). Monorepo with two disciplines:
-- **`web/`** — Next.js (App Router) + React + Tailwind + shadcn/ui, API routes, Neon Postgres via Drizzle, near-api-js, NEAR Intents 1Click API.
+- **`web/`** — Next.js (App Router) + React + Tailwind + shadcn/ui, API routes, Postgres via Drizzle (PGlite locally, any hosted Postgres in production), near-api-js, NEAR Intents 1Click API.
 - **`contracts/vault/`** — Rust smart contract (near-sdk-rs) that holds the operator's USDC and enforces payout policy on-chain.
 
 Guests pay invoices from any chain via 1Click → exact USDC lands in the vault. Bookings are reconciled. A settlement agent pays owners and cleaners through the vault using a function-call key scoped to `settle` only.
@@ -23,7 +23,7 @@ Recorded at scaffold, 2026-11-01. Update when you bump something.
 | Toolchain | rustc/cargo 1.99.1 (host); contract pinned to **1.93.0** via `contracts/vault/rust-toolchain.toml`; cargo-near 0.22.0; near-cli-rs 0.30.1; Node 25.9.0; pnpm 12.16.1 |
 | Web | Next **16.4.3** (App Router, `cacheComponents` + `partialPrefetching` on, `proxy.ts` replaces `middleware.ts`), React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.3 |
 | UI | shadcn CLI 4.23 (`base-nova` style, **Base UI** primitives `@base-ui/react` 1.9.0, not Radix), `cn` 0.5.1 (shadcn's clsx+tailwind-merge replacement, re-exported from `@/lib/utils`), lucide-react 1.65.0, date-fns 4.4.0 |
-| Data/auth | drizzle-orm 0.45.4, drizzle-kit 0.31.11, @neondatabase/serverless 1.2.0 (neon-http driver), jose 6.2.14, bcryptjs 3.0.3, zod **4**.6.7 |
+| Data/auth | drizzle-orm 0.45.4, drizzle-kit 0.31.11, pg 8.23.1 (node-postgres, used when `DATABASE_URL` is set), @electric-sql/pglite 0.5.13 (local dev + tests when it isn't), jose 6.2.14, bcryptjs 3.0.3, zod **4**.6.7 |
 | Tests | vitest 5.0.5, fast-check 4.10.2 |
 | NEAR JS | near-api-js **7.4.0** (single package, v7 API: `new Account(id, provider, key)`, `callFunction`, `actions.*`; typed errors in `near-api-js/rpc-errors`). Verified in spike #3, not yet installed in `web/` |
 | Contract | near-sdk 5.29.1; integration tests use **near-sandbox 0.3.16 + near-api 0.8.7 + cargo-near-build 0.11.5** (the current `cargo near new` template), not near-workspaces |
@@ -151,7 +151,10 @@ Paste the reference handler here once the first full one exists (auth + validati
 
 ### Data layer
 
-- Neon Postgres only (dev branch locally, main branch in production). No SQLite.
+- **Postgres only. No SQLite.** `web/lib/db/client.ts` picks the driver:
+  - `DATABASE_URL` set: `pg` (node-postgres). Works with any hosted Postgres (Neon, Supabase, RDS) or a local server.
+  - `DATABASE_URL` unset (dev/tests only): **PGlite**, real Postgres compiled to WASM, running in-process. No Docker or install needed. Data in `web/.data/pglite` (gitignored); tests use `PGLITE_DIR=memory://`. It applies `web/drizzle/` migrations on startup.
+  - Production without `DATABASE_URL` throws; it never silently uses PGlite. Same for `SESSION_SECRET`: dev falls back to a labelled insecure constant, production throws.
 - Drizzle with `bigint` columns in `mode: 'bigint'`. Check every money column returns `bigint`, not `string` or `number`.
 - All queries go through `web/lib/db/`.
 
@@ -172,7 +175,7 @@ Paste the reference handler here once the first full one exists (auth + validati
 
 ## Guardrails
 
-- **Know which network and which database you're pointed at before anything that writes.** Check `NEAR_NETWORK` and the Neon branch every time. A mainnet value left in `.env.local` turns a test into real money.
+- **Know which network and which database you're pointed at before anything that writes.** Check `NEAR_NETWORK` and which `DATABASE_URL` (if any) is set every time. A mainnet value left in `.env.local` turns a test into real money.
 - **Never deploy to mainnet, sign mainnet transactions, or spend tokens without Joseph's explicit confirmation**, each time.
 - **Never push, force-push, make the repo public, post anything, or send the hackathon submission without Joseph's explicit confirmation.**
 - **No full-access key ever lives on the server or in the app's env.** The agent key is a function-call key scoped to `vault.settle`.
@@ -199,7 +202,7 @@ pnpm --filter web lint
 pnpm --filter web typecheck      # next typegen && tsc --noEmit
 pnpm --filter web test           # vitest run (+ fast-check)
 pnpm --filter web db:generate    # drizzle-kit generate → web/drizzle/
-pnpm --filter web db:migrate     # applies to DATABASE_URL in web/.env.local — check the Neon branch first
+pnpm --filter web db:migrate     # hosted Postgres only: applies web/drizzle/ to DATABASE_URL (from web/.env.local). PGlite migrates itself
 pnpm --filter web e2e            # playwright (not set up yet)
 
 # contract
@@ -213,7 +216,7 @@ Auth layout: `web/lib/auth/token.ts` (pure JWT, used by `proxy.ts` and tests), `
 **Which checks lie:**
 - Playwright with mocked 1Click proves nothing about real 1Click. The real path is only verified by a manual tiny mainnet payment.
 - Testnet settlement with a mock FT proves nothing about mainnet USDC contract IDs or storage registration. Run the full loop on mainnet before Nov 10's freeze.
-- A local build pointed at the Neon dev branch proves nothing about the production branch's schema. Confirm migrations ran on both.
+- Local PGlite proves the SQL and migrations, not the hosted database's schema or connection limits. Run `db:migrate` against the hosted database and smoke-test sign-in there before the Nov 10 freeze.
 
 ---
 

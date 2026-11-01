@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { SESSION_COOKIE, verifySession } from "@/lib/auth/token";
+import { SESSION_COOKIE, resolveSessionSecret, verifySession } from "@/lib/auth/token";
 
 // Optimistic gate only. The real check is requireUser() in lib/auth/dal.ts,
 // and every route handler/action re-verifies the session itself.
@@ -8,8 +8,7 @@ const AUTH_PAGES = ["/login", "/signup"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const secret = process.env.SESSION_SECRET ?? "";
-  const userId = secret ? await verifySession(req.cookies.get(SESSION_COOKIE)?.value, secret) : null;
+  const userId = await verifySession(req.cookies.get(SESSION_COOKIE)?.value, resolveSessionSecret());
   const onAuthPage = AUTH_PAGES.includes(pathname);
 
   if (!userId && !onAuthPage) return NextResponse.redirect(new URL("/login", req.url));

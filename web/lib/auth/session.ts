@@ -1,12 +1,8 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { SESSION_COOKIE, SESSION_TTL_SECONDS, signSession, verifySession } from "./token";
+import { SESSION_COOKIE, SESSION_TTL_SECONDS, resolveSessionSecret, signSession, verifySession } from "./token";
 
-export function sessionSecret(): string {
-  const s = process.env.SESSION_SECRET;
-  if (!s) throw new Error("SESSION_SECRET is not set");
-  return s;
-}
+const sessionSecret = () => resolveSessionSecret();
 
 export async function createSession(userId: string) {
   const token = await signSession(userId, sessionSecret());

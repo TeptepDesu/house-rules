@@ -84,7 +84,7 @@ Repo (monorepo)
         ├── agent/              Plan → policy pre-check → chunk → settle → verify
         └── auth/               JWT + bcrypt
 
-Neon Postgres + Drizzle · Tailwind + shadcn/ui · Vitest + fast-check · Playwright
+Postgres (PGlite locally, hosted Postgres in prod) + Drizzle · Tailwind + shadcn/ui · Vitest + fast-check · Playwright
 ```
 
 **Who signs what**
@@ -326,7 +326,7 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 ## 10. Day-1 checklist
 
 - [ ] Private GitHub repo with MIT `LICENSE`
-- [ ] Neon project + dev branch; Vercel project
+- [ ] Hosted Postgres (e.g. Neon) for production + Vercel project. Local dev needs nothing: PGlite
 - [ ] Testnet + mainnet accounts; keys in a password manager, never in the repo
 - [ ] Mainnet: a few NEAR (vault deploy storage + gas + payee storage deposits) + ~$30 USDC for demo
 - [ ] 1Click JWT (or accept 0.2%)

@@ -25,7 +25,7 @@ async function SessionBar() {
   return (
     <div className="flex items-center gap-3 text-sm">
       <span data-testid="session-user-name">{user.name}</span>
-      <form action={logout}>
+      <form action={logout} data-testid="session-logout-form">
         <Button type="submit" variant="outline" size="sm" data-testid="session-logout">
           Sign out
         </Button>

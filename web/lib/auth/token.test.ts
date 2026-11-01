@@ -43,3 +43,17 @@ describe("session token", () => {
     await expect(signSession(USER, "short")).rejects.toThrow(/at least 32/);
   });
 });
+
+describe("resolveSessionSecret", async () => {
+  const { resolveSessionSecret, DEV_SESSION_SECRET } = await import("./token");
+  it("uses SESSION_SECRET when set", () => {
+    expect(resolveSessionSecret({ SESSION_SECRET: SECRET, NODE_ENV: "production" })).toBe(SECRET);
+  });
+  it("falls back to the dev secret outside production", () => {
+    expect(resolveSessionSecret({ NODE_ENV: "development" })).toBe(DEV_SESSION_SECRET);
+    expect(resolveSessionSecret({ NODE_ENV: "test" })).toBe(DEV_SESSION_SECRET);
+  });
+  it("refuses to run in production without a secret", () => {
+    expect(() => resolveSessionSecret({ NODE_ENV: "production" })).toThrow(/SESSION_SECRET/);
+  });
+});
