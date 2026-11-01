@@ -62,3 +62,18 @@ Signed with near-cli and refused by the vault with readable reasons:
 - The operator paid owner-1 during the waiting period: `POLICY_REJECTED:PayeeInDelay`.
 - The operator paid an account that isn't a payee: `POLICY_REJECTED:PayeeNotAllowed`.
 - owner-1 (neither owner nor agent) called `settle`: `POLICY_REJECTED:Unauthorized`.
+
+## Payout verified on testnet
+
+Signed by the operator, which the vault allows as owner, after the 10-minute payee delay:
+
+- **One `settle`, two payouts, atomic:** owner-1 got **$7.20** and cleaner-1 **$2.00**. Tx `5zJgtUU7UyyCJrg9ynVgWoggPRTKLT5ctZahckM5Gqas`:
+  - events: `settle_started`, then 2 × `ft_transfer`, then `settled`; the return value is `true`;
+  - **9.06 TGas** burnt in total: vault 3.17, token 3.41 for both transfers, callback 1.5.
+  - Balances afterwards: owner-1 7.2, cleaner-1 2.0, vault 4,990.8 mock USDC.
+- **Paying cleaner-1 $100.000001** (above the $100 cap) was refused: `POLICY_REJECTED:OverCap`.
+- **Paying `demo-bk1:owner` again** was refused: `POLICY_REJECTED:AlreadyPaid`.
+
+That's five different policy refusals on testnet: PayeeInDelay, PayeeNotAllowed, Unauthorized, OverCap and AlreadyPaid.
+
+**Still to run:** the app's own agent with the settle-only key (`pnpm --filter web test:testnet`), once the key is in `web/.env.testnet.local`.

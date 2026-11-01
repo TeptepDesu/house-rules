@@ -176,7 +176,8 @@ Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p 
 | | |
 |---|---|
 | ✅ Done and tested | Vault contract; import and reconciliation; splits; settlement agent; guest pay flow; every screen; audit log |
-| ⏳ Before submission | **Testnet deploy** of the vault, with the app switched to live mode (`AGENT_MODE=live`) |
+| ✅ Testnet | Vault + mock USDC deployed, payees approved, settle-only agent key. A real atomic payout and 5 policy refusals were verified on testnet; accounts and tx hashes are in [`docs/testnet-deployment.md`](docs/testnet-deployment.md) |
+| ⏳ Before submission | The app's agent running **live** against the testnet vault (`pnpm --filter web test:testnet`), then mainnet |
 | ⏳ Before submission | **A real 1Click payment** on mainnet (the client is checked against the API docs; live delivery is unproven so far) |
 | ⏳ Before submission | **Wallet signing** for "approve payee" (`add_payee`). Until then the operator signs it with near-cli |
 | Stretch | Confidential Intents for private revenue; AI exception triage on NEAR AI Cloud (private inference) |
