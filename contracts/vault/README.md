@@ -1,4 +1,4 @@
-# SettleStay Vault
+# House Rules Vault
 
 Holds an operator's USDC and enforces payout policy on-chain. Spec: `plan.md` §4 (→ `docs/vault-spec.md`).
 

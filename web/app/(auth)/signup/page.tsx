@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth-form";
 import { signup } from "../actions";
 
-export const metadata: Metadata = { title: "Create account · SettleStay" };
+export const metadata: Metadata = { title: "Create account · House Rules" };
 
 export default function SignupPage() {
   return <AuthForm mode="signup" action={signup} />;

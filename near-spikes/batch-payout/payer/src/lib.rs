@@ -41,7 +41,7 @@ fn reject(code: &str) -> ! {
 fn event(name: &str, data: near_sdk::serde_json::Value) {
     env::log_str(&format!(
         "EVENT_JSON:{}",
-        json!({ "standard": "settlestay", "version": "0.0.1", "event": name, "data": data })
+        json!({ "standard": "houserules", "version": "0.0.1", "event": name, "data": data })
     ));
 }
 

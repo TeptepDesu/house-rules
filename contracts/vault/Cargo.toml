@@ -1,13 +1,13 @@
 [package]
 name = "vault"
-description = "SettleStay Vault: holds operator USDC and enforces payout policy on-chain"
+description = "House Rules Vault: holds operator USDC and enforces payout policy on-chain"
 version = "0.1.0"
 edition = "2024"
 resolver = "3"
 rust-version = "1.93"
 # NEP-0330 is automatically implemented for all contracts built with https://github.com/near/cargo-near.
 # Link to the repository will be available via `contract_source_metadata` view-function.
-repository = "https://github.com/TeptepDesu/settlestay"
+repository = "https://github.com/TeptepDesu/house-rules"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

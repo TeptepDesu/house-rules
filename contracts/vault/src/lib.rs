@@ -1,4 +1,4 @@
-//! SettleStay Vault — holds an operator's USDC and enforces payout policy on-chain.
+//! House Rules Vault — holds an operator's USDC and enforces payout policy on-chain.
 //!
 //! Day-1 skeleton: state layout from plan.md §4 plus `new` and `get_policy`.
 //! Policy methods (add_payee, settle, on_settled, withdraw, …) land Nov 2–3, test-first.

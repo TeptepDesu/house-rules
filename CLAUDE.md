@@ -1,6 +1,6 @@
-# SettleStay — Agent Guide
+# House Rules — Agent Guide
 
-SettleStay is an autonomous back office for short-term rental operators, built for the NEAR HACKATHON (window ends 14 Nov 2026 23:59 UTC). Monorepo with two disciplines:
+House Rules is an autonomous back office for short-term rental operators, built for the NEAR HACKATHON (window ends 14 Nov 2026 23:59 UTC). Monorepo with two disciplines:
 - **`web/`** — Next.js (App Router) + React + Tailwind + shadcn/ui, API routes, Neon Postgres via Drizzle, near-api-js, NEAR Intents 1Click API.
 - **`contracts/vault/`** — Rust smart contract (near-sdk-rs) that holds the operator's USDC and enforces payout policy on-chain.
 

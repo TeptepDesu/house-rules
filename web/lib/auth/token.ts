@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from "jose";
 
 // Pure JWT helpers: no Next.js imports, so proxy.ts and unit tests can use them.
 
-export const SESSION_COOKIE = "ss_session";
+export const SESSION_COOKIE = "hr_session";
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
 function key(secret: string) {

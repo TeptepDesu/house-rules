@@ -14,6 +14,6 @@ export function verifyPassword(plain: string, hash: string): Promise<boolean> {
 // "wrong password" take the same time. Generated once per process.
 let dummy: Promise<string> | undefined;
 export function dummyHash(): Promise<string> {
-  dummy ??= bcrypt.hash("settlestay-timing-equalizer", ROUNDS);
+  dummy ??= bcrypt.hash("houserules-timing-equalizer", ROUNDS);
   return dummy;
 }

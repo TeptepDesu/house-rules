@@ -1,5 +1,5 @@
 {
-  "name": "settlestay",
+  "name": "house-rules",
   "private": true,
   "scripts": {
     "dev": "pnpm --filter web dev",

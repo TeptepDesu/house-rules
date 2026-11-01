@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 type Mode = "login" | "signup";
 
 const copy = {
-  login: { title: "Sign in to SettleStay", desc: "Your payouts, reconciled and settled.", cta: "Sign in", alt: "No account yet?", altLink: "Create one", altHref: "/signup" },
+  login: { title: "Sign in to House Rules", desc: "Your payout rules, enforced on-chain.", cta: "Sign in", alt: "No account yet?", altLink: "Create one", altHref: "/signup" },
   signup: { title: "Create your operator account", desc: "Set the rules once. The vault enforces them.", cta: "Create account", alt: "Already have an account?", altLink: "Sign in", altHref: "/login" },
 } as const;
 

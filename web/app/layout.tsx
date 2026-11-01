@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SettleStay",
-  description: "Autonomous payouts for short-term rental operators, with rules enforced on-chain.",
+  title: "House Rules",
+  description: "Your payout rules, enforced on-chain. Autonomous payouts for short-term rental operators.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

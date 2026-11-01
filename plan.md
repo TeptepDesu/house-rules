@@ -1,4 +1,4 @@
-# SettleStay — NEAR Hackathon Plan (v3)
+# House Rules — NEAR Hackathon Plan (v3)
 
 > **Your payouts run themselves. Your rules are enforced on-chain.**
 > An autonomous back office for short-term rental operators: guests pay from any chain, a settlement agent reconciles and pays owners and cleaners, and a NEAR policy vault makes it impossible for the agent to pay anyone, or any amount, outside the operator's rules.
@@ -27,8 +27,8 @@
 
 Rental operators collect money from many places (Airbnb/Booking.com payouts, direct bookings, damage and penalty claims), reconcile in spreadsheets, then pay owners and cleaners by hand. Automating payouts is scary: whatever runs them can drain the account.
 
-**SettleStay:**
-1. **Collect.** Guests pay direct bookings, extensions, and penalty invoices from any token on any chain via **NEAR Intents (1Click)**. Exact USDC lands in the operator's **SettleStay Vault** on NEAR.
+**House Rules:**
+1. **Collect.** Guests pay direct bookings, extensions, and penalty invoices from any token on any chain via **NEAR Intents (1Click)**. Exact USDC lands in the operator's **House Rules Vault** on NEAR.
 2. **Reconcile.** On-chain payments match automatically. OTA payout reports are dropped in, and the format is auto-detected. Underpayments and open damage claims block payout.
 3. **Split & disburse — autonomously, within rules.** A settlement agent computes the 3-way split (flat cleaner fee, management fee %, owner net) and pays out through the vault. The agent holds only a **function-call key** that can call `settle()` and nothing else. The **vault contract** enforces the operator's rules on-chain: only allowlisted payees, per-payout caps, a daily limit, a new-payee delay, and each booking paid once.
 
@@ -66,7 +66,7 @@ Rental operators collect money from many places (Airbnb/Booking.com payouts, dir
 
 ```
 Repo (monorepo)
-├── contracts/vault/            Rust: SettleStay Vault (near-sdk-rs)
+├── contracts/vault/            Rust: House Rules Vault (near-sdk-rs)
 │   └── tests/                  near-workspaces integration tests (sandbox)
 └── web/                        Next.js App Router on Vercel
     ├── app/(dashboard)         Properties, payees, invoices, bookings, reconciliation, settlements, audit log
@@ -117,7 +117,7 @@ The track asks for something a normal company could use tomorrow, and judges dec
 
 ---
 
-## 4. SettleStay Vault (contract spec)
+## 4. House Rules Vault (contract spec)
 
 One vault per operator, deployed as a sub-account (e.g. `vault.operator.near`).
 
@@ -337,7 +337,7 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 
 ## 11. Demo script (2 minutes, mainnet)
 
-1. **Hook (10s):** "Rental operators reconcile in spreadsheets and pay owners by hand, because automating payouts means trusting software with the bank account. SettleStay makes that safe."
+1. **Hook (10s):** "Rental operators reconcile in spreadsheets and pay owners by hand, because automating payouts means trusting software with the bank account. House Rules makes that safe."
 2. **Collect (20s):** Guest pays a damage invoice from another chain through NEAR Intents. Exact USDC lands in the vault.
 3. **Reconcile (15s):** Drop an Airbnb payout report: format detected, 22 matched, one underpaid, one blocked by an open damage claim.
 4. **Autonomous payout (25s):** Click **Run agent**. Splits computed (cleaner flat fee, 15% management, owner net), owners and cleaners paid in one atomic batch, audit log fills from on-chain events.

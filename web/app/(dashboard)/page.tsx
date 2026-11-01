@@ -7,7 +7,7 @@ export default function HomePage() {
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 p-6">
       <header className="flex items-center justify-between border-b pb-4">
-        <span className="font-semibold">SettleStay</span>
+        <span className="font-semibold">House Rules</span>
         <Suspense fallback={<span className="text-sm text-muted-foreground" data-testid="session-loading">…</span>}>
           <SessionBar />
         </Suspense>
