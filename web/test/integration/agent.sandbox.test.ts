@@ -30,6 +30,8 @@ describe.skipIf(!sandboxAvailable())("settlement agent on a real vault (sandbox)
     vault: typeof import("@/lib/near/vault");
     service: typeof import("@/lib/agent/service");
     agentDb: typeof import("@/lib/db/agent");
+    load: typeof import("@/lib/vault/load");
+    inv: typeof import("@/lib/db/invoices");
   };
     // latest state (optimistic): "final" trails the transfer we just made by a block or two
   const balance = async (who: string) => BigInt(await mods.vault.viewCall<string>(sb.rpcUrl, USDC, "ft_balance_of", { account_id: who }, "optimistic"));
@@ -50,6 +52,8 @@ describe.skipIf(!sandboxAvailable())("settlement agent on a real vault (sandbox)
     mods.vault = await import("@/lib/near/vault");
     mods.service = await import("@/lib/agent/service");
     mods.agentDb = await import("@/lib/db/agent");
+    mods.load = await import("@/lib/vault/load");
+    mods.inv = await import("@/lib/db/invoices");
 
     sb = await startSandbox(3141);
     await sb.makeAccount(USDC, [actions.functionCall("new", {}, teraToGas("50"), 0n)], WASM.ft);
@@ -135,5 +139,28 @@ describe.skipIf(!sandboxAvailable())("settlement agent on a real vault (sandbox)
     expect(held!.status).toBe("pending");
     // HM3 (left unpaid by the refused run) is paid now with the right key
     expect(r.outcome.bookings.filter((b) => b.status === "paid")).toHaveLength(1);
+  });
+
+  it("Vault rules page data: live policy + payees from chain, agent key verified, payee statuses synced", async () => {
+    Object.assign(process.env, { AGENT_MODE: "live", NEAR_RPC_URL: sb.rpcUrl, AGENT_ACCOUNT: AGENT, AGENT_PRIVATE_KEY: agentKey });
+    try {
+      await mods.inv.setVaultAccount(userId, VAULT);
+      const v = await mods.load.loadVaultView(userId);
+      if (v.state !== "ok") throw new Error(v.state);
+      expect(v.mode).toBe("live");
+      expect(v.policy).toMatchObject({ dailyLimit: 3_000n * U, payeeDelayNs: 0n, agent: AGENT, owner: OPERATOR, tokenRegistered: true });
+      expect(v.payees.map((p) => p.accountId).sort()).toEqual([MARIA, OWEN]);
+      expect(v.agentKey.ok).toBe(true);
+      const statuses = Object.fromEntries((await mods.people.listPayees(userId)).map((p) => [p.nearAccount, p.vaultStatus]));
+      expect(statuses).toEqual({ [OWEN]: "active", [MARIA]: "active" }); // synced from chain (were pending_signature)
+
+      process.env.AGENT_PRIVATE_KEY = sb.rootKey; // full access → flagged
+      const bad = await mods.load.loadVaultView(userId);
+      if (bad.state !== "ok") throw new Error(bad.state);
+      expect(bad.agentKey).toMatchObject({ ok: false });
+      expect(bad.agentKey.detail).toMatch(/FULL ACCESS/);
+    } finally {
+      for (const k of ["AGENT_MODE", "NEAR_RPC_URL", "AGENT_ACCOUNT", "AGENT_PRIVATE_KEY"]) delete process.env[k];
+    }
   });
 });
