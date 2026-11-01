@@ -153,3 +153,15 @@ export async function unpaidSplits(userId: string) {
     .leftJoin(payees, eq(payees.id, payoutSplits.payeeId))
     .where(and(eq(bookings.userId, userId), inArray(payoutSplits.status, ["pending", "rejected"])));
 }
+
+/** Recent runs with their settlement txs, for the Payouts history. */
+export async function listRunsWithTxs(userId: string, limit = 10) {
+  const runs = await listRuns(userId, limit);
+  if (runs.length === 0) return [];
+  const txs = await (await db())
+    .select()
+    .from(settlementTxs)
+    .where(inArray(settlementTxs.agentRunId, runs.map((r) => r.id)))
+    .orderBy(settlementTxs.chunkIndex);
+  return runs.map((r) => ({ ...r, txs: txs.filter((t) => t.agentRunId === r.id) }));
+}

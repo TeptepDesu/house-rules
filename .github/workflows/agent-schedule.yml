@@ -1,0 +1,31 @@
+# Scheduled settlement runs (plan §6E). Vercel's free plan only runs cron daily, so GitHub Actions
+# calls the app instead. Needs repo secrets APP_URL (e.g. https://house-rules.vercel.app) and
+# AGENT_RUN_SECRET (same value as the app's env). Without them it exits quietly.
+name: Agent schedule
+
+on:
+  schedule:
+    - cron: "17 */6 * * *" # every 6 hours, off the hour
+  workflow_dispatch: {}
+
+permissions: {}
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger payout run
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          AGENT_RUN_SECRET: ${{ secrets.AGENT_RUN_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$AGENT_RUN_SECRET" ]; then
+            echo "APP_URL / AGENT_RUN_SECRET not configured yet; skipping."
+            exit 0
+          fi
+          status=$(curl -sS -o response.json -w '%{http_code}' -X POST "$APP_URL/api/agent/run" -H "x-agent-secret: $AGENT_RUN_SECRET")
+          echo "HTTP $status"
+          # never print secrets; the response holds only run ids, statuses and totals
+          cat response.json
+          test "$status" = "200"

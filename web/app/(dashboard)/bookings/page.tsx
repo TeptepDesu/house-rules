@@ -52,7 +52,7 @@ async function BookingsContent() {
       />
     );
   }
-  const ready = rows.filter((r) => r.recon.settlementStatus === "ready");
+  const ready = rows.filter((r) => r.recon.settlementStatus === "ready" && r.settlementStatus !== "settled");
   const blocked = rows.filter((r) => r.recon.settlementStatus === "blocked");
   const waiting = rows.filter((r) => r.recon.settlementStatus === "unreconciled");
   const readyTotal = ready.reduce((a, r) => a + r.recon.collected, 0n);
@@ -95,7 +95,11 @@ async function BookingsContent() {
                   <Money raw={r.recon.collected} />
                 </TableCell>
                 <TableCell className="align-top">
-                  <StatusPill kind="recon" status={r.recon.result} />
+                  {r.settlementStatus === "settled" ? (
+                    <StatusPill kind="booking" status="settled" data-testid={`booking-paid-${r.externalRef}`} />
+                  ) : (
+                    <StatusPill kind="recon" status={r.recon.result} />
+                  )}
                   {r.recon.settlementStatus === "blocked" && (
                     <p className="mt-1 max-w-[260px] text-xs text-muted-foreground" data-testid={`booking-note-${r.externalRef}`}>
                       {r.recon.note}

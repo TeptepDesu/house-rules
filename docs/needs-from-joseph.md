@@ -49,6 +49,11 @@ _Last updated: 2026-11-01_
   - about **$30 USDC** to collect and pay out on camera;
   - a mainnet owner and cleaner account (yours or friends', with permission).
 
+## For live payouts (after the testnet deploy)
+
+- [ ] **The agent's function-call key in the server env:** `AGENT_ACCOUNT=houserules-agent.testnet` and `AGENT_PRIVATE_KEY=<the settle-only key>`. I'll create the key during the testnet deploy. The app checks on-chain that this key can only call `vault.settle` and refuses to run otherwise. Never paste a full-access key there.
+- [ ] **For scheduled runs:** add GitHub repo secrets `APP_URL` and `AGENT_RUN_SECRET` (≥32 random chars, the same value as the app's env). The workflow is in `.github/workflows/agent-schedule.yml` and does nothing until both exist. The **Run agent now** button works without them.
+
 ## Hackathon admin
 
 - [ ] **Paste the official hackathon rules** (or a link). I'll save them as `HACKATHON.md`; CLAUDE.md points there, and it doesn't exist yet.
