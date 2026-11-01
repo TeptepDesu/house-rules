@@ -43,11 +43,13 @@ describe("vaultEvents", () => {
 
 describe("settleResult", () => {
   it("paid: callback returned true", () => {
-    expect(settleResult(tx(success), VAULT)).toEqual({ kind: "paid", keys: ["bk1:owner", "bk1:cleaner"], total: 350_000_000n, txHash: expect.any(String) });
+    const r = settleResult(tx(success), VAULT);
+    expect(r).toMatchObject({ kind: "paid", keys: ["bk1:owner", "bk1:cleaner"], total: 350_000_000n, txHash: expect.any(String) });
+    expect(r.kind === "paid" && r.events?.map((e) => e.event)).toEqual(["settle_started", "settled"]);
   });
 
   it("reverted: tx 'succeeded' but the callback returned false, so nothing was paid", () => {
-    expect(settleResult(tx(batchFailed), VAULT)).toEqual({ kind: "reverted", keys: ["bk3:owner", "bk3:cleaner"], total: 15_000_000n, txHash: expect.any(String) });
+    expect(settleResult(tx(batchFailed), VAULT)).toMatchObject({ kind: "reverted", keys: ["bk3:owner", "bk3:cleaner"], total: 15_000_000n, txHash: expect.any(String) });
   });
 
   it("rejected: policy code parsed from the failed tx", () => {

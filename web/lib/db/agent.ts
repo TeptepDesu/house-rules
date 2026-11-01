@@ -4,7 +4,7 @@ import type { PropertyTerms, ReadyBooking } from "@/lib/agent/plan";
 import type { RunOutcome } from "@/lib/agent/run";
 import { listBookingsWithRecon } from "./bookings";
 import { db } from "./conn";
-import { agentRuns, bookings, payees, payoutSplits, properties, settlementTxs } from "./schema";
+import { agentRuns, bookings, payees, payoutSplits, properties, settlementTxs, vaultEvents } from "./schema";
 
 // Agent runs: what to pay (inputs), a per-operator run lock, and the full record of each run.
 
@@ -56,6 +56,7 @@ export async function failRun(runId: string) {
 /** Record everything a run did, in one transaction. Split rows are upserted per (booking, role). */
 export async function finishRun(userId: string, runId: string, out: RunOutcome, payeeIdsByAccount: Map<string, string>) {
   const d = await db();
+  const base = Date.now();
   await d.transaction(async (tx) => {
     const txIdByHash = new Map<string, string>();
     for (const c of out.chunks) {
@@ -67,6 +68,27 @@ export async function finishRun(userId: string, runId: string, out: RunOutcome, 
         .values({ agentRunId: runId, chunkIndex: c.index, txHash: hash || null, status, rejectionCode: r.kind === "rejected" ? r.code : r.kind === "error" ? r.error.kind : null, executedAt: new Date() })
         .returning({ id: settlementTxs.id });
       if (hash) txIdByHash.set(hash, row.id);
+      // the vault's own events from this tx (successful receipts only) → audit log
+      const events = (r.kind === "paid" || r.kind === "reverted") && r.events ? r.events : [];
+      if (hash && events.length) {
+        await tx
+          .insert(vaultEvents)
+          // explicit, increasing timestamps: Postgres now() is fixed per transaction, which would
+          // interleave the events of different chunks in the feed
+          .values(
+            events.map((e, seq) => ({
+              userId,
+              txHash: hash,
+              receiptId: e.receiptId,
+              seq,
+              event: e.event,
+              dataJson: e.data,
+              simulated: hash.startsWith("mock-"),
+              createdAt: new Date(base + c.index * 100 + seq),
+            })),
+          )
+          .onConflictDoNothing();
+      }
     }
     for (const b of out.bookings) {
       for (const it of b.items) {

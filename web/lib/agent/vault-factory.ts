@@ -58,7 +58,16 @@ function mockVault(userId: string): AgentVault {
     paidKeys: async (keys) => new Set(keys.filter((k) => paid.has(k))),
     async settle(items) {
       items.forEach((i) => paid.add(i.key));
-      return { kind: "paid", keys: items.map((i) => i.key), total: items.reduce((a, i) => a + i.amount, 0n), txHash: `mock-settle-${Date.now().toString(36)}-${++n}` };
+      const keys = items.map((i) => i.key);
+      const total = items.reduce((a, i) => a + i.amount, 0n);
+      const txHash = `mock-settle-${Date.now().toString(36)}-${++n}`;
+      const wire = items.map((i) => ({ key: i.key, payee: i.payee, amount: i.amount.toString() }));
+      // same event shapes the real vault emits (docs/vault-spec.md), so the audit log looks identical
+      const events = [
+        { event: "settle_started", data: { items: wire, total: total.toString() }, receiptId: `${txHash}-r1` },
+        { event: "settled", data: { keys, total: total.toString() }, receiptId: `${txHash}-r2` },
+      ];
+      return { kind: "paid", keys, total, txHash, events };
     },
   };
 }

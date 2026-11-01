@@ -54,6 +54,18 @@ test("Run agent pays every reconciled booking; blocked ones stay; a second run h
   await expect(page.locator('[data-testid^="booking-paid-"]')).toHaveCount(21);
   await expect(page.getByTestId("booking-row-airbnb-HM4009X")).toHaveAttribute("data-recon", "mismatch");
   await expect(page.getByTestId("booking-paid-HM4009X")).toHaveCount(0);
+
+  // audit log: the vault's settle events (simulated in rehearsal) + what the operator did in the app
+  await page.getByTestId("nav-audit").click();
+  const feed = page.getByTestId("audit-feed");
+  await expect(feed.locator('[data-kind="chain"]').filter({ hasText: "Paid $" })).toHaveCount(2); // one "settled" per tx
+  await expect(feed.locator('[data-kind="chain"]').filter({ hasText: "Payout batch sent: 40 payouts" })).toHaveCount(1);
+  await expect(feed).toContainText("Imported an Airbnb payout report: 22 bookings added");
+  await expect(feed).toContainText("Connected vault vault.houserules-operator.testnet");
+  await expect(feed).toContainText("Ran the payout agent: paid $");
+  await page.getByTestId("audit-filter-chain").click();
+  await expect(page.getByTestId("audit-feed").locator('[data-kind="app"]')).toHaveCount(0);
+  if (process.env.SCREENSHOT_DIR) await page.screenshot({ caret: "initial", path: `${process.env.SCREENSHOT_DIR}/audit.png`, fullPage: true });
 });
 
 test("/api/agent/run refuses anonymous callers and wrong scheduler secrets", async ({ request }) => {

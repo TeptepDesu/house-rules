@@ -106,6 +106,13 @@ describe.skipIf(!sandboxAvailable())("settlement agent on a real vault (sandbox)
     expect(detail?.splits.filter((s) => s.status === "paid")).toHaveLength(4);
     const [b] = await (await mods.conn.db()).select().from(mods.s.bookings).where((await import("drizzle-orm")).eq(mods.s.bookings.id, bookingIds[0]));
     expect(b.settlementStatus).toBe("settled");
+
+    // the vault's own events from that tx are in the audit trail, as real on-chain rows
+    const feed = await (await import("@/lib/db/audit")).listAuditFeed(userId, "chain");
+    expect(feed.map((e) => (e.kind === "chain" ? [e.event, e.simulated, e.txHash] : null))).toEqual([
+      ["settled", false, detail!.txs[0].txHash],
+      ["settle_started", false, detail!.txs[0].txHash],
+    ]);
   });
 
   it("running again pays nothing twice (no transactions at all)", async () => {

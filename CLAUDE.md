@@ -34,11 +34,11 @@ Recorded at scaffold, 2026-11-01. Update when you bump something.
 
 | Area | Path | Notes |
 |---|---|---|
-| Pages | `web/app/` | `(dashboard)/` for operators (overview, bookings, invoices, people, import, settings); `pay/[publicId]/` public guest pay page |
+| Pages | `web/app/` | `(dashboard)/` for operators (overview, bookings, invoices, payouts, rules, audit, people, import, settings); `pay/[publicId]/` public guest pay page |
 | API routes | `web/app/api/` | invoices, pay/intents, import, agent/run |
 | NEAR client | `web/lib/near/` | vault calls, view calls, event parsing, tx verification |
 | 1Click client | `web/lib/intents/` | tokens, quote, status. Mocked in tests |
-| Pure domain logic | `web/lib/{reconcile,splits,importers,agent}/` | No I/O in reconcile/splits. Heaviest test coverage |
+| Pure domain logic | `web/lib/{reconcile,splits,importers,agent,vault,audit}/` | No I/O in reconcile/splits/plan/rules/describe. `agent/run.ts` takes the vault as a parameter. Heaviest test coverage |
 | DB | `web/lib/db/` | Single module every query goes through |
 | Migrations | `web/drizzle/` | Drizzle Kit |
 | UI primitives | `web/components/ui/` | shadcn. Extend, don't fork |

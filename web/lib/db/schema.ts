@@ -212,6 +212,23 @@ export const payoutSplits = pgTable(
   (t) => [uniqueIndex("payout_splits_booking_role_uq").on(t.bookingId, t.role), uniqueIndex("payout_splits_vault_key_uq").on(t.vaultKey)],
 );
 
+/** Vault events (NEP-297) read from SUCCESSFUL receipts of txs the app sent or verified. Each links to its tx. */
+export const vaultEvents = pgTable(
+  "vault_events",
+  {
+    id: id(),
+    userId: uuid("user_id").notNull().references(() => users.id),
+    txHash: text("tx_hash").notNull(),
+    receiptId: text("receipt_id").notNull(),
+    seq: integer("seq").notNull(), // order within the tx
+    event: text("event").notNull(),
+    dataJson: jsonb("data_json").notNull(),
+    simulated: boolean("simulated").notNull().default(false), // rehearsal mode, not on a chain
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("vault_events_tx_seq_uq").on(t.txHash, t.seq), index("vault_events_user_idx").on(t.userId, t.createdAt)],
+);
+
 export const activityLog = pgTable(
   "activity_log",
   {

@@ -37,8 +37,8 @@ export function vaultEvents(tx: TxOutcome, vaultId: string): VaultEvent[] {
 }
 
 export type SettleResult =
-  | { kind: "paid"; keys: string[]; total: bigint; txHash: string }
-  | { kind: "reverted"; keys: string[]; total: bigint; txHash: string }
+  | { kind: "paid"; keys: string[]; total: bigint; txHash: string; events?: VaultEvent[] }
+  | { kind: "reverted"; keys: string[]; total: bigint; txHash: string; events?: VaultEvent[] }
   | { kind: "rejected"; code: PolicyCode; txHash: string }
   | { kind: "failed"; message: string; txHash: string };
 
@@ -82,10 +82,10 @@ export function settleResult(tx: TxOutcome, vaultId: string): SettleResult {
   const settled = pick("settled");
   const failed = pick("settle_failed");
   if (value === "true" && settled?.keys && settled.total) {
-    return { kind: "paid", keys: settled.keys, total: BigInt(settled.total), txHash };
+    return { kind: "paid", keys: settled.keys, total: BigInt(settled.total), txHash, events };
   }
   if (value === "false" && failed?.keys && failed.total) {
-    return { kind: "reverted", keys: failed.keys, total: BigInt(failed.total), txHash };
+    return { kind: "reverted", keys: failed.keys, total: BigInt(failed.total), txHash, events };
   }
   return { kind: "failed", message: `unexpected settle outcome (return ${JSON.stringify(value)})`, txHash };
 }
