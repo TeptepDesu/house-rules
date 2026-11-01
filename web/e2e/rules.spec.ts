@@ -16,6 +16,18 @@ test("Vault rules read as plain sentences; no vault → prompt to connect", asyn
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByTestId("vault-saved")).toBeVisible();
 
+  // approve payees (rehearsal stand-in for the wallet-signed add_payee)
+  await page.goto("/people");
+  const approve = page.locator('[data-testid^="payee-approve-"]').filter({ hasText: "Approve (rehearsal)" });
+  await expect(approve).toHaveCount(2);
+  await approve.first().click();
+  await expect(approve).toHaveCount(1);
+  await approve.first().click();
+  await expect(approve).toHaveCount(0);
+  await expect(page.getByTestId("payees-table")).not.toContainText("Needs signature");
+  await page.getByTestId("nav-overview").click();
+  await expect(page.getByTestId("setup-step-sign")).toHaveAttribute("data-done", "true");
+
   await page.getByTestId("nav-rules").click();
   await expect(page.getByTestId("rules-rehearsal")).toBeVisible();
   await expect(page.getByTestId("policy-rule-allowlist")).toContainText("Pays only these 2 people");

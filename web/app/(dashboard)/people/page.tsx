@@ -4,6 +4,7 @@ import { AccountName } from "@/components/account-name";
 import { EmptyState } from "@/components/empty-state";
 import { Money } from "@/components/money";
 import { PageHeader } from "@/components/page-header";
+import { ApprovePayee } from "@/components/people/approve-payee";
 import { PayeeForm } from "@/components/people/payee-form";
 import { PropertyForm } from "@/components/people/property-form";
 import { StatusPill } from "@/components/status-pill";
@@ -12,6 +13,8 @@ import { requireUser } from "@/lib/auth/dal";
 import { listPayees, listProperties } from "@/lib/db/people";
 import { formatBps } from "@/lib/money";
 import { networkId } from "@/lib/near/network";
+import { agentMode } from "@/lib/agent/vault-factory";
+import { getVaultAccount } from "@/lib/db/invoices";
 
 export const metadata: Metadata = { title: "People & properties · House Rules" };
 
@@ -30,7 +33,8 @@ export default function PeoplePage() {
 
 async function PeopleContent() {
   const user = await requireUser();
-  const [payees, properties] = await Promise.all([listPayees(user.id), listProperties(user.id)]);
+  const [payees, properties, vault] = await Promise.all([listPayees(user.id), listProperties(user.id), getVaultAccount(user.id)]);
+  const rehearsal = agentMode() === "mock";
   const owners = payees.filter((p) => p.role === "owner" && p.vaultStatus !== "removed");
   const cleaners = payees.filter((p) => p.role === "cleaner" && p.vaultStatus !== "removed");
 
@@ -74,7 +78,10 @@ async function PeopleContent() {
                         <Money raw={p.capRaw} />
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        <StatusPill kind="payee" status={p.vaultStatus} data-testid={`payee-status-${p.id}`} />
+                        <div className="grid justify-items-start gap-1.5">
+                          <StatusPill kind="payee" status={p.vaultStatus} data-testid={`payee-status-${p.id}`} />
+                          {p.vaultStatus === "pending_signature" && vault && <ApprovePayee payeeId={p.id} rehearsal={rehearsal} />}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -25,6 +25,8 @@ describe("describeActivity", () => {
     ["invoice.create", { type: "penalty", amount: "200000000" }, "Charged a guest $200.00"],
     ["payee.create", { role: "cleaner", nearAccount: "maria.testnet" }, "Added cleaner maria.testnet (needs vault approval)"],
     ["property.create", { name: "Casa Azul" }, "Added property Casa Azul"],
+    ["payee.approve", { nearAccount: "owen.testnet" }, "Approved owen.testnet in the vault (signed with your wallet)"],
+    ["payee.approve_rehearsal", { nearAccount: "owen.testnet" }, "Approved owen.testnet (rehearsal, not on-chain)"],
     ["vault.set_account", { vaultAccount: "vault.op.testnet" }, "Connected vault vault.op.testnet"],
     ["agent.run", { trigger: "manual", status: "succeeded", paid: "874000000", rejected: 0 }, "Ran the payout agent: paid $874.00"],
     ["agent.run", { trigger: "cron", status: "partial", paid: "0", rejected: 2 }, "Scheduled payout run: paid $0.00, 2 held back"],

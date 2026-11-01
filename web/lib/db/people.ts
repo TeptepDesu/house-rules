@@ -81,3 +81,16 @@ export async function setupCounts(userId: string) {
   ]);
   return { payees: p.n, activePayees: a.n, properties: pr.n };
 }
+
+export async function getPayee(userId: string, payeeId: string) {
+  if (!UUID_RE.test(payeeId)) return null;
+  const [p] = await (await db()).select().from(payees).where(and(eq(payees.id, payeeId), eq(payees.userId, userId)));
+  return p ?? null;
+}
+
+export async function setPayeeVaultStatus(userId: string, payeeId: string, status: "pending_signature" | "in_delay" | "active" | "removed", addedTx?: string) {
+  await (await db())
+    .update(payees)
+    .set({ vaultStatus: status, ...(addedTx ? { addedTx } : {}) })
+    .where(and(eq(payees.id, payeeId), eq(payees.userId, userId)));
+}

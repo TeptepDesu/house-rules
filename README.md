@@ -165,7 +165,7 @@ Postgres (PGlite locally, any hosted Postgres in production) · Drizzle
 | Contract: sandbox | `cd contracts && cargo test -p vault --test sandbox` | 8 |
 | App: unit, property and DB | `pnpm --filter web test` | 312 |
 | App: browser (Playwright) | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 14, plus 1 optional screenshot capture |
-| App on a real vault | `pnpm --filter web test:integration` | 5 |
+| App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 8 |
 
 Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p vault --target wasm32-unknown-unknown -- -D warnings`.
 
@@ -179,7 +179,7 @@ Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p 
 | ✅ Testnet | Vault + mock USDC deployed, payees approved, settle-only agent key. A real atomic payout and 5 policy refusals were verified on testnet; accounts and tx hashes are in [`docs/testnet-deployment.md`](docs/testnet-deployment.md) |
 | ⏳ Before submission | The app's agent running **live** against the testnet vault (`pnpm --filter web test:testnet`), then mainnet |
 | ⏳ Before submission | **A real 1Click payment** on mainnet (the client is checked against the API docs; live delivery is unproven so far) |
-| ⏳ Before submission | **Wallet signing** for "approve payee" (`add_payee`). Until then the operator signs it with near-cli |
+| ✅ Built | **Approve payee with your wallet** (NEAR Connect signs `add_payee`; the server verifies the signed tx on-chain, also tested against a real testnet tx). Waiting on one manual sign-in with a browser wallet |
 | Stretch | Confidential Intents for private revenue; AI exception triage on NEAR AI Cloud (private inference) |
 
 Spike notes and measured numbers: [`docs/notes.md`](docs/notes.md). Design system: [`design.md`](design.md).
@@ -191,7 +191,7 @@ Spike notes and measured numbers: [`docs/notes.md`](docs/notes.md). Design syste
 **App:**
 - **Framework and UI:** Next.js 16.4 (App Router), React 19.3, TypeScript 5.9, Tailwind CSS 4, shadcn/ui (base-nova style on Base UI), `cn`, class-variance-authority, tw-animate-css, lucide-react, IBM Plex Sans and Mono.
 - **Data and auth:** Drizzle ORM and drizzle-kit, PGlite (local Postgres), node-postgres (`pg`), jose (sessions), bcryptjs, zod.
-- **NEAR:** near-api-js 7.4.
+- **NEAR:** near-api-js 7.4, @hot-labs/near-connect 0.12 (wallet connection, as recommended in NEAR's web-login docs).
 - **Other:** qrcode.
 - **Tests:** Vitest, fast-check, Playwright.
 

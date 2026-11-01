@@ -46,6 +46,10 @@ export function describeActivity(action: string, m: Record<string, unknown>): st
       return `Charged a guest ${usd(m.amount)}`;
     case "payee.create":
       return `Added ${String(m.role)} ${String(m.nearAccount)} (needs vault approval)`;
+    case "payee.approve":
+      return `Approved ${String(m.nearAccount)} in the vault (signed with your wallet)`;
+    case "payee.approve_rehearsal":
+      return `Approved ${String(m.nearAccount)} (rehearsal, not on-chain)`;
     case "property.create":
       return `Added property ${String(m.name)}`;
     case "vault.set_account":
