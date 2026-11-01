@@ -1,0 +1,7 @@
+Reservation number,Check-in,Check-out,Guest name,Property name,Status,Currency,Original amount,Commission amount,Payout amount
+4410023001,2026-10-02,2026-10-05,Liam Novak,Loft 21,ok,USD,480.00,72.00,408.00
+4410023002,2026-10-06,2026-10-08,Mia Fischer,Casa Azul,ok,USD,330.00,49.50,280.50
+4410023003,2026-10-09,2026-10-12,Noah Kim,Seaside Cottage,cancelled,USD,510.00,0.00,0.00
+4410023004,2026-10-13,2026-10-17,Olivia Brown,Casa Azul,ok,USD,690.00,103.50,586.50
+4410023004,2026-10-13,2026-10-17,Olivia Brown,Casa Azul,ok,USD,690.00,103.50,566.50
+4410023005,2026-10-18,2026-10-20,Pedro Alves,Loft 21,ok,USD,300.00,45.00,255.00
