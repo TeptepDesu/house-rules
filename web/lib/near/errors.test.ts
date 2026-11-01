@@ -44,6 +44,11 @@ describe("classifyError (near-api-js 7.4 error classes, as seen in spike #3)", (
     expect(classifyError(e)).toEqual({ kind: "allowance", allowance: 10n, cost: 300n });
   });
 
+  it("the app's own pre-flight refusal of an unscoped agent key stops runs too", () => {
+    const e = Object.assign(new Error("Refusing to run the agent: the agent key has FULL ACCESS"), { name: "AgentKeyNotScopedError" });
+    expect(classifyError(e)).toMatchObject({ kind: "key_scope" });
+  });
+
   it("anything else → other, with a message (no stack)", () => {
     expect(classifyError(new Error("fetch failed"))).toEqual({ kind: "other", message: "fetch failed" });
     expect(classifyError("boom")).toEqual({ kind: "other", message: "boom" });

@@ -28,7 +28,12 @@ export type VaultPayee = {
   active: boolean;
 };
 
-/** Gas to attach to a settle call with n items (spike #3: attach per chunk, not a flat 300). */
+/**
+ * Gas to attach to a settle call with n items (spike #3: per chunk, not a flat 300, so less of
+ * the agent key's allowance is reserved). Must cover what the vault reserves: 5 TGas per
+ * ft_transfer + 30 TGas for on_settled + settle's own work (~3 TGas + ~0.5/item) + receipt fees.
+ * The first version (30 + 6n) predated the 30 TGas callback and ran out of gas on a real vault.
+ */
 export function settleGasTgas(n: number): number {
-  return Math.min(300, 30 + 6 * n);
+  return Math.min(300, 45 + 6 * n);
 }

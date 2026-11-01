@@ -70,6 +70,10 @@ export async function applyImport(userId: string, rows: ImportRow[], source: str
 
 export type BookingRow = {
   id: string;
+  propertyId: string;
+  cleaningFeeOverrideRaw: bigint | null;
+  /** Paid penalty invoices, for the payout split. */
+  paidPenalties: { amount: bigint; operatorRevenue: boolean }[];
   externalRef: string;
   channel: "direct" | Channel;
   guestName: string;
@@ -96,6 +100,8 @@ export async function listBookingsWithRecon(userId: string, now = new Date()): P
       otaPayoutRaw: bookings.otaPayoutRaw,
       settlementStatus: bookings.settlementStatus,
       propertyName: properties.name,
+      propertyId: bookings.propertyId,
+      cleaningFeeOverrideRaw: bookings.cleaningFeeOverrideRaw,
     })
     .from(bookings)
     .innerJoin(properties, eq(properties.id, bookings.propertyId))
@@ -111,6 +117,7 @@ export async function listBookingsWithRecon(userId: string, now = new Date()): P
           type: invoices.type,
           amount: invoices.amountRaw,
           status: invoices.status,
+          operatorRevenue: invoices.operatorRevenue,
           received: sql<string>`coalesce(sum(case when ${payments.status} = 'verified' then ${payments.amountReceivedRaw} else 0 end), 0)`,
         })
         .from(invoices)
@@ -130,8 +137,12 @@ export async function listBookingsWithRecon(userId: string, now = new Date()): P
         .filter((i) => i.bookingId === r.id)
         .map((i) => ({ id: i.id, type: i.type, amount: i.amount, status: i.status, amountReceived: BigInt(i.received) })),
     };
+    const mine = invs.filter((i) => i.bookingId === r.id);
     return {
       id: r.id,
+      propertyId: r.propertyId,
+      cleaningFeeOverrideRaw: r.cleaningFeeOverrideRaw,
+      paidPenalties: mine.filter((i) => i.type === "penalty" && i.status === "paid").map((i) => ({ amount: BigInt(i.received), operatorRevenue: i.operatorRevenue })),
       externalRef: r.externalRef,
       channel: r.channel,
       guestName: r.guestName,

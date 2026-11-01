@@ -16,6 +16,6 @@ export default defineConfig({
     testTimeout: 20_000,
     hookTimeout: 20_000,
     include: ["**/*.test.ts"],
-    exclude: ["node_modules/**", "e2e/**", ".next/**"],
+    exclude: ["node_modules/**", "e2e/**", ".next/**", "test/integration/**"],
   },
 });

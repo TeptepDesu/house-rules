@@ -201,7 +201,9 @@ pnpm --filter web dev
 pnpm --filter web build
 pnpm --filter web lint
 pnpm --filter web typecheck      # next typegen && tsc --noEmit
-pnpm --filter web test           # vitest run (+ fast-check)
+pnpm --filter web test           # vitest run (+ fast-check), fast unit/DB tests
+pnpm --filter web test:integration   # ~30s: real vault wasm + mock USDC on a local NEAR sandbox, real agent code + scoped key
+                                     # needs contracts built: (cd contracts/vault && cargo near build non-reproducible-wasm) etc.
 pnpm --filter web db:generate    # drizzle-kit generate → web/drizzle/
 pnpm --filter web db:migrate     # hosted Postgres only: applies web/drizzle/ to DATABASE_URL (from web/.env.local). PGlite migrates itself
 pnpm --filter web e2e            # Playwright (Chromium): starts `next dev` on :3200 with a fresh PGlite db (.data/e2e), testnet

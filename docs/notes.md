@@ -116,3 +116,16 @@ Source: docs.near-intents.org/api-reference/oneclick. Client: `web/lib/intents/c
 - That the vault being registered on USDC is enough for the delivery to land.
 - What `destinationChainTxHashes` contains for a NEAR destination, and that `usdcCreditedTo()` finds the credit in that tx.
 - The real minimum amounts per origin chain.
+
+## Settlement agent on a real vault (2026-11-01, sandbox)
+
+`web/test/integration/agent.sandbox.test.ts` runs the real app code against the real vault wasm and mock USDC on a local nearcore sandbox. That covers PGlite, planning, the pre-check, chunking, the vault client and the function-call key.
+
+- **One run pays everyone in a single atomic `settle`.** Two bookings, each $500 collected with an $80 cleaning fee and a 15% management fee: Owen got $714, Maria $160, and the $126 management share stays in the vault.
+- **A second run sends nothing.** Settled bookings aren't planned again, and the vault's `is_paid` keys back that up.
+- **A full-access key on the agent account is refused before anything is sent.** The app checks the key's permission on-chain (`assertAgentKeyScoped`) and requires a function-call key with `receiver_id = vault` and methods exactly `["settle"]`.
+- **An over-cap payout is held back by the pre-check and never sent.** Its reason is recorded.
+
+**Two bugs found and fixed:**
+- **The gas formula was wrong.** `30 + 6n` TGas came from spike #1, where the callback reserved 15 TGas. With the vault's real 30 TGas callback, a 4-item `settle` ran out of gas; it reverted safely and nothing moved. It's now `45 + 6n` (40 items → 285 TGas).
+- **Finality lag.** `final` reads trail the latest block by about 2 blocks. Right after adding a key, the scope check said it wasn't registered. Key checks now read `optimistic` state, which is what tx validation uses. Planning views stay on `final` (conservative). Tests read balances at `optimistic`.

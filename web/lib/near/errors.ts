@@ -38,6 +38,8 @@ export function classifyError(e: unknown): ClassifiedError {
   if (e instanceof AccessKeyNotEnoughAllowanceActionError) {
     return { kind: "allowance", allowance: e.allowance, cost: e.cost };
   }
+  // our own pre-flight refusal (lib/near/vault.ts) counts as a key-scope problem: stop the run
+  if (e instanceof Error && e.name === "AgentKeyNotScopedError") return { kind: "key_scope", detail: e.message };
   if (KEY_SCOPE.some((C) => e instanceof C)) {
     return { kind: "key_scope", detail: (e as Error).message };
   }

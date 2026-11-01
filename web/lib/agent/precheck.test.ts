@@ -130,9 +130,9 @@ describe("chunk", () => {
 });
 
 describe("settleGasTgas", () => {
-  it("is 30 + 6n, capped at 300", () => {
-    expect(settleGasTgas(1)).toBe(36);
-    expect(settleGasTgas(40)).toBe(270);
+  it("is 45 + 6n, capped at 300 (covers 5/transfer + 30 callback + settle itself)", () => {
+    expect(settleGasTgas(1)).toBe(51);
+    expect(settleGasTgas(40)).toBe(285);
     expect(settleGasTgas(100)).toBe(300);
   });
 });
