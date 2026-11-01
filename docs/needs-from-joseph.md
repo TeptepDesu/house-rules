@@ -54,7 +54,7 @@ The vault, mock USDC, payees and a settle-only agent key are live on testnet. De
 - [ ] **The Discord question about pre-hackathon work** (plan §12, still open).
 - [ ] **NEAR AI Cloud credits** ($10 by joining NEAR Builders), only if we do the AI-triage stretch goal.
 - [ ] **Nomad:** ask them before naming them as a design partner (plan §0). Until then, no Nomad names, data or branding anywhere.
-- [ ] **Nov 13:** record the demo video (I'll prepare the script and the demo data) and draft the X post. It must say "built at NEAR HACKATHON" and tag `@NEARProtocol` `#NEARHackathon`.
+- [ ] **Nov 13:** record the demo video. Script, shot list and a draft X post are in [demo-script.md](demo-script.md). Post only when you're happy with it.
 - [ ] **Nov 14:** decide on making the repo public. I'll run `npx -y ecc-agentshield scan --path .` first. Submit with tracks `realworld` + `security` + `business`, aiming for 12:00 UTC.
 
 ## Optional, makes my work better
