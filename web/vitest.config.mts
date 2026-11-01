@@ -11,6 +11,10 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // DB tests start an in-process Postgres (PGlite, WASM) per file; under parallel load that
+    // can take several seconds, so allow more than the 5s default.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
     include: ["**/*.test.ts"],
     exclude: ["node_modules/**", "e2e/**", ".next/**"],
   },

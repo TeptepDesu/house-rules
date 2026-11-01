@@ -34,7 +34,7 @@ Recorded at scaffold, 2026-11-01. Update when you bump something.
 
 | Area | Path | Notes |
 |---|---|---|
-| Pages | `web/app/` | `(dashboard)/` for operators, `pay/[publicId]/` for guests |
+| Pages | `web/app/` | `(dashboard)/` for operators (overview, bookings, invoices, people, import, settings); `pay/[publicId]/` public guest pay page |
 | API routes | `web/app/api/` | invoices, pay/intents, import, agent/run |
 | NEAR client | `web/lib/near/` | vault calls, view calls, event parsing, tx verification |
 | 1Click client | `web/lib/intents/` | tokens, quote, status. Mocked in tests |
@@ -236,6 +236,8 @@ Auth layout: `web/lib/auth/token.ts` (pure JWT, used by `proxy.ts` and tests), `
 - **Session reads call `await connection()`** before time-dependent checks (`lib/auth/session.ts`), or Cache Components flags `Date.now()` during prerender.
 - **A no-JS form POST to a page with `<Suspense>` data only re-renders the static shell.** Verify dashboard forms in a real browser (Playwright), not with curl.
 - **Playwright screenshots inject `caret-color` and trigger a hydration warning.** Pass `caret: "initial"`.
+- **Pages and route handlers are separate bundles in dev.** Process-wide singletons (DB client, mock 1Click store) must live on `globalThis`, or each bundle gets its own copy. Two PGlite instances on one data dir was a real bug.
+- **Public pages with no session read** (e.g. `/pay/[publicId]`) need `await connection()` before data access, or the DB client's internal clock trips Cache Components.
 
 ## Installing the skills
 

@@ -36,6 +36,7 @@ _Last updated: 2026-11-01_
 - [ ] **A funded mainnet account for testing**, e.g. `houserules-dev.near`, with about **1 NEAR** for gas and storage.
 - [ ] **About $5–10 of a token on another chain** (e.g. USDC on Arbitrum or Base) in a wallet you control. That's the "guest" paying an invoice from another chain.
 - [ ] **A 1Click API key** (optional). Without one, 1Click works but charges **0.2%**. The plan says to apply in prep. The key goes into `web/.env.local` as `ONECLICK_API_KEY`.
+- [ ] **Spike #2 will also confirm** three settings for live mode: `USDC_ASSET_ID`, `USDC_TOKEN_ACCOUNT` and `INTENTS_SENDERS` (see `web/.env.example`). Until then the app runs 1Click in mock mode, and the full guest-payment flow works and is tested.
 - [ ] **Your explicit OK for each mainnet transaction.** I never sign or spend on mainnet without it (CLAUDE.md).
 
 ## Before deploying the website: needed by Nov 10

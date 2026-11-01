@@ -143,3 +143,13 @@ export async function listBookingsWithRecon(userId: string, now = new Date()): P
     };
   });
 }
+
+/** Bookings an operator can charge against (newest stays first). */
+export async function listBookingOptions(userId: string) {
+  return (await db())
+    .select({ id: bookings.id, guestName: bookings.guestName, externalRef: bookings.externalRef, propertyName: properties.name, checkIn: bookings.checkIn, checkOut: bookings.checkOut })
+    .from(bookings)
+    .innerJoin(properties, eq(properties.id, bookings.propertyId))
+    .where(eq(bookings.userId, userId))
+    .orderBy(sql`${bookings.checkIn} desc`);
+}

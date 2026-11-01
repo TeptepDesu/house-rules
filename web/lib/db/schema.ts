@@ -121,6 +121,7 @@ export const invoices = pgTable(
     bookingId: uuid("booking_id").references(() => bookings.id),
     publicId: text("public_id").notNull().unique(), // ≥128-bit random, see lib/ids.ts
     type: invoiceType("type").notNull(),
+    description: text("description").notNull().default(""), // shown to the guest: "Damage: broken lamp"
     amountRaw: money("amount_raw").notNull(),
     status: invoiceStatus("status").notNull().default("open"),
     operatorRevenue: boolean("operator_revenue").notNull().default(false), // penalties: true = operator revenue, false = owner
