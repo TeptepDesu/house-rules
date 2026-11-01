@@ -226,7 +226,8 @@ export const vaultEvents = pgTable(
     simulated: boolean("simulated").notNull().default(false), // rehearsal mode, not on a chain
     createdAt: createdAt(),
   },
-  (t) => [uniqueIndex("vault_events_tx_seq_uq").on(t.txHash, t.seq), index("vault_events_user_idx").on(t.userId, t.createdAt)],
+  // per operator: one operator recording a tx can never block another's rows (code review #4)
+  (t) => [uniqueIndex("vault_events_user_tx_seq_uq").on(t.userId, t.txHash, t.seq), index("vault_events_user_idx").on(t.userId, t.createdAt)],
 );
 
 export const activityLog = pgTable(

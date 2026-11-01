@@ -44,7 +44,9 @@ pub enum PayeeRole {
 pub struct Payee {
     pub role: PayeeRole,
     pub cap_per_payout: u128,
-    pub added_at_ns: u64,
+    /// Fixed when the payee is approved: approval time + the delay in force then. Changing the
+    /// delay later never moves it. (Same slot/type as the old `added_at_ns`, so upgrades keep state.)
+    pub payable_from_ns: u64,
     pub active: bool,
 }
 
@@ -97,7 +99,6 @@ pub struct PayeeView {
     pub account_id: AccountId,
     pub role: PayeeRole,
     pub cap_per_payout: U128,
-    pub added_at_ns: U64,
     pub payable_from_ns: U64,
     pub active: bool,
 }
@@ -181,13 +182,13 @@ impl Vault {
         if let Some(p) = self.payees.get(&account_id) {
             require!(!p.active, "Payee is already active");
         }
-        let now = env::block_timestamp();
+        let payable_from_ns = env::block_timestamp().saturating_add(self.payee_delay_ns);
         self.payees.insert(
             account_id.clone(),
             Payee {
                 role,
                 cap_per_payout: cap_per_payout.0,
-                added_at_ns: now,
+                payable_from_ns,
                 active: true,
             },
         );
@@ -207,7 +208,7 @@ impl Vault {
                 "account_id": account_id,
                 "role": role,
                 "cap_per_payout": cap_per_payout,
-                "payable_from_ns": U64(now.saturating_add(self.payee_delay_ns)),
+                "payable_from_ns": U64(payable_from_ns),
             }),
         );
     }
@@ -301,7 +302,7 @@ impl Vault {
                 Some(p) if p.active => p,
                 _ => reject("PayeeNotAllowed"),
             };
-            if now < p.added_at_ns.saturating_add(self.payee_delay_ns) {
+            if now < p.payable_from_ns {
                 reject("PayeeInDelay");
             }
             if it.amount.0 > p.cap_per_payout {
@@ -449,8 +450,7 @@ impl Vault {
             account_id: id.clone(),
             role: p.role,
             cap_per_payout: U128(p.cap_per_payout),
-            added_at_ns: U64(p.added_at_ns),
-            payable_from_ns: U64(p.added_at_ns.saturating_add(self.payee_delay_ns)),
+            payable_from_ns: U64(p.payable_from_ns),
             active: p.active,
         }
     }

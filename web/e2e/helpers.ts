@@ -9,7 +9,8 @@ export async function signUp(page: Page, name = "Rina Operator") {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill("correct-horse-9");
   await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  // the first request of a run pays the dev server's cold start (compile + DB migrations + bcrypt)
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible({ timeout: 20_000 });
   return { email, password: "correct-horse-9" };
 }
 

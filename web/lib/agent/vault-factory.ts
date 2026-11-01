@@ -1,5 +1,7 @@
 import "server-only";
+import { getOperatorAccount } from "@/lib/db";
 import { listPayees } from "@/lib/db/people";
+import { checkVaultBinding } from "@/lib/vault/binding";
 import { getVaultAccount } from "@/lib/db/invoices";
 import type { VaultPayee } from "@/lib/near/policy";
 import { rpcUrl } from "@/lib/near/rpc";
@@ -23,7 +25,9 @@ export function agentMode(env: Record<string, string | undefined> = process.env)
   return env.AGENT_MODE === "live" ? "live" : "mock";
 }
 
-export type VaultSetup = { ok: true; vault: AgentVault; mode: AgentMode; vaultAccount: string } | { ok: false; reason: "no_vault" | "no_agent_key" };
+export type VaultSetup =
+  | { ok: true; vault: AgentVault; mode: AgentMode; vaultAccount: string }
+  | { ok: false; reason: "no_vault" | "no_agent_key" | "vault_not_verified"; message?: string };
 
 export async function agentVaultFor(userId: string): Promise<VaultSetup> {
   const vaultAccount = await getVaultAccount(userId);
@@ -33,6 +37,9 @@ export async function agentVaultFor(userId: string): Promise<VaultSetup> {
     const agentAccount = process.env.AGENT_ACCOUNT;
     const agentPrivateKey = process.env.AGENT_PRIVATE_KEY;
     if (!agentAccount || !agentPrivateKey) return { ok: false, reason: "no_agent_key" };
+    // defense in depth: never pay through a vault this operator hasn't proven they own
+    const binding = await checkVaultBinding(vaultAccount, await getOperatorAccount(userId));
+    if (!binding.ok) return { ok: false, reason: "vault_not_verified", message: binding.error };
     return { ok: true, mode, vaultAccount, vault: createAgentVault({ rpcUrl: rpcUrl(), vault: vaultAccount, agentAccount, agentPrivateKey }) };
   }
   return { ok: true, mode, vaultAccount, vault: mockVault(userId) };

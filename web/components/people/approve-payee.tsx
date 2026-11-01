@@ -1,17 +1,29 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ShieldCheck } from "lucide-react";
+import { RefreshCw, ShieldCheck } from "lucide-react";
 import { confirmApproval, prepareApproval, rehearsalApprove } from "@/app/(dashboard)/people/approve-actions";
 import { Button } from "@/components/ui/button";
 
-// "Approve in vault": the operator's own wallet signs vault.add_payee (via NEAR Connect). The server
-// prepared the exact call and verifies the signed tx on-chain afterwards. In rehearsal mode there's
-// no chain, so it's a labelled stand-in.
+// "Approve in vault": the operator's verified wallet signs vault.add_payee (via NEAR Connect). The
+// server prepared the exact call and reads the result from the vault. If the check runs before the
+// chain catches up, "Check again" re-reads the vault: it never asks the wallet to sign twice.
+// In rehearsal mode there's no chain, so it's a labelled stand-in.
 
 export function ApprovePayee({ payeeId, rehearsal }: { payeeId: string; rehearsal: boolean }) {
   const [msg, setMsg] = useState<{ tone: "error" | "info"; text: string } | null>(null);
+  const [signedTx, setSignedTx] = useState<string | null>(null);
   const [pending, start] = useTransition();
+
+  const check = (hash?: string) =>
+    start(async () => {
+      setMsg({ tone: "info", text: "Checking your vault…" });
+      const r = await confirmApproval(payeeId, hash ?? signedTx ?? undefined);
+      if (r.ok) {
+        setMsg(null);
+        setSignedTx(null);
+      } else setMsg({ tone: "error", text: r.error });
+    });
 
   const approve = () =>
     start(async () => {
@@ -26,8 +38,14 @@ export function ApprovePayee({ payeeId, rehearsal }: { payeeId: string; rehearsa
       try {
         const { NearConnector } = await import("@hot-labs/near-connect"); // browser-only, loaded on demand
         const connector = new NearConnector({ network: prep.network });
-        const wallet = await connector.wallet().catch(() => connector.connect());
-        const [account] = await wallet.getAccounts();
+        let wallet = await connector.wallet().catch(() => connector.connect());
+        let [account] = await wallet.getAccounts();
+        if (account?.accountId !== prep.owner) {
+          // a different account is connected: sign it out and let the operator pick the owner's
+          await connector.disconnect(wallet).catch(() => undefined);
+          wallet = await connector.connect();
+          [account] = await wallet.getAccounts();
+        }
         if (account?.accountId !== prep.owner) {
           return setMsg({ tone: "error", text: `Connect the vault owner's wallet (${prep.owner}) to approve payees.` });
         }
@@ -36,9 +54,13 @@ export function ApprovePayee({ payeeId, rehearsal }: { payeeId: string; rehearsa
           receiverId: prep.vault,
           actions: [{ type: "FunctionCall", params: { methodName: "add_payee", args: prep.args, gas: prep.gas, deposit: prep.deposit } }],
         });
-        setMsg({ tone: "info", text: "Checking the vault…" });
-        const r = await confirmApproval(payeeId, result.transaction.hash, account.accountId);
-        setMsg(r.ok ? null : { tone: "error", text: r.error ?? "Couldn't verify the approval." });
+        setSignedTx(result.transaction.hash);
+        setMsg({ tone: "info", text: "Checking your vault…" });
+        const r = await confirmApproval(payeeId, result.transaction.hash);
+        if (r.ok) {
+          setMsg(null);
+          setSignedTx(null);
+        } else setMsg({ tone: "error", text: r.error });
       } catch (e) {
         setMsg({ tone: "error", text: e instanceof Error && /reject|cancel/i.test(e.message) ? "You cancelled in your wallet." : "The wallet didn't complete the approval." });
       }
@@ -46,10 +68,17 @@ export function ApprovePayee({ payeeId, rehearsal }: { payeeId: string; rehearsa
 
   return (
     <div className="grid justify-items-start gap-1">
-      <Button size="sm" variant="outline" onClick={approve} disabled={pending} data-testid={`payee-approve-${payeeId}`}>
-        <ShieldCheck aria-hidden />
-        {pending ? "Approving…" : rehearsal ? "Approve (rehearsal)" : "Approve in vault"}
-      </Button>
+      {signedTx ? (
+        <Button size="sm" variant="outline" onClick={() => check()} disabled={pending} data-testid={`payee-approve-recheck-${payeeId}`}>
+          <RefreshCw aria-hidden />
+          {pending ? "Checking…" : "Check again"}
+        </Button>
+      ) : (
+        <Button size="sm" variant="outline" onClick={approve} disabled={pending} data-testid={`payee-approve-${payeeId}`}>
+          <ShieldCheck aria-hidden />
+          {pending ? "Approving…" : rehearsal ? "Approve (rehearsal)" : "Approve in vault"}
+        </Button>
+      )}
       {msg && (
         <p role={msg.tone === "error" ? "alert" : "status"} className={msg.tone === "error" ? "max-w-[240px] text-xs text-destructive" : "text-xs text-muted-foreground"} data-testid={`payee-approve-msg-${payeeId}`}>
           {msg.text}

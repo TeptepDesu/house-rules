@@ -433,6 +433,29 @@ fn settle_respects_payee_delay_boundary() {
 }
 
 #[test]
+fn set_limits_does_not_move_existing_payees_waiting_period() {
+    // payee approved at 10h with a 1h delay is payable from 11h, whatever the delay becomes later
+    let mut v = setup();
+    ctx(&owner(), STORAGE, 10 * HOUR);
+    v.add_payee(acc("new.near"), PayeeRole::Cleaner, U128(USD));
+    ctx(&owner(), NearToken::from_yoctonear(1), 10 * HOUR);
+    v.set_limits(U128(3_000 * USD), U64(0)); // shortening the delay…
+    ctx(&agent(), NearToken::from_yoctonear(0), 10 * HOUR + 1);
+    rejects(&mut v, "PayeeInDelay", |v| {
+        v.settle(vec![item("b1:cleaner", acc("new.near"), 1)]);
+    }); // …doesn't make the already-added payee payable early
+    assert_eq!(
+        v.get_payee(acc("new.near")).unwrap().payable_from_ns,
+        U64(11 * HOUR)
+    );
+
+    ctx(&owner(), NearToken::from_yoctonear(1), 10 * HOUR + 2);
+    v.set_limits(U128(3_000 * USD), U64(100 * HOUR)); // lengthening it doesn't push it back either
+    ctx(&agent(), NearToken::from_yoctonear(0), 11 * HOUR);
+    v.settle(vec![item("b1:cleaner", acc("new.near"), 1)]);
+}
+
+#[test]
 fn settle_respects_cap_boundary() {
     let mut v = setup();
     rejects(&mut v, "OverCap", |v| {

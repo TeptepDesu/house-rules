@@ -77,3 +77,9 @@ Signed by the operator, which the vault allows as owner, after the 10-minute pay
 That's five different policy refusals on testnet: PayeeInDelay, PayeeNotAllowed, Unauthorized, OverCap and AlreadyPaid.
 
 **Still to run:** the app's own agent with the settle-only key (`pnpm --filter web test:testnet`), once the key is in `web/.env.testnet.local`.
+
+## Upgrade: payable time fixed at approval (code review #10)
+
+Tx `XVp5L9Cp8P6WHTYj3hAMyUzE2LxRnYJM1hGVQBGgeiK` deploys new vault code without init. `Payee.payable_from_ns` is now stored when the payee is approved, so a later `set_limits` can't shorten or lengthen an existing payee's wait.
+
+It's the same field slot and type as the old `added_at_ns`, so state carried over. Payees, policy and paid keys all read back correctly after the upgrade. The two existing payees' stored values now read as their approval time, which was already in the past.

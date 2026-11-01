@@ -146,6 +146,8 @@ Postgres (PGlite locally, any hosted Postgres in production) · Drizzle
 |---|---|
 | The agent's key leaks | It's a function-call key that can only call `vault.settle`, with no deposits. The vault pays only allowlisted payees, within caps and the daily limit. Worst case: legitimate payees are paid early, bounded per day |
 | Someone configures the server with a powerful key | The app checks the key on-chain before paying and **refuses to run** unless it's scoped to `vault.settle` only |
+| An operator points their account at someone else's vault | They must first prove control of their NEAR account (NEP-413 signed message, full-access key verified on-chain). A vault connects, and the agent pays through it, only if its on-chain `owner` is that account and its `agent` is this server's |
+| A replayed or mismatched payee approval | The payee's status always comes from the vault itself (`get_payee`). Role and cap must match, and only payees awaiting approval can be confirmed |
 | The server or DB is compromised and an attacker adds their own payee | Adding a payee needs the operator's wallet. New payees wait out a delay, and `payee_added` events show in the audit log |
 | Double payout | The vault's on-chain paid keys (`booking:role`), plus `UNIQUE(booking_id, role)` in the DB. Re-runs and crashes are idempotent |
 | Partial batch failure | One receipt for all transfers. The callback restores keys and the daily spend. Callers check the result: a failed batch doesn't fail the transaction |

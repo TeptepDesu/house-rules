@@ -39,17 +39,28 @@ export async function listAuditFeed(userId: string, show: "all" | "chain" | "app
   return [...chain, ...app].sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, limit);
 }
 
-/** Store vault events read from a verified tx (e.g. a wallet-signed add_payee) in the audit trail. */
-export async function recordVaultEvents(
+/** Rows for vault_events: one mapping shared by every writer (agent runs, payee approvals). */
+export function vaultEventRows(
   userId: string,
   txHash: string,
   events: { event: string; data: Record<string, unknown>; receiptId: string }[],
-  simulated = false,
+  baseMs: number,
 ) {
+  // explicit, increasing timestamps: Postgres now() is fixed per transaction
+  return events.map((e, seq) => ({
+    userId,
+    txHash,
+    receiptId: e.receiptId,
+    seq,
+    event: e.event,
+    dataJson: e.data,
+    simulated: txHash.startsWith("mock-"),
+    createdAt: new Date(baseMs + seq),
+  }));
+}
+
+/** Store vault events read from a verified tx (e.g. a wallet-signed add_payee) in the audit trail. */
+export async function recordVaultEvents(userId: string, txHash: string, events: { event: string; data: Record<string, unknown>; receiptId: string }[]) {
   if (events.length === 0) return;
-  const base = Date.now();
-  await (await db())
-    .insert(vaultEvents)
-    .values(events.map((e, seq) => ({ userId, txHash, receiptId: e.receiptId, seq, event: e.event, dataJson: e.data, simulated, createdAt: new Date(base + seq) })))
-    .onConflictDoNothing();
+  await (await db()).insert(vaultEvents).values(vaultEventRows(userId, txHash, events, Date.now())).onConflictDoNothing();
 }

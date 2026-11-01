@@ -51,6 +51,8 @@ describe.skipIf(!live)("settlement agent on the TESTNET vault", () => {
       .insert(mods.s.bookings)
       .values({ userId, propertyId: p.id, externalRef: `TN-${Date.now()}`, channel: "airbnb", collectionMode: "ota_payout", guestName: "Testnet Guest", checkIn: "2026-10-01", checkOut: "2026-10-03", expectedGrossRaw: 10n * U, otaPayoutRaw: 10n * U });
     await mods.inv.setVaultAccount(userId, VAULT);
+    // the operator's wallet link (NEP-413) is covered in agent.sandbox.test.ts; here we record its result
+    await mods.db.setOperatorAccount(userId, "houserules-operator.testnet");
   });
   afterAll(() => undefined);
 

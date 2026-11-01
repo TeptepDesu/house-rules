@@ -14,7 +14,13 @@ export async function runAgentNow(): Promise<RunState> {
   const user = await requireUser();
   const setup = await agentVaultFor(user.id);
   if (!setup.ok) {
-    return { ok: false, error: setup.reason === "no_vault" ? "Connect your vault in Settings first." : "The payout agent isn't configured on this server yet." };
+    const error =
+      setup.reason === "no_vault"
+        ? "Connect your vault in Settings first."
+        : setup.reason === "vault_not_verified"
+          ? (setup.message ?? "Your vault isn't verified as yours.")
+          : "The payout agent isn't configured on this server yet.";
+    return { ok: false, error };
   }
   const r = await runAgentForUser(user.id, "manual", setup.vault);
   refresh();

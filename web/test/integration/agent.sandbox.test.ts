@@ -170,4 +170,38 @@ describe.skipIf(!sandboxAvailable())("settlement agent on a real vault (sandbox)
       for (const k of ["AGENT_MODE", "NEAR_RPC_URL", "AGENT_ACCOUNT", "AGENT_PRIVATE_KEY"]) delete process.env[k];
     }
   });
+
+  it("wallet link (NEP-413) + vault binding: only the vault's real owner can connect it", async () => {
+    const { signMessage } = await import("near-api-js/nep413");
+    const { JsonRpcProvider } = await import("near-api-js");
+    const { LINK_MESSAGE, LINK_RECIPIENT, verifyWalletLink } = await import("@/lib/auth/wallet-link");
+    const { checkVaultBinding } = await import("@/lib/vault/binding");
+    const provider = new JsonRpcProvider({ url: sb.rpcUrl });
+    const nonce = new Uint8Array(32).fill(9);
+    const payload = { message: LINK_MESSAGE, recipient: LINK_RECIPIENT, nonce };
+    const signedBy = async (acct: string, key: string) => {
+      const s = await signMessage({ signerAccount: sb.as(acct, key), payload });
+      return { accountId: acct, publicKey: s.publicKey.toString(), signature: Buffer.from(s.signature).toString("base64") };
+    };
+
+    // the operator's full-access key proves control
+    expect(await verifyWalletLink({ signed: await signedBy(OPERATOR, sb.rootKey), nonce, provider })).toEqual({ ok: true, accountId: OPERATOR });
+    // the agent's function-call key can't
+    expect(await verifyWalletLink({ signed: await signedBy(AGENT, agentKey), nonce, provider })).toMatchObject({ ok: false });
+
+    Object.assign(process.env, { NEAR_RPC_URL: sb.rpcUrl });
+    try {
+      expect(await checkVaultBinding(VAULT, OPERATOR, { AGENT_ACCOUNT: AGENT })).toEqual({ ok: true });
+      expect(await checkVaultBinding(VAULT, OWEN, { AGENT_ACCOUNT: AGENT })).toMatchObject({ ok: false, error: expect.stringContaining("belongs to operator.test.near") });
+      expect(await checkVaultBinding(VAULT, OPERATOR, { AGENT_ACCOUNT: "other-agent.test.near" })).toMatchObject({ ok: false, error: expect.stringContaining("agent is agent.test.near") });
+      expect(await checkVaultBinding(VAULT, null)).toMatchObject({ ok: false });
+
+      // get_payee: the chain's view of one payee (used to confirm approvals)
+      const reader = mods.vault.createVaultReader(sb.rpcUrl, VAULT);
+      expect(await reader.getPayee(OWEN)).toMatchObject({ accountId: OWEN, role: "owner", capPerPayout: 800n * U, active: true });
+      expect(await reader.getPayee("nobody.test.near")).toBeNull();
+    } finally {
+      delete process.env.NEAR_RPC_URL;
+    }
+  });
 });

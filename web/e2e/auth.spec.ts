@@ -20,7 +20,7 @@ test("sign up → dashboard → sign out → sign in", async ({ page }) => {
 
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible({ timeout: 20_000 });
 });
 
 test("sign-up validation shows field errors", async ({ page }) => {

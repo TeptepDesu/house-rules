@@ -42,3 +42,13 @@ export async function logActivity(entry: {
     metaJson: entry.meta,
   });
 }
+
+/** The operator's NEAR account, set only after a verified NEP-413 wallet link. */
+export async function getOperatorAccount(userId: string): Promise<string | null> {
+  const [u] = await (await db()).select({ a: schema.users.operatorAccount }).from(schema.users).where(eq(schema.users.id, userId));
+  return u?.a ?? null;
+}
+
+export async function setOperatorAccount(userId: string, account: string) {
+  await (await db()).update(schema.users).set({ operatorAccount: account }).where(eq(schema.users.id, userId));
+}

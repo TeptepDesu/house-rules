@@ -10,6 +10,7 @@ export default defineConfig({
   workers: 2,
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],
+  expect: { timeout: 10_000 }, // next dev compiles routes on first visit
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {

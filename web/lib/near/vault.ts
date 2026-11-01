@@ -60,6 +60,11 @@ export function createVaultReader(rpcUrl: string, vault: string) {
       const raw = await viewCall<RawPayee[]>(rpcUrl, vault, "get_payees");
       return raw.map((p) => ({ accountId: p.account_id, role: p.role, capPerPayout: BigInt(p.cap_per_payout), payableFromNs: BigInt(p.payable_from_ns), active: p.active }));
     },
+    /** One payee as the vault sees it (null if not on the allowlist). Optimistic: reads a just-signed add. */
+    async getPayee(accountId: string): Promise<VaultPayee | null> {
+      const p = await viewCall<RawPayee | null>(rpcUrl, vault, "get_payee", { account_id: accountId }, "optimistic");
+      return p && { accountId: p.account_id, role: p.role, capPerPayout: BigInt(p.cap_per_payout), payableFromNs: BigInt(p.payable_from_ns), active: p.active };
+    },
     async remainingToday() {
       return BigInt(await viewCall<string>(rpcUrl, vault, "remaining_today"));
     },

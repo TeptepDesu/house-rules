@@ -2,6 +2,7 @@ import "server-only";
 import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import type { PropertyTerms, ReadyBooking } from "@/lib/agent/plan";
 import type { RunOutcome } from "@/lib/agent/run";
+import { vaultEventRows } from "./audit";
 import { listBookingsWithRecon } from "./bookings";
 import { db } from "./conn";
 import { agentRuns, bookings, payees, payoutSplits, properties, settlementTxs, vaultEvents } from "./schema";
@@ -71,23 +72,7 @@ export async function finishRun(userId: string, runId: string, out: RunOutcome, 
       // the vault's own events from this tx (successful receipts only) → audit log
       const events = (r.kind === "paid" || r.kind === "reverted") && r.events ? r.events : [];
       if (hash && events.length) {
-        await tx
-          .insert(vaultEvents)
-          // explicit, increasing timestamps: Postgres now() is fixed per transaction, which would
-          // interleave the events of different chunks in the feed
-          .values(
-            events.map((e, seq) => ({
-              userId,
-              txHash: hash,
-              receiptId: e.receiptId,
-              seq,
-              event: e.event,
-              dataJson: e.data,
-              simulated: hash.startsWith("mock-"),
-              createdAt: new Date(base + c.index * 100 + seq),
-            })),
-          )
-          .onConflictDoNothing();
+        await tx.insert(vaultEvents).values(vaultEventRows(userId, hash, events, base + c.index * 100)).onConflictDoNothing();
       }
     }
     for (const b of out.bookings) {
