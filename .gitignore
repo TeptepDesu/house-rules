@@ -1,0 +1,30 @@
+# deps / builds
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# rust
+target/
+
+# env & keys — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+**/near-credentials/
+
+# test output
+playwright-report/
+test-results/
+
+# claude: only settings.json is committed
+.claude/*
+!.claude/settings.json
+
+# os
+.DS_Store

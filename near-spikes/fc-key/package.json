@@ -1,0 +1,8 @@
+{
+  "name": "spike-fc-key",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "near-api-js": "^7.4.0"
+  }
+}

@@ -1,0 +1,39 @@
+import { SignJWT, jwtVerify } from "jose";
+
+// Pure JWT helpers: no Next.js imports, so proxy.ts and unit tests can use them.
+
+export const SESSION_COOKIE = "ss_session";
+export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
+
+function key(secret: string) {
+  if (secret.length < 32) throw new Error("SESSION_SECRET must be at least 32 characters");
+  return new TextEncoder().encode(secret);
+}
+
+export async function signSession(userId: string, secret: string, now = Date.now()) {
+  const iat = Math.floor(now / 1000);
+  return new SignJWT({})
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(userId)
+    .setIssuedAt(iat)
+    .setExpirationTime(iat + SESSION_TTL_SECONDS)
+    .sign(key(secret));
+}
+
+/** Returns the user id, or null for a missing, tampered, or expired token. */
+export async function verifySession(
+  token: string | undefined,
+  secret: string,
+  now = Date.now(),
+): Promise<string | null> {
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, key(secret), {
+      algorithms: ["HS256"],
+      currentDate: new Date(now),
+    });
+    return typeof payload.sub === "string" ? payload.sub : null;
+  } catch {
+    return null;
+  }
+}
