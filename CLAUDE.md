@@ -22,7 +22,7 @@ Recorded at scaffold, 2026-11-01. Update when you bump something.
 |---|---|
 | Toolchain | rustc/cargo 1.99.1 (host); contract pinned to **1.93.0** via `contracts/vault/rust-toolchain.toml`; cargo-near 0.22.0; near-cli-rs 0.30.1; Node 25.9.0; pnpm 12.16.1 |
 | Web | Next **16.4.3** (App Router, `cacheComponents` + `partialPrefetching` on, `proxy.ts` replaces `middleware.ts`), React 19.3.0, TypeScript 5.9.3, Tailwind 4.3.3 |
-| UI | shadcn CLI 4.23 (`base-nova` style, **Base UI** primitives `@base-ui/react` 1.9.0, not Radix), `cn` 0.5.1 (shadcn's clsx+tailwind-merge replacement, re-exported from `@/lib/utils`), lucide-react 1.65.0, date-fns 4.4.0 |
+| UI | shadcn CLI 4.23 (`base-nova` style, **Base UI** primitives `@base-ui/react` 1.9.0, not Radix), `cn` 0.5.1 (shadcn's clsx+tailwind-merge replacement, re-exported from `@/lib/utils`), lucide-react 1.65.0 |
 | Data/auth | drizzle-orm 0.45.4, drizzle-kit 0.31.11, pg 8.23.1 (node-postgres, used when `DATABASE_URL` is set), @electric-sql/pglite 0.5.13 (local dev + tests when it isn't), jose 6.2.14, bcryptjs 3.0.3, zod **4**.6.7 |
 | Tests | vitest 5.0.5, fast-check 4.10.2, @playwright/test 1.64.1 (Chromium) |
 | NEAR JS | near-api-js **7.4.0** (single package, v7 API: `new Account(id, provider, key)`, `callFunction`, `actions.*`; typed errors in `near-api-js/rpc-errors`). Verified in spike #3, not yet installed in `web/` |
@@ -89,7 +89,7 @@ Read the skill's `SKILL.md` before hand-rolling UI when one covers the task:
 
 - shadcn/ui is the base layer: primitives in `web/components/ui/`, feature components in `web/components/`.
 - Conditional classes go through `cn()`. No string concatenation.
-- Icons: lucide-react. Dates: date-fns.
+- Icons: lucide-react. Dates: `web/lib/ui/format.ts` (built-in `Intl`, calendar dates without timezone drift); no date library.
 - **Money display goes through one helper**, `formatUsd(raw: bigint)` in `web/lib/money.ts`. Never `Number(raw)` and never float math on amounts.
 - Data fetching in server components or route handlers. Client components only for interactivity (wallet signing, polling, forms).
 - Respect `prefers-reduced-motion` in every animation.
