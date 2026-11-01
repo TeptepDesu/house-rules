@@ -11,7 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.ts"
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -23,6 +23,7 @@
     "drizzle-orm": "^0.45.4",
     "jose": "^6.2.14",
     "lucide-react": "^1.65.0",
+    "near-api-js": "7.4.0",
     "next": "16.4.3",
     "pg": "^8.23.1",
     "react": "19.3.0",

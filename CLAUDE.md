@@ -205,6 +205,10 @@ pnpm --filter web test           # vitest run (+ fast-check)
 pnpm --filter web db:generate    # drizzle-kit generate → web/drizzle/
 pnpm --filter web db:migrate     # hosted Postgres only: applies web/drizzle/ to DATABASE_URL (from web/.env.local). PGlite migrates itself
 pnpm --filter web e2e            # playwright (not set up yet)
+# re-record real RPC fixtures (web/test/fixtures/rpc) after a contract change; sandbox only:
+#   (cd contracts/vault && cargo near build non-reproducible-wasm); (cd contracts/mock-ft && cargo near build non-reproducible-wasm)
+#   cd web && node scripts/record-rpc-fixtures.mts <near-sandbox-bin> <scratch-dir>
+#   near-sandbox-bin: contracts/target/debug/build/near-sandbox-*/out/.near/near-sandbox-*/near-sandbox
 
 # contracts (cargo workspace: vault + mock-ft)
 cd contracts
