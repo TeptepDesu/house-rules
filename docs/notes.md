@@ -95,3 +95,24 @@ When a check fails, there's a fixed order: the deposit check comes before the re
 - OpenAI-compatible API at `https://cloud-api.near.ai/v1` with `sk-` bearer keys from cloud.near.ai. It exposes `POST /v1/chat/completions` and a model list at `/v1/model/list`.
 - Inference runs in TEEs, with attestation and per-chat signature endpoints.
 - That makes the triage stretch just an OpenAI SDK call with `baseURL` changed. I didn't call the live API; check the endpoints before relying on them.
+
+## 1Click API, checked against the docs (2026-11-01, no live calls)
+
+Source: docs.near-intents.org/api-reference/oneclick. Client: `web/lib/intents/client.ts`.
+
+- **Base URL:** `https://1click.chaindefuser.com`.
+- **Auth:** `X-API-Key: <key>` header (recommended); the legacy form is `Authorization: Bearer <JWT>`. With no key, the API still works but charges a 0.2% fee.
+- **`POST /v0/quote`:**
+  - Required fields: `dry`, `swapType` (`EXACT_INPUT|EXACT_OUTPUT|FLEX_INPUT|ANY_INPUT`), `slippageTolerance` (bps), `originAsset`, `depositType`, `destinationAsset`, `amount` (integer string in base units), `refundTo`, `refundType`, `recipient`, `recipientType` (`DESTINATION_CHAIN|INTENTS|CONFIDENTIAL_INTENTS`) and `deadline` (ISO).
+  - `dry: true` omits `depositAddress`, `deadline` and `timeWhenInactive`.
+  - The response's `quote` includes `depositAddress`, an optional `depositMemo`, `amountIn`, `minAmountIn`, `amountOut`, `minAmountOut`, `deadline`, `timeWhenInactive` and `timeEstimate`. The docs say to save the top-level `signature` with the quote, to resolve disputes.
+- **`GET /v0/status?depositAddress=…`:**
+  - `status` is one of `KNOWN_DEPOSIT_TX | PENDING_DEPOSIT | INCOMPLETE_DEPOSIT | PROCESSING | SUCCESS | REFUNDED | FAILED`. The docs describe none of them.
+  - `swapDetails` includes `amountOut`, `depositedAmount`, `refundedAmount`, `refundReason`, `nearTxHashes`, and `originChainTxHashes` / `destinationChainTxHashes` (each `{hash, explorerUrl}`).
+- **Confidential mode** (stretch goal): request option `confidentiality: public|basic|advanced`, plus `CONFIDENTIAL_INTENTS` for the deposit, refund and recipient types.
+
+**Still to prove in spike #2** (the first real, tiny mainnet payment):
+- That `recipientType: DESTINATION_CHAIN` with a NEAR account as `recipient` delivers via `ft_transfer` to the vault.
+- That the vault being registered on USDC is enough for the delivery to land.
+- What `destinationChainTxHashes` contains for a NEAR destination, and that `usdcCreditedTo()` finds the credit in that tx.
+- The real minimum amounts per origin chain.
