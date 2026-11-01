@@ -49,6 +49,13 @@ const MAPS = {
     partial: { label: "Partly paid", tone: "warning" },
     failed: { label: "Failed", tone: "destructive" },
   },
+  importRow: {
+    new: { label: "Will import", tone: "success" },
+    update: { label: "Adds payout", tone: "info" },
+    duplicate: { label: "Already imported", tone: "neutral" },
+    flagged: { label: "Needs attention", tone: "destructive" },
+    ignored: { label: "Skipped", tone: "neutral" },
+  },
   recon: {
     matched: { label: "Matched", tone: "success" },
     mismatch: { label: "Amount mismatch", tone: "destructive" },

@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { addPayee, signUp } from "./helpers";
+import { FIXTURES, addPayee, addProperty, signUp } from "./helpers";
 
 // Not assertions: saves screenshots for design review when SCREENSHOT_DIR is set.
 test.skip(!process.env.SCREENSHOT_DIR, "set SCREENSHOT_DIR to capture screens");
@@ -19,4 +19,14 @@ test("capture main screens", async ({ page }) => {
   await page.screenshot({ caret: "initial", path: `${dir}/people.png`, fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ caret: "initial", path: `${dir}/people-mobile.png`, fullPage: true });
+  await page.setViewportSize({ width: 1280, height: 860 });
+  for (const p of ["Casa Azul", "Loft 21", "Seaside Cottage"]) await addProperty(page, p);
+  await page.goto("/import");
+  await page.getByTestId("import-file-input").setInputFiles(`${FIXTURES}airbnb-style.csv`);
+  await page.getByTestId("import-preview-summary").waitFor();
+  await page.screenshot({ caret: "initial", path: `${dir}/import-preview.png` });
+  await page.getByTestId("import-confirm").click();
+  await page.getByTestId("import-done-bookings").click();
+  await page.getByTestId("bookings-table").waitFor();
+  await page.screenshot({ caret: "initial", path: `${dir}/bookings.png` });
 });

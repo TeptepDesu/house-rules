@@ -1,0 +1,72 @@
+# What I need from you (Joseph)
+
+Everything that's blocked on you, in the order it starts to matter. Each item says **why** and **by when**. Tick items off here, or just tell me in chat.
+
+_Last updated: 2026-11-01_
+
+---
+
+## Whenever you're back at the laptop (5 minutes)
+
+- [ ] **Say "push"** when you want the local commits on GitHub. I check that the repo is still private before every push.
+- [ ] **Add pnpm to your shell** (one line, once):
+  ```bash
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshenv
+  ```
+- [ ] **Quit Docker Desktop** if it's still running; we don't use it. PGlite gives us Postgres without Docker.
+
+## Before the testnet deploy: needed for Nov 2–4 work
+
+- [ ] **Be at the laptop when I deploy the vault to testnet.** The four testnet accounts already exist (10 test NEAR each), with keys in your macOS Keychain:
+  - `houserules-operator.testnet`
+  - `houserules-agent.testnet`
+  - `houserules-owner-1.testnet`
+  - `houserules-cleaner-1.testnet`
+
+  near-cli will trigger a macOS **"allow access to Keychain"** prompt that only you can click. After the deploy I'll:
+  - create `vault.houserules-operator.testnet` and the mock USDC token;
+  - add the agent's restricted `settle`-only key;
+  - run a real payout on testnet.
+
+  Testnet only, no real money.
+- [ ] **Optional:** export the agent's restricted key to an env var when I ask. I'll give you the exact command; the key never goes into the repo.
+
+## Before the real 1Click payment (spike #2): needed by Nov 5
+
+- [ ] **A funded mainnet account for testing**, e.g. `houserules-dev.near`, with about **1 NEAR** for gas and storage.
+- [ ] **About $5–10 of a token on another chain** (e.g. USDC on Arbitrum or Base) in a wallet you control. That's the "guest" paying an invoice from another chain.
+- [ ] **A 1Click API key** (optional). Without one, 1Click works but charges **0.2%**. The plan says to apply in prep. The key goes into `web/.env.local` as `ONECLICK_API_KEY`.
+- [ ] **Your explicit OK for each mainnet transaction.** I never sign or spend on mainnet without it (CLAUDE.md).
+
+## Before deploying the website: needed by Nov 10
+
+- [ ] **A hosted Postgres `DATABASE_URL`** for production. Any provider works (Neon's free tier is fine). Locally we don't need one; the app uses PGlite.
+- [ ] **A `SESSION_SECRET`** for production. Generate it with `openssl rand -base64 48`, and put both values into **Vercel** env vars, not into chat or the repo.
+- [ ] **A Vercel project** linked to the GitHub repo.
+- [ ] **Mainnet for the demo** (plan §10):
+  - a few NEAR for the vault deploy, storage and gas;
+  - about **$30 USDC** to collect and pay out on camera;
+  - a mainnet owner and cleaner account (yours or friends', with permission).
+
+## Hackathon admin
+
+- [ ] **Paste the official hackathon rules** (or a link). I'll save them as `HACKATHON.md`; CLAUDE.md points there, and it doesn't exist yet.
+- [ ] **The Discord question about pre-hackathon work** (plan §12, still open).
+- [ ] **NEAR AI Cloud credits** ($10 by joining NEAR Builders), only if we do the AI-triage stretch goal.
+- [ ] **Nomad:** ask them before naming them as a design partner (plan §0). Until then, no Nomad names, data or branding anywhere.
+- [ ] **Nov 13:** record the demo video (I'll prepare the script and the demo data) and draft the X post. It must say "built at NEAR HACKATHON" and tag `@NEARProtocol` `#NEARHackathon`.
+- [ ] **Nov 14:** decide on making the repo public. I'll run `npx -y ecc-agentshield scan --path .` first. Submit with tracks `realworld` + `security` + `business`, aiming for 12:00 UTC.
+
+## Optional, makes my work better
+
+- [ ] **Install the Claude skills** CLAUDE.md expects (`hallmark`, `ui-styling`, `emil-design-eng`, `test-driven-development`, …) into `.claude/skills/`, then restart the session. I've been following their intent by hand.
+- [ ] **Tell me the GitHub repo URL if it ever changes.** It's embedded in the contract's on-chain metadata (`contracts/vault/Cargo.toml`).
+
+---
+
+## Already done (no action)
+
+- Toolchain: Rust, cargo-near, near-cli, Node and pnpm.
+- Testnet accounts created; keys in the Keychain.
+- Private repo `TeptepDesu/house-rules`, with pushes so far.
+- Database switched to plain Postgres (PGlite locally), so no Neon is needed for development.

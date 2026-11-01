@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users } from "lucide-react";
+import { CalendarDays, LayoutDashboard, Upload, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Only screens that exist are listed; add an entry when its page ships
-// (planned: Bookings, Invoices, Payouts, Vault rules, Audit log, Import — design.md § Layout).
+// (planned: Invoices, Payouts, Vault rules, Audit log — design.md § Layout).
 const NAV = [
   { href: "/", label: "Overview", icon: LayoutDashboard, testid: "nav-overview" },
+  { href: "/bookings", label: "Bookings", icon: CalendarDays, testid: "nav-bookings" },
   { href: "/people", label: "People & properties", icon: Users, testid: "nav-people" },
+  { href: "/import", label: "Import", icon: Upload, testid: "nav-import" },
 ] as const satisfies readonly { href: string; label: string; icon: unknown; testid: string }[];
 
 export function AppNav({ orientation = "vertical" }: { orientation?: "vertical" | "horizontal" }) {

@@ -25,3 +25,17 @@ export async function addPayee(page: Page, p: { name: string; role: "Property ow
   await saved;
   await expect(form.getByRole("button", { name: "Add payee" })).toBeEnabled();
 }
+
+export async function addProperty(page: Page, name: string, opts: { cleaningFee?: string; mgmtFee?: string } = {}) {
+  const form = page.getByTestId("property-form");
+  await form.getByLabel("Property name").fill(name);
+  await form.getByLabel("Cleaning fee (USD)").fill(opts.cleaningFee ?? "80");
+  await form.getByLabel("Management fee (%)").fill(opts.mgmtFee ?? "15");
+  const saved = page.waitForResponse((r) => r.request().method() === "POST" && new URL(r.url()).pathname === "/people");
+  await form.getByRole("button", { name: "Add property" }).click();
+  await saved;
+  await expect(page.getByTestId("properties-table").getByRole("row", { name: new RegExp(name) })).toBeVisible();
+}
+
+// Playwright runs from web/ (CommonJS specs, so no import.meta)
+export const FIXTURES = `${process.cwd()}/test/fixtures/payout-reports/`;
