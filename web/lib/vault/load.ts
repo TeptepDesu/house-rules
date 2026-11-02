@@ -1,15 +1,11 @@
 import "server-only";
-import { and, eq } from "drizzle-orm";
 import { KeyPair } from "near-api-js";
 import { agentMode } from "@/lib/agent/vault-factory";
-import { db } from "@/lib/db/conn";
 import { getVaultAccount } from "@/lib/db/invoices";
-import { listPayees } from "@/lib/db/people";
-import { payees as payeesTable } from "@/lib/db/schema";
+import { listPayees, syncPayeeStatuses } from "@/lib/db/people";
 import type { VaultPayee } from "@/lib/near/policy";
 import { rpcUrl } from "@/lib/near/rpc";
 import { assertAgentKeyScoped, createVaultReader } from "@/lib/near/vault";
-import { payeeVaultStatus } from "./rules";
 
 // What the Vault rules page shows. Live: read from the vault on-chain (and sync payee statuses
 // into the app). Mock/rehearsal: the operator's app data, labelled as not on-chain yet.
@@ -98,14 +94,20 @@ export async function loadVaultView(userId: string): Promise<VaultView> {
   }
 }
 
-/** Mirror the vault's view of each payee into the app (chain is the source of truth). */
-async function syncPayeeStatuses(userId: string, chain: VaultPayee[], nowNs: bigint) {
-  const d = await db();
-  const byAccount = new Map(chain.map((p) => [p.accountId, p]));
-  for (const p of await listPayees(userId)) {
-    const status = payeeVaultStatus(byAccount.get(p.nearAccount), nowNs);
-    if (status !== p.vaultStatus) {
-      await d.update(payeesTable).set({ vaultStatus: status }).where(and(eq(payeesTable.id, p.id), eq(payeesTable.userId, userId)));
-    }
+/**
+ * For the People page: if any payee is still in its waiting period, re-read the vault so the
+ * status flips to active once the time has passed. No chain read otherwise; failures are logged
+ * and the stored status is shown.
+ */
+export async function refreshWaitingPayees(userId: string): Promise<void> {
+  if (agentMode() !== "live") return;
+  const vaultAccount = await getVaultAccount(userId);
+  if (!vaultAccount) return;
+  if (!(await listPayees(userId)).some((p) => p.vaultStatus === "in_delay")) return;
+  try {
+    const chain = await createVaultReader(rpcUrl(), vaultAccount).getPayees();
+    await syncPayeeStatuses(userId, chain, BigInt(Date.now()) * 1_000_000n);
+  } catch (e) {
+    console.error("[vault.refreshWaitingPayees] failed", e);
   }
 }

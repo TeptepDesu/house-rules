@@ -2,6 +2,8 @@ import "server-only";
 import { and, asc, count, eq } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "./conn";
+import type { VaultPayee } from "@/lib/near/policy";
+import { payeeVaultStatus } from "@/lib/vault/rules";
 import { payees, properties } from "./schema";
 
 // Payees and properties. Every query is scoped to the operator (userId); ids from the client
@@ -93,4 +95,16 @@ export async function setPayeeVaultStatus(userId: string, payeeId: string, statu
     .update(payees)
     .set({ vaultStatus: status, ...(addedTx ? { addedTx } : {}) })
     .where(and(eq(payees.id, payeeId), eq(payees.userId, userId)));
+}
+
+/** Mirror the vault's view of each payee into the app (the chain is the source of truth). */
+export async function syncPayeeStatuses(userId: string, chain: VaultPayee[], nowNs: bigint) {
+  const d = await db();
+  const byAccount = new Map(chain.map((p) => [p.accountId, p]));
+  for (const p of await listPayees(userId)) {
+    const status = payeeVaultStatus(byAccount.get(p.nearAccount), nowNs);
+    if (status !== p.vaultStatus) {
+      await d.update(payees).set({ vaultStatus: status }).where(and(eq(payees.id, p.id), eq(payees.userId, userId)));
+    }
+  }
 }

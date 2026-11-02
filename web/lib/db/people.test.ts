@@ -65,3 +65,32 @@ describe("properties", () => {
     expect(await people.setupCounts(a)).toEqual({ payees: 1, activePayees: 0, properties: 0 });
   });
 });
+
+describe("syncPayeeStatuses (mirror the vault's view)", () => {
+  const NOW = 1_000n * 1_000_000_000n;
+  const onVault = (accountId: string, payableFromNs: bigint, active = true) =>
+    ({ accountId, role: "cleaner" as const, capPerPayout: U, payableFromNs, active });
+
+  it("a waiting payee turns active once its time has passed; others follow the vault", async () => {
+    const m = await people.createPayee(a, { name: "Maria", role: "cleaner", nearAccount: "maria.testnet", capRaw: U });
+    const w = await people.createPayee(a, { name: "Wes", role: "cleaner", nearAccount: "wes.testnet", capRaw: U });
+    const n = await people.createPayee(a, { name: "New", role: "cleaner", nearAccount: "new.testnet", capRaw: U });
+    if (!m.ok || !w.ok || !n.ok) throw new Error("setup");
+    await people.setPayeeVaultStatus(a, m.id, "in_delay");
+    await people.setPayeeVaultStatus(a, w.id, "in_delay");
+
+    await people.syncPayeeStatuses(a, [onVault("maria.testnet", NOW - 1n), onVault("wes.testnet", NOW + 1n)], NOW);
+    const by = Object.fromEntries((await people.listPayees(a)).map((p) => [p.name, p.vaultStatus]));
+    expect(by).toEqual({ Maria: "active", Wes: "in_delay", New: "pending_signature" });
+  });
+
+  it("only touches the operator's own payees", async () => {
+    const mine = await people.createPayee(a, { name: "Maria", role: "cleaner", nearAccount: "maria.testnet", capRaw: U });
+    const theirs = await people.createPayee(b, { name: "Maria", role: "cleaner", nearAccount: "maria.testnet", capRaw: U });
+    if (!mine.ok || !theirs.ok) throw new Error("setup");
+    await people.setPayeeVaultStatus(b, theirs.id, "in_delay");
+    await people.syncPayeeStatuses(a, [onVault("maria.testnet", 0n)], NOW);
+    expect((await people.listPayees(a))[0].vaultStatus).toBe("active");
+    expect((await people.listPayees(b))[0].vaultStatus).toBe("in_delay");
+  });
+});

@@ -15,6 +15,7 @@ import { formatBps } from "@/lib/money";
 import { networkId } from "@/lib/near/network";
 import { agentMode } from "@/lib/agent/vault-factory";
 import { getVaultAccount } from "@/lib/db/invoices";
+import { refreshWaitingPayees } from "@/lib/vault/load";
 
 export const metadata: Metadata = { title: "People & properties · House Rules" };
 
@@ -33,6 +34,7 @@ export default function PeoplePage() {
 
 async function PeopleContent() {
   const user = await requireUser();
+  await refreshWaitingPayees(user.id);
   const [payees, properties, vault] = await Promise.all([listPayees(user.id), listProperties(user.id), getVaultAccount(user.id)]);
   const rehearsal = agentMode() === "mock";
   const owners = payees.filter((p) => p.role === "owner" && p.vaultStatus !== "removed");
