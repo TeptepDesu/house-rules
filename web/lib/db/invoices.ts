@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { newPublicId } from "@/lib/ids";
 import type { PaymentStatus } from "@/lib/intents";
 import type { InvoiceStatus } from "@/lib/reconcile";
@@ -165,4 +165,13 @@ export async function applyPaymentUpdate(
         .where(eq(invoices.id, invoiceId));
     }
   });
+}
+
+/** The booking's still-payable invoices (newest first), for follow-up messages. Operator-scoped. */
+export async function openInvoicesForBooking(userId: string, bookingId: string) {
+  return (await db())
+    .select({ publicId: invoices.publicId, type: invoices.type, amountRaw: invoices.amountRaw, description: invoices.description })
+    .from(invoices)
+    .where(and(eq(invoices.userId, userId), eq(invoices.bookingId, bookingId), inArray(invoices.status, ["open", "expired"])))
+    .orderBy(desc(invoices.createdAt));
 }

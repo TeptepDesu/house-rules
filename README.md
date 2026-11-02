@@ -85,6 +85,7 @@ This whole walkthrough is a browser test, [`web/e2e/readme.spec.ts`](web/e2e/rea
 - **Bookings → Accept $474.70** on the short booking: you accept the channel's adjustment, and the booking is paid out on what actually arrived (`accept-payout.spec.ts`).
 - **Invoices → Waive** on an open charge: the booking unblocks. Waiving is refused while a guest's payment could still arrive (`waive.spec.ts`).
 - **People → Manage** a payee: change their limit or remove them. On a live vault your wallet signs it, and changing a limit restarts the payee's waiting period (`manage-payee.spec.ts`).
+- **Bookings → Message guest** on a booking blocked by an open charge or an unpaid stay: a ready-to-copy message with the exact amount and the guest's pay link. Nothing is sent from the app. If NEAR AI is configured, **Polish with NEAR AI** rewords it with private inference, and any rewrite that changes an amount, drops the link or adds a URL is thrown away (`follow-up.spec.ts`).
 
 ---
 
@@ -176,8 +177,8 @@ Postgres (PGlite locally, any hosted Postgres in production) · Drizzle
 |---|---|---|
 | Contract: unit | `cd contracts && cargo test -p vault --lib` | 33 |
 | Contract: sandbox | `cd contracts && cargo test -p vault --test sandbox` | 8 |
-| App: unit, property and DB | `pnpm --filter web test` | 357 |
-| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 19, plus 2 optional screenshot captures |
+| App: unit, property and DB | `pnpm --filter web test` | 367 |
+| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 20, plus 3 optional screenshot captures |
 | App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 14 |
 
 Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p vault --target wasm32-unknown-unknown -- -D warnings`.
@@ -192,7 +193,8 @@ Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p 
 | ✅ Testnet | Vault + mock USDC deployed, payees approved, settle-only agent key. **The app's own agent paid live through the testnet vault**, a payee was **approved with a real browser wallet**, and the stolen-key attacks in "Proof on a real chain" were all refused. Accounts and tx hashes: [`docs/testnet-deployment.md`](docs/testnet-deployment.md) |
 | ⏳ Before submission | Mainnet deploy and full loop with small real amounts |
 | ⏳ Before submission | **A real 1Click payment** on mainnet (the client is checked against the API docs; live delivery is unproven so far) |
-| Stretch | Confidential Intents for private revenue; AI exception triage on NEAR AI Cloud (private inference) |
+| ✅ Stretch, built | Guest follow-up messages for blocked bookings, with optional rewording on NEAR AI Cloud (private inference). The guard that rejects unsafe rewrites is unit-tested; **a live NEAR AI call hasn't been made yet** (no key) |
+| Stretch, not built | Confidential Intents for private revenue |
 
 Spike notes and measured numbers: [`docs/notes.md`](docs/notes.md). Design system: [`design.md`](design.md).
 

@@ -26,6 +26,8 @@ describe("describeActivity", () => {
     ["invoice.waive", { amount: "45000000", description: "Late checkout" }, "Waived a $45.00 charge: Late checkout"],
     ["booking.accept_payout", { amount: "474700000", delta: "-20000000" }, "Accepted $474.70 as final for a booking ($20.00 short)"],
     ["booking.create_direct", { ref: "D-7KQ2MX", amount: "600000000" }, "Created direct booking D-7KQ2MX and its $600.00 invoice"],
+    ["followup.polish", { used: true }, "Reworded a guest message with NEAR AI (private inference)"],
+    ["followup.polish", { used: false }, "NEAR AI's rewording changed the facts, so the template was kept"],
     ["payee.remove", { nearAccount: "owen.testnet", onChain: true }, "Removed owen.testnet from the vault (signed with your wallet)"],
     ["payee.cap_change", { nearAccount: "owen.testnet", from: "800000000", to: "900000000", onChain: true }, "Changed owen.testnet's limit from $800.00 to $900.00 (signed with your wallet; waiting period restarted)"],
     ["payee.cap_change", { nearAccount: "owen.testnet", from: "800000000", to: "900000000", onChain: false }, "Changed owen.testnet's limit from $800.00 to $900.00"],

@@ -6,6 +6,7 @@ import { MetricCard } from "@/components/metric-card";
 import { Money } from "@/components/money";
 import { PageHeader } from "@/components/page-header";
 import { AcceptPayout } from "@/components/bookings/accept-payout";
+import { FollowUp } from "@/components/bookings/follow-up";
 import { formatUsd } from "@/lib/money";
 import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
@@ -117,6 +118,9 @@ async function BookingsContent() {
                     <p className="mt-1 max-w-[150px] text-xs text-muted-foreground sm:max-w-[260px]" data-testid={`booking-note-${r.externalRef}`}>
                       {r.recon.note}
                     </p>
+                  )}
+                  {(r.recon.result === "open_penalty" || r.recon.result === "unpaid") && r.settlementStatus !== "settled" && (
+                    <FollowUp bookingId={r.id} refName={r.externalRef} guestName={r.guestName} />
                   )}
                   {r.recon.result === "mismatch" && r.settlementStatus !== "settled" && (
                     <AcceptPayout bookingId={r.id} refName={r.externalRef} amountRaw={r.recon.collected.toString()} amount={formatUsd(r.recon.collected)} />

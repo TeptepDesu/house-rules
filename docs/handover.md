@@ -5,8 +5,8 @@ Where House Rules stands, what's half-done, and what's next. Read with `CLAUDE.m
 ## TL;DR
 
 - **The app is feature-complete for the plan's core scope.** Every core item in plan §7 is built and tested, and the testnet proof is done.
-- **One stretch feature is half-done and uncommitted:** guest follow-up messages with optional NEAR AI rewording. See [In progress](#in-progress-uncommitted).
-- **7 local commits are not pushed.** The repo `TeptepDesu/house-rules` is still private; check that before pushing. Joseph decides when to push.
+- **Stretch: guest follow-up messages are done and committed.** The optional NEAR AI rewording hasn't been tried against the live API. See [Follow-up messages](#follow-up-messages-finished-2026-11-03).
+- **9 local commits are not pushed.** The repo `TeptepDesu/house-rules` is still private; check that before pushing. Joseph decides when to push.
 - **What's left is mostly Joseph's:** mainnet funds, hosting, the demo recording and the submission.
 
 ## State of the repo
@@ -15,8 +15,8 @@ Where House Rules stands, what's half-done, and what's next. Read with `CLAUDE.m
 |---|---|
 | Branch | `main` (trunk only) |
 | Last pushed | `07363a7` |
-| Local, unpushed | `2056e4d` → `464effe` (7 commits, listed below) |
-| Uncommitted | Follow-up messages / NEAR AI triage (in progress) |
+| Local, unpushed | `2056e4d` → `HEAD` (9 commits: the 7 below, the handover, the follow-up messages) |
+| Uncommitted | Nothing |
 | Servers running | None |
 
 Unpushed commits, oldest first:
@@ -61,40 +61,24 @@ Contract suites are unchanged since the last run: 33 unit and 8 sandbox tests.
 - Confirmed 1Click values and dry-quote costs in `docs/notes.md`.
 - The README walkthrough is now 14 steps (adds "approve payees" and "Overview").
 
-## In progress (uncommitted)
+## Follow-up messages (finished 2026-11-03)
 
-**Guest follow-up messages + optional NEAR AI rewording** (plan §7 stretch 2).
-
-| File | What |
-|---|---|
-| `web/lib/triage/index.ts`, `pay-link.ts`, `index.test.ts` | Deterministic drafts for `open_penalty` / `unpaid`; `keepsTheFacts` guard; `polishWithNearAi` (OpenAI-style call, 15 s timeout, returns null on any doubt). **8 unit tests pass** |
-| `web/app/(dashboard)/bookings/follow-up-actions.ts` | `draftFollowUpFor`, `polishFollowUp`. The draft is built server-side from the operator's own records |
-| `web/components/bookings/follow-up.tsx` | **Message guest** dialog: subject, editable body, Copy, and *Polish with NEAR AI* (shown only when configured) |
-| `web/app/(dashboard)/bookings/page.tsx` | Button on `open_penalty` / `unpaid` rows |
-| `web/lib/db/invoices.ts` | `openInvoicesForBooking` |
-| `web/lib/audit/describe.ts` + test | `followup.polish` audit text |
-| `web/e2e/follow-up.spec.ts` | Browser test. **Written but never run to completion:** the run was interrupted |
+**Guest follow-up messages + optional NEAR AI rewording** (plan §7 stretch 2) are committed. Code is in `web/lib/triage/`, `web/app/(dashboard)/bookings/follow-up-actions.ts`, `web/components/bookings/follow-up.tsx` and `web/e2e/follow-up.spec.ts`.
 
 **Safety design:**
-- The model never sees the pay link, only the `{PAY_LINK}` placeholder, which the browser swaps after any AI step.
-- A rewrite is discarded if any of these hold:
-  - it changes or adds a dollar amount;
-  - it drops or duplicates the link;
-  - it adds any URL.
+- The model never sees the pay link, only the `{PAY_LINK}` placeholder. The browser swaps it in after any AI step.
+- A rewrite is discarded if it changes or adds a dollar amount, drops or duplicates the link, or adds any URL.
 - Nothing is ever sent.
-- Config: `NEAR_AI_API_KEY` + `NEAR_AI_MODEL` (and optionally `NEAR_AI_BASE_URL`, default `https://cloud-api.near.ai/v1`). The feature is off unless both are set.
+- Config: `NEAR_AI_API_KEY` + `NEAR_AI_MODEL` (optionally `NEAR_AI_BASE_URL`, default `https://cloud-api.near.ai/v1`). The feature is off unless both are set. These are listed in `docs/deploy.md`. **`web/.env.example` doesn't list them yet**, because agent reads of `.env*` are denied. Joseph: add them there by hand.
 
-**To finish:**
-1. `pnpm --filter web e2e e2e/follow-up.spec.ts`. Fix what it finds. The clipboard-permission and axe parts are the likeliest to need adjustment.
-2. Run the full suites (typecheck, lint, test, e2e).
-3. Update the README: "Also try" bullet, test counts, and env vars in `docs/deploy.md`.
-4. Commit.
-5. **The live NEAR AI call is unverified:** there's no key, and the endpoint and model names come from desk research. Before calling it done, get a key from cloud.near.ai, list models (`/v1/model/list`), and try one rewrite.
+**Verified at this commit:** typecheck and lint clean; `test` 367 passed; `e2e` 20 passed, 3 screenshot specs skipped. `test:integration` was not re-run because nothing in `lib/near` or `lib/agent` changed.
+
+**Still unverified: the live NEAR AI call.** There's no key, and the endpoint and model names come from desk research. Get a key from cloud.near.ai, list the models (`/v1/model/list`), set both env vars, and try **Polish with NEAR AI** once. Until then the README marks it as untested live.
 
 ## What's next
 
 **Claude can do these without Joseph:**
-1. Finish the follow-up feature above.
+1. Verify the live NEAR AI call once there's a key (above).
 2. Optional: overview charts (the last cut-line item, low value).
 3. Optional: a mainnet preflight script. It would be read-only, checking USDC registration for Joseph's account, a dry quote and status reachability. It needs Joseph's mainnet account name.
 4. Before the repo goes public: `npx -y ecc-agentshield scan --path .` (CLAUDE.md).

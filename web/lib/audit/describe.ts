@@ -44,6 +44,8 @@ export function describeActivity(action: string, m: Record<string, unknown>): st
       return `Imported ${FORMAT[String(m.format)] ?? "a payout report"}: ${plural(Number(m.created ?? 0), "booking")} added${Number(m.updated) ? `, ${Number(m.updated)} updated` : ""}`;
     case "invoice.create":
       return `Charged a guest ${usd(m.amount)}`;
+    case "followup.polish":
+      return m.used ? "Reworded a guest message with NEAR AI (private inference)" : "NEAR AI's rewording changed the facts, so the template was kept";
     case "booking.create_direct":
       return `Created direct booking ${String(m.ref)} and its ${usd(m.amount)} invoice`;
     case "booking.accept_payout": {

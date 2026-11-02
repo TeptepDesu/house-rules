@@ -41,6 +41,8 @@ Any provider works. Neon's free tier is fine.
 | `AGENT_RUN_SECRET` | output of `openssl rand -base64 32`, for the scheduled runs | **yes** |
 | `ONECLICK_API_KEY` | optional; without it 1Click charges 0.2% | **yes** |
 | `NEAR_RPC_URL` | optional; defaults to the public NEAR RPC for `NEAR_NETWORK` | no |
+| `NEAR_AI_API_KEY`, `NEAR_AI_MODEL` | optional; set **both** to show *Polish with NEAR AI* on guest follow-ups (key from cloud.near.ai) | key: **yes** |
+| `NEAR_AI_BASE_URL` | optional; defaults to `https://cloud-api.near.ai/v1` | no |
 
 **Open decision (before Nov 10):** production refuses mock 1Click, and 1Click only delivers on mainnet. So a hosted **testnet** deploy can't take guest payments. The rest works there: import, payouts and the vault pages. Either deploy straight to mainnet (the plan), or decide we want a hosted testnet preview and Claude adds a clearly labelled exception.
 
