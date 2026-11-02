@@ -8,6 +8,9 @@ import { Money } from "@/components/money";
 import { PageHeader } from "@/components/page-header";
 import { StatusPill } from "@/components/status-pill";
 import { requireUser } from "@/lib/auth/dal";
+import { getOperatorAccount } from "@/lib/db";
+import { VaultControls } from "@/components/rules/vault-controls";
+import { formatUsd } from "@/lib/money";
 import { explorerAccountUrl, networkId } from "@/lib/near/network";
 import { cn } from "@/lib/utils";
 import { describeRules } from "@/lib/vault/rules";
@@ -61,7 +64,7 @@ function RuleCard({
 
 async function RulesContent() {
   const user = await requireUser();
-  const v = await loadVaultView(user.id);
+  const [v, operator] = await Promise.all([loadVaultView(user.id), getOperatorAccount(user.id)]);
   if (v.state === "no_vault") {
     return (
       <EmptyState
@@ -141,6 +144,27 @@ async function RulesContent() {
         title={v.agentKey.ok ? "The agent can only call settle" : "The agent key needs attention"}
         detail={v.agentKey.ok ? `${v.agentKey.detail}. It can't withdraw, add payees, or change these rules: those need your wallet.` : v.agentKey.detail}
       />
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border bg-card px-4 py-3" data-testid="vault-controls">
+        <div className="min-w-0">
+          <h2 className="font-semibold">Your controls</h2>
+          <p className="text-sm text-muted-foreground">Only your wallet can change the limits or move money out of the vault.</p>
+        </div>
+        {v.mode === "live" && operator ? (
+          <VaultControls
+            dailyLimit={usdInput(v.policy.dailyLimit)}
+            delayHours={(v.policy.payeeDelayNs / 3_600_000_000_000n).toString()}
+            balance={v.balance !== null ? formatUsd(v.balance) : "your USDC"}
+            owner={operator}
+          />
+        ) : (
+          <p className="text-xs text-muted-foreground" data-testid="vault-controls-unavailable">
+            {v.mode === "live" ? "Link your NEAR wallet in Settings to use these." : "Rehearsal: these are signed by your wallet on a live vault."}
+          </p>
+        )}
+      </section>
     </div>
   );
 }
+
+/** 20_000_000_000n → "20000.00" for an editable input. */
+const usdInput = (raw: bigint) => `${raw / 1_000_000n}.${(raw % 1_000_000n).toString().padStart(6, "0").slice(0, 2)}`;

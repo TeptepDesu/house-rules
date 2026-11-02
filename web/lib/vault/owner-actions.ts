@@ -34,8 +34,8 @@ export const withdrawCalls = (amount: bigint, receiver: string): WalletCall[] =>
   { methodName: "withdraw", args: { amount: amount.toString(), receiver_id: receiver }, gas: TGAS(50), deposit: ONE_YOCTO },
 ];
 
-export const removedOnChain = (p: VaultPayee | undefined) => !!p && !p.active;
-export const capChangedOnChain = (p: VaultPayee | undefined, role: PayeeRole, cap: bigint) => !!p && p.active && p.role === role && p.capPerPayout === cap;
+export const removedOnChain = (p: VaultPayee | null | undefined) => !!p && !p.active;
+export const capChangedOnChain = (p: VaultPayee | null | undefined, role: PayeeRole, cap: bigint) => !!p && p.active && p.role === role && p.capPerPayout === cap;
 export const limitsOnChain = (policy: { dailyLimit: bigint; payeeDelayNs: bigint }, dailyLimit: bigint, payeeDelayNs: bigint) =>
   policy.dailyLimit === dailyLimit && policy.payeeDelayNs === payeeDelayNs;
 

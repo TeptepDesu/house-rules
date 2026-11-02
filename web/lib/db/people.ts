@@ -108,3 +108,10 @@ export async function syncPayeeStatuses(userId: string, chain: VaultPayee[], now
     }
   }
 }
+
+export async function setPayeeCap(userId: string, payeeId: string, capRaw: bigint) {
+  await (await db())
+    .update(payees)
+    .set({ capRaw })
+    .where(and(eq(payees.id, payeeId), eq(payees.userId, userId)));
+}

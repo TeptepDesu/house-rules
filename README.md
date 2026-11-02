@@ -90,12 +90,12 @@ The rehearsal mode only stands in for the network. The contract and the live age
 
 ```bash
 cd contracts
-cargo test -p vault --lib                                # 32 unit tests: every rule, boundaries, check order, callbacks
+cargo test -p vault --lib                                # 33 unit tests: every rule, boundaries, check order, callbacks
 cargo test -p vault --test sandbox -- --test-threads=4   # 8 tests on a sandbox with real token transfers
 (cd vault && cargo near build non-reproducible-wasm) && (cd mock-ft && cargo near build non-reproducible-wasm)
 
 cd ../web
-pnpm test:integration     # 5 tests: the app's real agent code against that vault
+pnpm test:integration     # 14 tests: the app's agent and your wallet's owner actions against that vault
 ```
 
 **`pnpm test:integration` shows:**
@@ -105,6 +105,7 @@ pnpm test:integration     # 5 tests: the app's real agent code against that vaul
 - **A payout over a payee's cap is held back** with a reason and never sent.
 - **The Vault rules page reads policy and payees from the chain,** and syncs payee statuses.
 - **Audit-log rows come from the vault's own events** in that transaction.
+- **Your wallet's owner actions work on the real contract:** changing a payee's limit (remove + re-add in one transaction, which restarts their waiting period), removing a payee, changing the daily limit and waiting period, and withdrawing to your own wallet. A non-owner can do none of them.
 
 **Try to break it yourself on testnet** (needs the agent key in `web/.env.testnet.local`): `pnpm --filter web break-it` acts as someone who stole the agent's key. Paying a stranger, paying over a cap and paying a booking twice are refused by the vault; `withdraw` and `add_payee` are refused by NEAR before they reach it; the vault's balance doesn't change. Recorded results: [`docs/testnet-deployment.md`](docs/testnet-deployment.md).
 
@@ -169,9 +170,9 @@ Postgres (PGlite locally, any hosted Postgres in production) · Drizzle
 |---|---|---|
 | Contract: unit | `cd contracts && cargo test -p vault --lib` | 33 |
 | Contract: sandbox | `cd contracts && cargo test -p vault --test sandbox` | 8 |
-| App: unit, property and DB | `pnpm --filter web test` | 325 |
-| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 15, plus 2 optional screenshot captures |
-| App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 9 |
+| App: unit, property and DB | `pnpm --filter web test` | 349 |
+| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 17, plus 2 optional screenshot captures |
+| App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 14 |
 
 Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p vault --target wasm32-unknown-unknown -- -D warnings`.
 

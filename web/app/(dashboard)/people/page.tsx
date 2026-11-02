@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Money } from "@/components/money";
 import { PageHeader } from "@/components/page-header";
 import { ApprovePayee } from "@/components/people/approve-payee";
+import { ManagePayee } from "@/components/people/manage-payee";
 import { PayeeForm } from "@/components/people/payee-form";
 import { PropertyForm } from "@/components/people/property-form";
 import { StatusPill } from "@/components/status-pill";
@@ -20,6 +21,8 @@ import { refreshWaitingPayees } from "@/lib/vault/load";
 export const metadata: Metadata = { title: "People & properties · House Rules" };
 
 const ROLE = { owner: "Owner", cleaner: "Cleaner" } as const;
+/** 800_000_000n → "800.00" for an editable input (display elsewhere goes through formatUsd). */
+const capInput = (raw: bigint) => `${raw / 1_000_000n}.${(raw % 1_000_000n).toString().padStart(6, "0").slice(0, 2)}`;
 
 export default function PeoplePage() {
   return (
@@ -74,6 +77,13 @@ async function PeopleContent() {
                           <span className="text-xs text-muted-foreground">{ROLE[p.role]}</span>
                           <StatusPill kind="payee" status={p.vaultStatus} />
                         </div>
+                        {/* actions at every size (the Vault column is hidden on small screens) */}
+                        {p.vaultStatus !== "removed" && (
+                          <div className="mt-2 flex flex-wrap items-start gap-2">
+                            {p.vaultStatus === "pending_signature" && vault && <ApprovePayee payeeId={p.id} rehearsal={rehearsal} />}
+                            <ManagePayee payeeId={p.id} name={p.name} account={p.nearAccount} cap={capInput(p.capRaw)} onVault={p.vaultStatus !== "pending_signature"} rehearsal={rehearsal} />
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">{ROLE[p.role]}</TableCell>
                       <TableCell className="text-right align-top sm:align-middle">
@@ -82,7 +92,6 @@ async function PeopleContent() {
                       <TableCell className="hidden sm:table-cell">
                         <div className="grid justify-items-start gap-1.5">
                           <StatusPill kind="payee" status={p.vaultStatus} data-testid={`payee-status-${p.id}`} />
-                          {p.vaultStatus === "pending_signature" && vault && <ApprovePayee payeeId={p.id} rehearsal={rehearsal} />}
                         </div>
                       </TableCell>
                     </TableRow>

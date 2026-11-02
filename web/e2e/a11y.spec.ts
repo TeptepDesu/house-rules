@@ -33,6 +33,11 @@ test("no serious or critical accessibility violations", async ({ page, browser }
   await pf.getByRole("button", { name: "Add property" }).click();
   await page.getByTestId("property-form-saved").waitFor();
   await axe(page, "people");
+  await page.locator('[data-testid^="payee-manage-"]').first().click();
+  await page.getByTestId("payee-manage-dialog").waitFor();
+  await axe(page, "people-manage-dialog");
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("payee-manage-dialog")).toBeHidden();
 
   await page.goto("/settings");
   await page.getByLabel("Vault account").fill("vault.casa.testnet");

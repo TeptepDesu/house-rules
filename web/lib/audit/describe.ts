@@ -50,6 +50,14 @@ export function describeActivity(action: string, m: Record<string, unknown>): st
       return `Added ${String(m.role)} ${String(m.nearAccount)} (needs vault approval)`;
     case "payee.approve":
       return `Approved ${String(m.nearAccount)} in the vault (signed with your wallet)`;
+    case "payee.remove":
+      return `Removed ${String(m.nearAccount)} from the vault${m.onChain ? " (signed with your wallet)" : ""}`;
+    case "payee.cap_change":
+      return `Changed ${String(m.nearAccount)}'s limit from ${usd(m.from)} to ${usd(m.to)}${m.onChain ? " (signed with your wallet; waiting period restarted)" : ""}`;
+    case "vault.limits_change":
+      return `Set the daily limit to ${usd(m.dailyLimit)} and the new-payee wait to ${Number(BigInt(String(m.payeeDelayNs)) / 3_600_000_000_000n)} hours (signed with your wallet)`;
+    case "vault.withdraw":
+      return `Withdrew ${usd(m.amount)} to ${String(m.to)} (signed with your wallet)`;
     case "payee.approve_rehearsal":
       return `Approved ${String(m.nearAccount)} (rehearsal, not on-chain)`;
     case "property.create":
