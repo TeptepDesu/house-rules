@@ -80,6 +80,12 @@ pnpm --filter web dev        # http://localhost:3000
 
 This whole walkthrough is a browser test, [`web/e2e/readme.spec.ts`](web/e2e/readme.spec.ts), which asserts what each step says you'll see. If the README and the app ever disagree, that test fails.
 
+**Also try** (each is its own browser test in [`web/e2e/`](web/e2e/)):
+- **Bookings → New direct booking:** a guest who booked with you gets an invoice for the stay. Pay it from the guest's page, and the booking reconciles and is paid out to the owner and cleaner (`direct-booking.spec.ts`).
+- **Bookings → Accept $474.70** on the short booking: you accept the channel's adjustment, and the booking is paid out on what actually arrived (`accept-payout.spec.ts`).
+- **Invoices → Waive** on an open charge: the booking unblocks. Waiving is refused while a guest's payment could still arrive (`waive.spec.ts`).
+- **People → Manage** a payee: change their limit or remove them. On a live vault your wallet signs it, and changing a limit restarts the payee's waiting period (`manage-payee.spec.ts`).
+
 ---
 
 ## Proof on a real chain
@@ -170,8 +176,8 @@ Postgres (PGlite locally, any hosted Postgres in production) · Drizzle
 |---|---|---|
 | Contract: unit | `cd contracts && cargo test -p vault --lib` | 33 |
 | Contract: sandbox | `cd contracts && cargo test -p vault --test sandbox` | 8 |
-| App: unit, property and DB | `pnpm --filter web test` | 354 |
-| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 18, plus 2 optional screenshot captures |
+| App: unit, property and DB | `pnpm --filter web test` | 357 |
+| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 19, plus 2 optional screenshot captures |
 | App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 14 |
 
 Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p vault --target wasm32-unknown-unknown -- -D warnings`.

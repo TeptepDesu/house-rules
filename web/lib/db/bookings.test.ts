@@ -86,3 +86,27 @@ describe("accept a short payout as final", () => {
     expect(after.recon.note).toBe("Accepted $474.70 as final ($20.00 short of $494.70)");
   });
 });
+
+describe("direct bookings", () => {
+  it("creates the booking and its stay invoice together; open until paid, then ready to pay out", async () => {
+    const [casa] = await seedPropsOnce(a);
+    const r = await bk.createDirectBooking(a, { propertyId: casa.id, guestName: "Lena Park", checkIn: "2026-11-20", checkOut: "2026-11-23", totalRaw: 600_000_000n, dueDate: "2026-11-18" });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.externalRef).toMatch(/^D-[2-9A-HJ-KM-NP-Z]{6}$/);
+    expect(r.publicId).toMatch(/^[A-Za-z0-9_-]{22}$/);
+
+    const row = (await bk.listBookingsWithRecon(a, new Date("2026-11-10T00:00:00Z"))).find((x) => x.id === r.id)!;
+    expect(row).toMatchObject({ channel: "direct", guestName: "Lena Park", propertyName: "Casa Azul" });
+    expect(row.recon).toMatchObject({ result: "awaiting_payment", settlementStatus: "unreconciled" });
+
+    const { listInvoices } = await import("./invoices");
+    const [i] = await listInvoices(a);
+    expect(i).toMatchObject({ publicId: r.publicId, type: "booking", amountRaw: 600_000_000n, status: "open", dueDate: "2026-11-18", description: "Stay at Casa Azul, Nov 20 – Nov 23" });
+  });
+
+  it("refuses another operator's property and impossible dates", async () => {
+    const [casa] = await seedPropsOnce(a);
+    expect(await bk.createDirectBooking(b, { propertyId: casa.id, guestName: "X", checkIn: "2026-11-20", checkOut: "2026-11-23", totalRaw: 1n, dueDate: "2026-11-18" })).toEqual({ ok: false, error: "invalid_property" });
+    expect(await bk.createDirectBooking(a, { propertyId: casa.id, guestName: "X", checkIn: "2026-11-23", checkOut: "2026-11-23", totalRaw: 1n, dueDate: "2026-11-18" })).toEqual({ ok: false, error: "invalid_dates" });
+  });
+});

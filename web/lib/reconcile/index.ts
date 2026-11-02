@@ -8,6 +8,7 @@
 // orphan payments (verified, no booking) are listed separately: findOrphanPayments.
 
 import { formatUsd } from "@/lib/money";
+import { longDate } from "@/lib/ui/format";
 
 export type InvoiceType = "booking" | "extension" | "penalty" | "deposit";
 export type InvoiceStatus = "open" | "pending" | "paid" | "underpaid" | "overpaid" | "expired" | "refunded" | "waived";
@@ -88,7 +89,7 @@ export function reconcileBooking(b: BookingForRecon, now: Date): Reconciliation 
   }
   if (!haveCollection) {
     if (b.collectionMode === "onchain" && now > b.dueDate) {
-      return { ...base, result: "unpaid", settlementStatus: "blocked", note: `Nothing collected; due ${b.dueDate.toISOString().slice(0, 10)}` };
+      return { ...base, result: "unpaid", settlementStatus: "blocked", note: `Nothing collected; due ${longDate(b.dueDate.toISOString().slice(0, 10))}` };
     }
     const why = b.collectionMode === "ota_payout" ? "Waiting for the channel's payout report" : "Not due yet";
     return { ...base, result: "awaiting_payment", settlementStatus: "unreconciled", note: why };

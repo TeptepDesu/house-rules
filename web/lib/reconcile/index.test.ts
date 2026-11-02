@@ -46,6 +46,7 @@ describe("reconcileBooking: on-chain (direct) bookings", () => {
   it("unpaid → blocked: past due with nothing collected", () => {
     const r = reconcileBooking(direct({ invoices: [inv("booking", 1_000n * U, "open")] }), NOW);
     expect(r).toMatchObject({ result: "unpaid", settlementStatus: "blocked", collected: 0n });
+    expect(r.note).toBe("Nothing collected; due Nov 5, 2026");
   });
 
   it("not yet due with nothing collected → awaiting payment, not blocked", () => {

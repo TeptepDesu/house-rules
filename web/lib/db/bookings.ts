@@ -1,7 +1,9 @@
 import "server-only";
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { newDirectRef, newPublicId } from "@/lib/ids";
 import type { ImportRow } from "@/lib/importers";
 import { type BookingForRecon, type Reconciliation, reconcileBooking } from "@/lib/reconcile";
+import { stayRange } from "@/lib/ui/format";
 import { db } from "./conn";
 import { bookings, invoices, payments, properties } from "./schema";
 
@@ -182,4 +184,39 @@ export async function acceptCollected(userId: string, bookingId: string, amountR
     .set({ acceptedCollectedRaw: amountRaw })
     .where(and(eq(bookings.id, bookingId), eq(bookings.userId, userId)));
   return { ok: true, delta: row.recon.delta };
+}
+
+/**
+ * A direct booking (the guest books with the operator, not a channel): the booking and the
+ * invoice for the stay are created together. Paid via the guest pay page (1Click → vault); it
+ * reconciles once that payment is verified on-chain.
+ */
+export async function createDirectBooking(
+  userId: string,
+  i: { propertyId: string; guestName: string; checkIn: string; checkOut: string; totalRaw: bigint; dueDate: string },
+): Promise<{ ok: true; id: string; externalRef: string; publicId: string } | { ok: false; error: "invalid_property" | "invalid_dates" }> {
+  if (!(i.checkOut > i.checkIn)) return { ok: false, error: "invalid_dates" };
+  const d = await db();
+  const [prop] = await d.select({ id: properties.id, name: properties.name }).from(properties).where(and(eq(properties.id, i.propertyId), eq(properties.userId, userId)));
+  if (!prop) return { ok: false, error: "invalid_property" };
+  for (let attempt = 0; ; attempt++) {
+    const externalRef = newDirectRef();
+    try {
+      return await d.transaction(async (tx) => {
+        const [b] = await tx
+          .insert(bookings)
+          .values({ userId, propertyId: prop.id, externalRef, channel: "direct", collectionMode: "onchain", guestName: i.guestName, checkIn: i.checkIn, checkOut: i.checkOut, expectedGrossRaw: i.totalRaw, source: "direct" })
+          .returning({ id: bookings.id });
+        const [inv] = await tx
+          .insert(invoices)
+          .values({ userId, bookingId: b.id, publicId: newPublicId(), type: "booking", description: `Stay at ${prop.name}, ${stayRange(i.checkIn, i.checkOut)}`, amountRaw: i.totalRaw, dueDate: i.dueDate })
+          .returning({ publicId: invoices.publicId });
+        return { ok: true as const, id: b.id, externalRef, publicId: inv.publicId };
+      });
+    } catch (e) {
+      // the (user, channel, ref) index caught a reference collision: try a fresh one
+      if (attempt < 3 && /bookings_user_channel_ref_uq/.test(String((e as { cause?: unknown })?.cause ?? e))) continue;
+      throw e;
+    }
+  }
 }

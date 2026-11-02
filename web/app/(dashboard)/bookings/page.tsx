@@ -25,9 +25,14 @@ export default function BookingsPage() {
         title="Bookings"
         description="Every stay, checked against what was actually collected. Only ready bookings are paid out."
         action={
-          <Link href="/import" className={buttonVariants({ variant: "outline" })} data-testid="bookings-import-link">
-            Import payouts
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/import" className={buttonVariants({ variant: "outline" })} data-testid="bookings-import-link">
+              Import payouts
+            </Link>
+            <Link href="/bookings/new" className={buttonVariants()} data-testid="bookings-new-direct">
+              New direct booking
+            </Link>
+          </div>
         }
       />
       <Suspense fallback={<p className="text-sm text-muted-foreground" data-testid="bookings-loading">Loading…</p>}>
@@ -45,11 +50,16 @@ async function BookingsContent() {
       <EmptyState
         data-testid="bookings-empty"
         title="No bookings yet"
-        body="Import a payout report to bring in your Airbnb and Booking.com stays. Direct bookings appear when you send an invoice."
+        body="Import a payout report to bring in your Airbnb and Booking.com stays, or add a guest who booked with you directly."
         action={
-          <Link href="/import" className={buttonVariants()}>
-            Import payouts
-          </Link>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Link href="/import" className={buttonVariants()}>
+              Import payouts
+            </Link>
+            <Link href="/bookings/new" className={buttonVariants({ variant: "outline" })}>
+              New direct booking
+            </Link>
+          </div>
         }
       />
     );
