@@ -35,6 +35,8 @@ The vault, mock USDC, payees and a settle-only agent key are live on testnet. De
 
 ## Before deploying the website: needed by Nov 10
 
+Step-by-step guide: [deploy.md](deploy.md). The production build is already checked locally.
+
 - [ ] **A hosted Postgres `DATABASE_URL`** for production. Any provider works (Neon's free tier is fine). Locally we don't need one; the app uses PGlite.
 - [ ] **A `SESSION_SECRET`** for production. Generate it with `openssl rand -base64 48`, and put both values into **Vercel** env vars, not into chat or the repo.
 - [ ] **A Vercel project** linked to the GitHub repo.
