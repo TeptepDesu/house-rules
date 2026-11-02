@@ -193,7 +193,7 @@ Paste the reference handler here once the first full one exists (auth + validati
 
 ## Commands
 
-Run from the repo root (pnpm workspace). pnpm lives in `~/.local/bin`; Homebrew here belongs to another macOS user.
+Run from the repo root (pnpm workspace). On the Mac, pnpm lives in `~/.local/bin` and Homebrew belongs to another macOS user. On Windows, everything runs in Ubuntu on WSL: see `docs/new-machine-windows.md`.
 
 ```bash
 # web

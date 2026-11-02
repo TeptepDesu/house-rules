@@ -1,4 +1,4 @@
-# Handover — 2026-11-02
+# Handover — 2026-11-03
 
 Where House Rules stands, what's half-done, and what's next. Read with `CLAUDE.md` (rules, commands, versions), `plan.md` (scope) and `docs/needs-from-joseph.md` (Joseph's checklist).
 
@@ -6,7 +6,8 @@ Where House Rules stands, what's half-done, and what's next. Read with `CLAUDE.m
 
 - **The app is feature-complete for the plan's core scope.** Every core item in plan §7 is built and tested, and the testnet proof is done.
 - **Stretch: guest follow-up messages are done and committed.** The optional NEAR AI rewording hasn't been tried against the live API. See [Follow-up messages](#follow-up-messages-finished-2026-11-03).
-- **9 local commits are not pushed.** The repo `TeptepDesu/house-rules` is still private; check that before pushing. Joseph decides when to push.
+- **Joseph is moving to a Windows laptop (Ubuntu on WSL).** Setup steps, and what to bring over from the Mac: [`docs/new-machine-windows.md`](new-machine-windows.md). See [Moving machines](#moving-machines).
+- **9 local commits are not pushed.** The repo `TeptepDesu/house-rules` is still private (checked 2026-11-03: the API returns 404). Push before switching laptops. Joseph decides when to push.
 - **What's left is mostly Joseph's:** mainnet funds, hosting, the demo recording and the submission.
 
 ## State of the repo
@@ -28,13 +29,22 @@ Unpushed commits, oldest first:
 6. `5e483ad` Direct bookings: a booking plus its stay invoice, paid from any chain.
 7. `464effe` Design-review screenshot spec for the action screens.
 
-**Last full verification**, at `5e483ad`, before the in-progress work:
+**Last full verification**, at the follow-up commit (2026-11-03):
 - typecheck and lint: clean;
-- `pnpm --filter web test`: 357 passed;
-- `pnpm --filter web e2e`: 19 passed, 2 screenshot specs skipped;
-- `pnpm --filter web test:integration`: 14 passed, 1 skipped (live testnet, which needs the key file).
+- `pnpm --filter web test`: 367 passed;
+- `pnpm --filter web e2e`: 20 passed, 3 screenshot specs skipped;
+- `pnpm --filter web test:integration`: 14 passed, 1 skipped (live testnet, which needs the key file). Last run at `5e483ad`; nothing it covers has changed since.
 
 Contract suites are unchanged since the last run: 33 unit and 8 sandbox tests.
+
+## Moving machines
+
+The Mac was the only machine so far. On the new laptop:
+- **Code:** clone `main` after the push. Everything else needed comes with it, including `.claude/settings.json`, which denies agent reads of `.env*`.
+- **Not in git, bring by hand:** `web/.env.testnet.local` (settle-only agent key). The testnet deployer keys (`vault.` / `usdc.houserules-operator.testnet`) are in the Mac's Keychain and are only needed to redeploy or upgrade the testnet contracts. The operator account is in Meteor (seed phrase).
+- **Mac-only notes that no longer apply:** "pnpm lives in `~/.local/bin`", "Homebrew belongs to another user", "keys in the macOS Keychain". On WSL: nvm Node, global pnpm, and near-cli's file keychain.
+- **Claude's memory stays on the Mac.** Two notes worth carrying over: (1) before any push, check the repo is private with `curl -s -o /dev/null -w '%{http_code}\n' https://api.github.com/repos/TeptepDesu/house-rules` (`404` = private; on `200`, stop and ask); (2) the repo goes public only at submission, Nov 14, after the agentshield scan.
+- **First check on the new machine:** the suites in step 7 of the setup guide should match the counts below. If they don't, debug before building anything new.
 
 ## What was built this session
 
