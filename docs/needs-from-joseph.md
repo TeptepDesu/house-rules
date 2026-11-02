@@ -23,7 +23,7 @@ The vault, mock USDC, payees and a settle-only agent key are live on testnet. De
 
 ## To try "Approve in vault" with a real wallet (optional, 10 minutes)
 
-- [ ] **Import `houserules-operator.testnet` into a browser wallet** (e.g. MyNearWallet, Meteor or HOT) using its key from Keychain Access. Then, in the app with live mode on, click **Approve in vault** on a new payee and sign. A fresh payee account for this exists: `houserules-cleaner-2.testnet`. Everything after the wallet popup (checking the signer is the vault owner, verifying the tx on-chain, the audit row) is already tested, including against a real testnet `add_payee`.
+- [x] **Real-wallet flow on testnet.** Done 2026-11-02 with Meteor: linked `houserules-operator.testnet` (NEP-413), connected the vault, approved `houserules-cleaner-2.testnet` via **Approve in vault**; it showed *In waiting period*, then *Active* after the 10-minute delay. Found and fixed a stale-status bug on the People page along the way. Everything after the wallet popup (checking the signer is the vault owner, verifying the tx on-chain, the audit row) is already tested, including against a real testnet `add_payee`.
 
 ## Before the real 1Click payment (spike #2): needed by Nov 5
 
