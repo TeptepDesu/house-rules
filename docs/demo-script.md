@@ -26,23 +26,23 @@ For recording on **Nov 13**. Follows plan §11, matched to what the app actually
 | 2 | 0:10–0:30 | **Collect.** Invoices → charge Diego $200 "Damage: broken lamp" → copy the pay link → guest window: *USDC on Arbitrum* → *Get payment address* → (live: the guest pays; rehearsal: *simulate deposit*) → **Payment received** | "Guests pay from whatever chain they're on. NEAR Intents converts it, and the vault receives exactly two hundred dollars in USDC. Not a cent more or less." |
 | 3 | 0:30–0:45 | **Reconcile.** Import → drop `airbnb-style.csv` → **"22 will match, 2 flagged, 1 duplicate"** → Import → Bookings: one row **blocked, $20.00 short** | "Drop in the Airbnb payout report. It's detected, matched, and anything that doesn't add up is blocked before anyone gets paid." |
 | 4 | 0:45–1:10 | **Pay out.** Payouts → **Run agent now** → *Paid $9,917.37 to 40 payees in 1 transaction · 2 held back* → open **Held back**: *Owen for Diego Santos: Above this payee's per-payout limit, $816.85* → Audit log | "One click. The agent splits every booking (cleaner's fee, my fifteen percent, the owner gets the rest) and pays forty people in one atomic transaction. Notice what it *didn't* pay: Diego's damage money pushed Owen past his eight-hundred-dollar limit, so the vault's rules hold that booking back." |
-| 5 | 1:10–1:40 | **Try to break it** (the key moment). Terminal, testnet commands below: pay a stranger → `POLICY_REJECTED:PayeeNotAllowed`; pay over the cap → `OverCap`; pay a booking twice → `AlreadyPaid`. Then **Vault rules** → *The agent can only call settle* | "So what if someone steals the agent's key? It's a NEAR function-call key: it can call one method, settle, and nothing else. No withdrawals, no new payees, no limit changes. And settle itself refuses anyone not on the list, anything over a cap, and anything already paid. The chain enforces it, not my server." |
+| 5 | 1:10–1:40 | **Try to break it** (the key moment). Terminal: `pnpm --filter web break-it` (below), signed with the agent's own key: a stranger → `PayeeNotAllowed`; over the cap → `OverCap`; paid twice → `AlreadyPaid`; `withdraw` and `add_payee` → refused by NEAR; vault balance unchanged. Then **Vault rules** → *The agent can only call settle* | "So what if someone steals the agent's key? It's a NEAR function-call key: it can call one method, settle, and nothing else. No withdrawals, no new payees, no limit changes. And settle itself refuses anyone not on the list, anything over a cap, and anything already paid. The chain enforces it, not my server." |
 | 6 | 1:40–2:00 | **Close.** Vault rules cards → Audit log (On-chain filter) → the README's tests table | "Humans set the rules. NEAR enforces them. House Rules, built at NEAR HACKATHON." |
 
-### Terminal commands for shot 5 (testnet; Claude can run them on cue)
-
-The operator signs these, but the vault refuses on rules, not on who signed.
+### Terminal command for shot 5 (testnet)
 
 ```bash
-# pay someone who isn't on the allowlist
-near contract call-function as-transaction vault.houserules-operator.testnet settle json-args '{"items":[{"key":"demo-x:owner","payee":"houserules-agent.testnet","amount":"1000000"}]}' prepaid-gas '100 Tgas' attached-deposit '0 NEAR' sign-as houserules-operator.testnet network-config testnet sign-with-keychain send
-# pay the cleaner over her $100 cap
-near contract call-function as-transaction vault.houserules-operator.testnet settle json-args '{"items":[{"key":"demo-y:cleaner","payee":"houserules-cleaner-1.testnet","amount":"100000001"}]}' prepaid-gas '100 Tgas' attached-deposit '0 NEAR' sign-as houserules-operator.testnet network-config testnet sign-with-keychain send
-# pay a booking that was already paid
-near contract call-function as-transaction vault.houserules-operator.testnet settle json-args '{"items":[{"key":"demo-bk1:owner","payee":"houserules-owner-1.testnet","amount":"7200000"}]}' prepaid-gas '100 Tgas' attached-deposit '0 NEAR' sign-as houserules-operator.testnet network-config testnet sign-with-keychain send
+pnpm --filter web break-it
 ```
 
-**Optional:** "the agent key can't even call withdraw". This needs the agent's function-call key selected in near-cli. The integration test `agent_function_call_key_can_only_settle` proves it on a sandbox; show that test's green output if a live attempt is awkward.
+It signs every attempt with **the agent's own settle-only key**, as a thief would:
+1. pay a stranger $500: refused by the vault, `PayeeNotAllowed`;
+2. pay the cleaner one cent over her cap: refused, `OverCap`;
+3. pay a booking that's already paid: refused, `AlreadyPaid`;
+4. `withdraw` the vault's USDC: refused by NEAR, the key can only call `settle`;
+5. add itself as a payee: refused by NEAR, same reason.
+
+It ends with the vault's balance before and after: nothing moved. Takes about 20 seconds; run it once before recording so the terminal is warm. Recorded run: `docs/testnet-deployment.md`.
 
 ## Fallback lines (if something misbehaves on camera)
 

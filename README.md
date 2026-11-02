@@ -104,6 +104,8 @@ pnpm test:integration     # 5 tests: the app's real agent code against that vaul
 - **The Vault rules page reads policy and payees from the chain,** and syncs payee statuses.
 - **Audit-log rows come from the vault's own events** in that transaction.
 
+**Try to break it yourself on testnet** (needs the agent key in `web/.env.testnet.local`): `pnpm --filter web break-it` acts as someone who stole the agent's key. Paying a stranger, paying over a cap and paying a booking twice are refused by the vault; `withdraw` and `add_payee` are refused by NEAR before they reach it; the vault's balance doesn't change. Recorded results: [`docs/testnet-deployment.md`](docs/testnet-deployment.md).
+
 **The contract's sandbox tests also show:**
 - **One failing transfer reverts the whole batch.** The first transfer, which had already run, is undone; the callback restores paid keys and the daily spend.
 - **A function-call key can't call `withdraw`, `add_payee`, `set_limits` or `set_agent`.**
@@ -178,10 +180,9 @@ Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p 
 | | |
 |---|---|
 | ✅ Done and tested | Vault contract; import and reconciliation; splits; settlement agent; guest pay flow; every screen; audit log |
-| ✅ Testnet | Vault + mock USDC deployed, payees approved, settle-only agent key. A real atomic payout and 5 policy refusals were verified on testnet; accounts and tx hashes are in [`docs/testnet-deployment.md`](docs/testnet-deployment.md) |
-| ⏳ Before submission | The app's agent running **live** against the testnet vault (`pnpm --filter web test:testnet`), then mainnet |
+| ✅ Testnet | Vault + mock USDC deployed, payees approved, settle-only agent key. **The app's own agent paid live through the testnet vault**, a payee was **approved with a real browser wallet**, and the stolen-key attacks in "Proof on a real chain" were all refused. Accounts and tx hashes: [`docs/testnet-deployment.md`](docs/testnet-deployment.md) |
+| ⏳ Before submission | Mainnet deploy and full loop with small real amounts |
 | ⏳ Before submission | **A real 1Click payment** on mainnet (the client is checked against the API docs; live delivery is unproven so far) |
-| ✅ Built | **Approve payee with your wallet** (NEAR Connect signs `add_payee`; the server verifies the signed tx on-chain, also tested against a real testnet tx). Waiting on one manual sign-in with a browser wallet |
 | Stretch | Confidential Intents for private revenue; AI exception triage on NEAR AI Cloud (private inference) |
 
 Spike notes and measured numbers: [`docs/notes.md`](docs/notes.md). Design system: [`design.md`](design.md).

@@ -76,7 +76,27 @@ Signed by the operator, which the vault allows as owner, after the 10-minute pay
 
 That's five different policy refusals on testnet: PayeeInDelay, PayeeNotAllowed, Unauthorized, OverCap and AlreadyPaid.
 
-**Still to run:** the app's own agent with the settle-only key (`pnpm --filter web test:testnet`), once the key is in `web/.env.testnet.local`.
+## The app's agent, live on testnet (2026-11-02)
+
+`pnpm --filter web test:testnet` ran the app's real agent code against this vault with the settle-only key: one run paid owner-1 **$7.20** and cleaner-1 **$2.00**, the $0.80 management share stayed in the vault, and every balance matched on-chain.
+
+## Approve in vault with a real wallet (2026-11-02)
+
+In the app (live mode, Meteor wallet): linked `houserules-operator.testnet` by signing a NEP-413 message, connected the vault (the app checked owner and agent on-chain), added `houserules-cleaner-2.testnet` and approved it with **Approve in vault**. It showed *In waiting period*, then *Active* after the 10-minute delay.
+
+## "Try to break it" with the stolen agent key (2026-11-02)
+
+`pnpm --filter web break-it` signs every attempt with the agent's settle-only key:
+
+| Attempt | Refused by | Result |
+|---|---|---|
+| Pay `thief.testnet` $500 | the vault | `PayeeNotAllowed`, tx `53urv2cQu7hZpwoBKCt2hHfy5L2a2KLuqL2a7ofF2bgX` |
+| Pay cleaner-1 one cent over the $100 cap | the vault | `OverCap`, tx `DP3CdBv1ZoBQwwqHLwpURY7b6RXvz5UgsiFjacUzpWv7` |
+| Pay `demo-bk1:owner` a second time | the vault | `AlreadyPaid`, tx `HK2FcPB6x75vXx1xDt13QpTms41YgNTPScHf1X2SGasU` |
+| `withdraw` to `thief.testnet` | NEAR (key permission) | never reaches the vault |
+| `add_payee thief.testnet` | NEAR (key permission) | never reaches the vault |
+
+The vault held $4,981.60 before and after.
 
 ## Upgrade: payable time fixed at approval (code review #10)
 
