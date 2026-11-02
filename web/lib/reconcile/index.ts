@@ -1,6 +1,7 @@
 // Pure reconciliation (plan §6A). No I/O. Evaluated in this order; first match wins:
 //   1. open_penalty  unpaid, non-waived penalty invoice            → blocked
 //   2. mismatch      collected ≠ expected (something was collected) → blocked, delta stored
+//                    (unless the operator accepted exactly that collected amount as final → matched)
 //   3. unpaid        on-chain booking past due, nothing collected   → blocked
 //   4. matched                                                      → ready
 // Plus awaiting_payment (not due yet / OTA report not imported)     → stays unreconciled.
@@ -29,6 +30,8 @@ export type BookingForRecon = {
   otaPayout?: bigint;
   dueDate: Date;
   invoices: InvoiceForRecon[];
+  /** The operator accepted exactly this collected amount as final (resolves a mismatch). */
+  acceptedCollected?: bigint;
 };
 
 export type ReconResult = "matched" | "mismatch" | "open_penalty" | "unpaid" | "awaiting_payment";
@@ -77,6 +80,10 @@ export function reconcileBooking(b: BookingForRecon, now: Date): Reconciliation 
   }
   if (haveCollection && delta !== 0n) {
     const how = delta < 0n ? `${formatUsd(-delta)} short` : `${formatUsd(delta)} over`;
+    // accepted as final: only for exactly the amount the operator saw (a new amount re-blocks)
+    if (b.acceptedCollected === collected) {
+      return { ...base, result: "matched", settlementStatus: "ready", note: `Accepted ${formatUsd(collected)} as final (${how} of ${formatUsd(expected)})` };
+    }
     return { ...base, result: "mismatch", settlementStatus: "blocked", note: `Collected ${formatUsd(collected)} vs expected ${formatUsd(expected)} (${how})` };
   }
   if (!haveCollection) {

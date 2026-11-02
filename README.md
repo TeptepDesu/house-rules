@@ -67,7 +67,7 @@ pnpm --filter web dev        # http://localhost:3000
 | **2.** **People & properties** → add *Owen* (Property owner, `owen.testnet`, max $800) and *Maria* (Cleaner, `maria.testnet`, max $100) | Both listed by **name first**, account in small text, *Needs signature*. Try `guy.near`: it's refused because this is testnet |
 | **3.** Add properties **Casa Azul**, **Loft 21**, **Seaside Cottage**: owner Owen, cleaner Maria, cleaning fee 80, management 15 | Three rows with $80.00 and 15% |
 | **4.** **Import** → drop [`web/test/fixtures/payout-reports/airbnb-style.csv`](web/test/fixtures/payout-reports/airbnb-style.csv) | *Airbnb payout report* detected: **"22 will match, 2 flagged, 1 duplicate"**. The flags say *Not in USD* and *Listing doesn't match any of your properties* |
-| **5.** Click **Import 22 bookings** → **Review bookings** | 21 *Matched*, and **1 blocked**: *Collected $474.70 vs expected $494.70 ($20.00 short)*. Importing the same file again changes nothing |
+| **5.** Click **Import 22 bookings** → **Review bookings** | 21 *Matched*, and **1 blocked**: *Collected $474.70 vs expected $494.70 ($20.00 short)*. **Accept $474.70** would resolve it if you agree with the channel's adjustment; this walkthrough leaves it blocked. Importing the same file again changes nothing |
 | **6.** **Settings** → vault account `vault.yourname.testnet` | *Saved. Guests can now pay invoices online.* |
 | **7.** **People & properties** → **Approve (rehearsal)** on Owen and Maria | Both leave *Needs signature*, and the setup checklist on **Overview** is done and steps aside. Live, this is your wallet signing `add_payee` on the vault, followed by the vault's waiting period (rehearsal skips the wait). **An unapproved payee is never paid**, in rehearsal too |
 | **8.** **Invoices** → charge *Diego Santos · Casa Azul* $200, "Damage: broken lamp" | An open invoice. On **Bookings**, Diego's stay is now *Open damage claim*, so his payout is held |
@@ -170,8 +170,8 @@ Postgres (PGlite locally, any hosted Postgres in production) · Drizzle
 |---|---|---|
 | Contract: unit | `cd contracts && cargo test -p vault --lib` | 33 |
 | Contract: sandbox | `cd contracts && cargo test -p vault --test sandbox` | 8 |
-| App: unit, property and DB | `pnpm --filter web test` | 349 |
-| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 17, plus 2 optional screenshot captures |
+| App: unit, property and DB | `pnpm --filter web test` | 354 |
+| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 18, plus 2 optional screenshot captures |
 | App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 14 |
 
 Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p vault --target wasm32-unknown-unknown -- -D warnings`.

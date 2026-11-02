@@ -69,3 +69,20 @@ describe("import → bookings", () => {
     expect(await bk.applyImport(b, (await preview(b)).rows, "import:airbnb")).toEqual({ created: 22, updated: 0 });
   });
 });
+
+describe("accept a short payout as final", () => {
+  it("only for the operator's own mismatch, only for the amount shown; then it's ready to pay on what arrived", async () => {
+    await bk.applyImport(a, (await preview(a)).rows, "import:airbnb");
+    const short = (await bk.listBookingsWithRecon(a)).find((x) => x.externalRef === "HM4009X")!;
+    const ok = (await bk.listBookingsWithRecon(a)).find((x) => x.externalRef === "HM4000X")!;
+
+    expect(await bk.acceptCollected(b, short.id, 474_700_000n)).toEqual({ ok: false, error: "not_found" }); // RBAC
+    expect(await bk.acceptCollected(a, ok.id, ok.recon.collected)).toEqual({ ok: false, error: "not_mismatch" });
+    expect(await bk.acceptCollected(a, short.id, 494_700_000n)).toEqual({ ok: false, error: "amount_changed" });
+    expect(await bk.acceptCollected(a, short.id, 474_700_000n)).toEqual({ ok: true, delta: -20_000_000n });
+
+    const after = (await bk.listBookingsWithRecon(a)).find((x) => x.externalRef === "HM4009X")!;
+    expect(after.recon).toMatchObject({ result: "matched", settlementStatus: "ready", collected: 474_700_000n });
+    expect(after.recon.note).toBe("Accepted $474.70 as final ($20.00 short of $494.70)");
+  });
+});

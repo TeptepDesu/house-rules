@@ -102,6 +102,7 @@ export async function listBookingsWithRecon(userId: string, now = new Date()): P
       propertyName: properties.name,
       propertyId: bookings.propertyId,
       cleaningFeeOverrideRaw: bookings.cleaningFeeOverrideRaw,
+      acceptedCollectedRaw: bookings.acceptedCollectedRaw,
     })
     .from(bookings)
     .innerJoin(properties, eq(properties.id, bookings.propertyId))
@@ -133,6 +134,7 @@ export async function listBookingsWithRecon(userId: string, now = new Date()): P
       expectedGross: r.expectedGrossRaw,
       otaPayout: r.otaPayoutRaw ?? undefined,
       dueDate: new Date(`${r.checkOut}T23:59:59Z`),
+      acceptedCollected: r.acceptedCollectedRaw ?? undefined,
       invoices: invs
         .filter((i) => i.bookingId === r.id)
         .map((i) => ({ id: i.id, type: i.type, amount: i.amount, status: i.status, amountReceived: BigInt(i.received) })),
@@ -163,4 +165,21 @@ export async function listBookingOptions(userId: string) {
     .innerJoin(properties, eq(properties.id, bookings.propertyId))
     .where(eq(bookings.userId, userId))
     .orderBy(sql`${bookings.checkIn} desc`);
+}
+
+/**
+ * The operator accepts what was actually collected as final (e.g. after a channel's resolution
+ * adjustment). Only for a booking that's currently a mismatch, and only for exactly the amount the
+ * operator was shown: a different amount means the data changed under them.
+ */
+export async function acceptCollected(userId: string, bookingId: string, amountRaw: bigint): Promise<{ ok: true; delta: bigint } | { ok: false; error: "not_found" | "not_mismatch" | "amount_changed" }> {
+  const row = (await listBookingsWithRecon(userId)).find((b) => b.id === bookingId);
+  if (!row) return { ok: false, error: "not_found" };
+  if (row.recon.result !== "mismatch") return { ok: false, error: "not_mismatch" };
+  if (row.recon.collected !== amountRaw) return { ok: false, error: "amount_changed" };
+  await (await db())
+    .update(bookings)
+    .set({ acceptedCollectedRaw: amountRaw })
+    .where(and(eq(bookings.id, bookingId), eq(bookings.userId, userId)));
+  return { ok: true, delta: row.recon.delta };
 }

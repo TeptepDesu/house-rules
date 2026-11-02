@@ -102,6 +102,8 @@ export const bookings = pgTable(
     expectedGrossRaw: money("expected_gross_raw").notNull(),
     otaPayoutRaw: money("ota_payout_raw"),
     cleaningFeeOverrideRaw: money("cleaning_fee_override_raw"),
+    /** The operator accepted exactly this collected amount as final (resolves a short/over payout). */
+    acceptedCollectedRaw: money("accepted_collected_raw"),
     settlementStatus: settlementStatus("settlement_status").notNull().default("unreconciled"),
     source: text("source").notNull().default("manual"),
     importedAt: ts("imported_at"),

@@ -44,6 +44,10 @@ export function describeActivity(action: string, m: Record<string, unknown>): st
       return `Imported ${FORMAT[String(m.format)] ?? "a payout report"}: ${plural(Number(m.created ?? 0), "booking")} added${Number(m.updated) ? `, ${Number(m.updated)} updated` : ""}`;
     case "invoice.create":
       return `Charged a guest ${usd(m.amount)}`;
+    case "booking.accept_payout": {
+      const d = String(m.delta ?? "");
+      return `Accepted ${usd(m.amount)} as final for a booking (${d.startsWith("-") ? `${usd(d.slice(1))} short` : `${usd(d)} over`})`;
+    }
     case "invoice.waive":
       return `Waived a ${usd(m.amount)} charge${m.description ? `: ${String(m.description)}` : ""}`;
     case "payee.create":

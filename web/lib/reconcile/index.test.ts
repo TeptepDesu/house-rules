@@ -110,6 +110,26 @@ describe("reconcileBooking: OTA bookings (payout report)", () => {
   });
 });
 
+describe("reconcileBooking: the operator accepts a short or over payout as final", () => {
+  const ota = (over: Partial<BookingForRecon> = {}) => direct({ collectionMode: "ota_payout", expectedGross: 494_700_000n, otaPayout: 474_700_000n, ...over });
+
+  it("accepting exactly what was collected → matched; the split uses what actually arrived", () => {
+    const r = reconcileBooking(ota({ acceptedCollected: 474_700_000n }), NOW);
+    expect(r).toMatchObject({ result: "matched", settlementStatus: "ready", collected: 474_700_000n, delta: -20n * U });
+    expect(r.note).toBe("Accepted $474.70 as final ($20.00 short of $494.70)");
+  });
+
+  it("the acceptance is tied to that exact amount: a different payout later is a mismatch again", () => {
+    expect(reconcileBooking(ota({ otaPayout: 470n * U, acceptedCollected: 474_700_000n }), NOW)).toMatchObject({ result: "mismatch", settlementStatus: "blocked" });
+  });
+
+  it("an open penalty still blocks, accepted or not; on-chain underpayments can be accepted too", () => {
+    expect(reconcileBooking(ota({ acceptedCollected: 474_700_000n, invoices: [inv("penalty", 50n * U, "open")] }), NOW).result).toBe("open_penalty");
+    const under = direct({ invoices: [inv("booking", 1_000n * U, "underpaid", 960n * U)], acceptedCollected: 960n * U });
+    expect(reconcileBooking(under, NOW)).toMatchObject({ result: "matched", collected: 960n * U });
+  });
+});
+
 describe("findOrphanPayments", () => {
   it("lists verified payments whose invoice has no booking", () => {
     const orphans = findOrphanPayments(
