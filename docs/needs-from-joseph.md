@@ -19,11 +19,11 @@ _Last updated: 2026-11-01 (after the testnet deploy)_
 
 The vault, mock USDC, payees and a settle-only agent key are live on testnet. Details are in [testnet-deployment.md](testnet-deployment.md). No Keychain prompt was needed after all.
 
-- [ ] **Copy the agent key into `web/.env.testnet.local`** (5 minutes, steps in [testnet-deployment.md](testnet-deployment.md#the-agent-key)). It's the `BkN4M…` function-call key from Keychain Access. I don't handle private keys, so this one's yours. Then tell me, and I'll run the app live against the testnet vault.
+- [x] **Copy the agent key into `web/.env.testnet.local`.** Done 2026-11-02. `pnpm --filter web test:testnet` passed: the app's agent paid owner-1 $7.20 and cleaner-1 $2.00 through the testnet vault with the settle-only key.
 
 ## To try "Approve in vault" with a real wallet (optional, 10 minutes)
 
-- [ ] **Import `houserules-operator.testnet` into a browser wallet** (e.g. MyNearWallet, Meteor or HOT) using its key from Keychain Access. Then, in the app with live mode on, click **Approve in vault** on a new payee and sign. Everything after the wallet popup (checking the signer is the vault owner, verifying the tx on-chain, the audit row) is already tested, including against a real testnet `add_payee`.
+- [ ] **Import `houserules-operator.testnet` into a browser wallet** (e.g. MyNearWallet, Meteor or HOT) using its key from Keychain Access. Then, in the app with live mode on, click **Approve in vault** on a new payee and sign. A fresh payee account for this exists: `houserules-cleaner-2.testnet`. Everything after the wallet popup (checking the signer is the vault owner, verifying the tx on-chain, the audit row) is already tested, including against a real testnet `add_payee`.
 
 ## Before the real 1Click payment (spike #2): needed by Nov 5
 
