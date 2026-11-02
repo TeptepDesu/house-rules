@@ -25,7 +25,9 @@ The vault, mock USDC, payees and a settle-only agent key are live on testnet. De
 
 - [x] **Real-wallet flow on testnet.** Done 2026-11-02 with Meteor: linked `houserules-operator.testnet` (NEP-413), connected the vault, approved `houserules-cleaner-2.testnet` via **Approve in vault**; it showed *In waiting period*, then *Active* after the 10-minute delay. Found and fixed a stale-status bug on the People page along the way. Everything after the wallet popup (checking the signer is the vault owner, verifying the tx on-chain, the audit row) is already tested, including against a real testnet `add_payee`.
 
-## Before the real 1Click payment (spike #2): needed by Nov 5
+## The real $1 1Click payment (spike #2): on recording day, Nov 13
+
+**Decision 2026-11-02:** Joseph does the one real $1 payment on recording day instead of by Nov 5. To keep it from being the first try on camera, do it **about an hour before recording** as a rehearsal, then record a second $1 payment (or use the first as the "one I ran earlier" fallback). Fund the two wallets a few days ahead: exchange withdrawals and identity checks can be slow.
 
 - [ ] **A funded mainnet account for testing**, e.g. `houserules-dev.near`, with about **1 NEAR** for gas and storage.
 - [ ] **About $5–10 of a token on another chain** (e.g. USDC on Arbitrum or Base) in a wallet you control. That's the "guest" paying an invoice from another chain.

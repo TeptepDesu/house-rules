@@ -7,6 +7,12 @@ For recording on **Nov 13**. Follows plan §11, matched to what the app actually
 - **Good: live on testnet.** Needs the agent key in `web/.env.testnet.local`. "View on-chain" links then open real testnet transactions.
 - **Fallback: rehearsal mode.** Works today with no setup. Say "rehearsal" out loud; screens show *Simulated*.
 
+## About an hour before recording: the real $1 payment
+
+1. Claude switches the local app to live 1Click on mainnet (separate env file) and checks the settings.
+2. Create a **$1 invoice** and pay it from MetaMask with **USDC on Base** (about $1.01). It should show **Paid** in about 35 seconds.
+3. If it works, record shot 2 with a second $1 invoice. If it fails, there's still time to fix it or fall back to "here's one I ran earlier".
+
 ## Before you hit record (10 minutes)
 
 - **Data:** a fresh account named after the business (e.g. *Casa Hosts*). Then:
