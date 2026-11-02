@@ -40,3 +40,14 @@ export async function addProperty(page: Page, name: string, opts: { cleaningFee?
 
 // Playwright runs from web/ (CommonJS specs, so no import.meta)
 export const FIXTURES = `${process.cwd()}/test/fixtures/payout-reports/`;
+
+/** Rehearsal stand-in for the wallet-signed add_payee: approve every payee (needs a vault set). */
+export async function approveAllPayees(page: Page) {
+  await page.goto("/people");
+  const approve = page.locator('[data-testid^="payee-approve-"]').filter({ hasText: "Approve (rehearsal)" });
+  await expect(approve.first()).toBeVisible();
+  for (let left = await approve.count(); left > 0; left--) {
+    await approve.first().click();
+    await expect(approve).toHaveCount(left - 1);
+  }
+}

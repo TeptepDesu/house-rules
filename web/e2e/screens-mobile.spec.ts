@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { FIXTURES, addPayee, signUp } from "./helpers";
+import { FIXTURES, addPayee, approveAllPayees, signUp } from "./helpers";
 
 // Design review captures at phone width (set SCREENSHOT_DIR). Not assertions about layout, except
 // that nothing overflows the viewport horizontally.
@@ -27,6 +27,7 @@ test("capture every screen at 390px", async ({ page, browser }) => {
   await page.getByLabel("Vault account").fill("vault.casa.testnet");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByTestId("vault-saved")).toBeVisible();
+  await approveAllPayees(page);
   await page.goto("/import");
   await page.getByTestId("import-file-input").setInputFiles(`${FIXTURES}airbnb-style.csv`);
   await page.getByTestId("import-preview-summary").waitFor();
@@ -50,6 +51,12 @@ test("capture every screen at 390px", async ({ page, browser }) => {
   await shoot("/rules", "rules");
   await shoot("/audit", "audit");
   await shoot("/settings", "settings");
+  await shoot("/", "overview");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  await page.screenshot({ caret: "initial", path: `${dir}/overview-desktop.png`, fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByTestId("app-menu-toggle").click();
   await page.screenshot({ caret: "initial", path: `${dir}/m-menu-open.png` });
 

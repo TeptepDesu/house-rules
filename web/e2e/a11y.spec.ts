@@ -48,9 +48,9 @@ test("no serious or critical accessibility violations", async ({ page, browser }
   await page.getByTestId("import-confirm").click();
   await page.getByTestId("import-done").waitFor();
 
-  for (const path of ["/bookings", "/invoices", "/payouts", "/rules", "/audit"]) {
+  for (const path of ["/bookings", "/invoices", "/payouts", "/rules", "/audit", "/"]) {
     await page.goto(path);
-    await axe(page, path.slice(1));
+    await axe(page, path.slice(1) || "overview-with-data");
   }
 
   // guest pay page (no session)

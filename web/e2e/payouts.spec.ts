@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { FIXTURES, addPayee, signUp } from "./helpers";
+import { FIXTURES, addPayee, approveAllPayees, signUp } from "./helpers";
 
 // Demo step 4 (plan §11): click Run agent → splits computed, owners and cleaners paid, reconciled
 // bookings marked paid out. AGENT_MODE=mock here (simulated vault); the real-vault path is
@@ -36,6 +36,7 @@ test("Run agent pays every reconciled booking; blocked ones stay; a second run h
   await page.getByLabel("Vault account").fill("vault.houserules-operator.testnet");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByTestId("vault-saved")).toBeVisible();
+  await approveAllPayees(page);
 
   await page.getByTestId("nav-payouts").click();
   await expect(page.getByTestId("metric-to-pay")).toContainText("21 bookings");

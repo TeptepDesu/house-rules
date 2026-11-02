@@ -39,8 +39,11 @@ async function PayoutsContent() {
   const plans = planBookingPayouts(ready, terms);
   const ok = plans.filter((p) => !p.problem);
   const blocked = plans.filter((p) => p.problem);
-  const toPay = ok.reduce((a, p) => a + p.split.owner + p.split.cleaner, 0n);
-  const retained = ok.reduce((a, p) => a + p.split.manager, 0n);
+  // held-back bookings are retried by the next run (e.g. after a cap is raised) but aren't "ready" money
+  const heldIds = new Set(held.map((h) => h.bookingId));
+  const fresh = ok.filter((p) => !heldIds.has(p.bookingId));
+  const toPay = fresh.reduce((a, p) => a + p.split.owner + p.split.cleaner, 0n);
+  const retained = fresh.reduce((a, p) => a + p.split.manager, 0n);
   const mode = agentMode();
   const network = networkId();
   const explorerBase = network === "mainnet" ? "https://nearblocks.io" : "https://testnet.nearblocks.io";
@@ -53,7 +56,7 @@ async function PayoutsContent() {
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-3">
-        <MetricCard label="Ready to pay out" value={<Money raw={toPay} />} context={`${ok.length} booking${ok.length === 1 ? "" : "s"}, owners + cleaners`} data-testid="metric-to-pay" />
+        <MetricCard label="Ready to pay out" value={<Money raw={toPay} />} context={fresh.length ? `${fresh.length} booking${fresh.length === 1 ? "" : "s"}, owners + cleaners` : "Nothing waiting"} data-testid="metric-to-pay" />
         <MetricCard label="Your fees (kept in vault)" value={<Money raw={retained} />} context="Management share of these bookings" data-testid="metric-retained" />
         <MetricCard label="Held back" value={held.length + blocked.length} context="Payouts needing attention" data-testid="metric-held" />
       </div>

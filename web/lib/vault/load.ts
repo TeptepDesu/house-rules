@@ -6,12 +6,11 @@ import { listPayees, syncPayeeStatuses } from "@/lib/db/people";
 import type { VaultPayee } from "@/lib/near/policy";
 import { rpcUrl } from "@/lib/near/rpc";
 import { assertAgentKeyScoped, createVaultReader } from "@/lib/near/vault";
+import { REHEARSAL_DAILY_LIMIT, REHEARSAL_DELAY_NS, rehearsalRemaining, sharedRehearsalStore } from "./rehearsal";
 
 // What the Vault rules page shows. Live: read from the vault on-chain (and sync payee statuses
 // into the app). Mock/rehearsal: the operator's app data, labelled as not on-chain yet.
 
-const REHEARSAL_DAILY_LIMIT = 3_000n * 1_000_000n;
-const REHEARSAL_DELAY_NS = 24n * 3_600n * 1_000_000_000n;
 
 export type VaultView =
   | { state: "no_vault" }
@@ -43,10 +42,10 @@ export async function loadVaultView(userId: string): Promise<VaultView> {
       vaultAccount,
       policy: { dailyLimit: REHEARSAL_DAILY_LIMIT, payeeDelayNs: REHEARSAL_DELAY_NS, agent: "simulated agent", owner: "you", maxBatch: 40, tokenRegistered: true },
       payees: dbPayees
-        .filter((p) => p.vaultStatus !== "removed")
+        .filter((p) => p.vaultStatus === "active")
         .map((p) => ({ accountId: p.nearAccount, role: p.role, capPerPayout: p.capRaw, payableFromNs: 0n, active: true })),
       names,
-      remainingToday: REHEARSAL_DAILY_LIMIT,
+      remainingToday: rehearsalRemaining(sharedRehearsalStore(), userId, nowNs),
       balance: null,
       agentKey: { ok: true, detail: "Simulated in rehearsal mode" },
       nowNs,

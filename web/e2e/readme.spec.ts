@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { FIXTURES, addPayee } from "./helpers";
+import { FIXTURES, addPayee, approveAllPayees } from "./helpers";
 
 // Follows README.md "Try it in 5 minutes" step by step and checks what it says you'll see.
 // If this fails, the README is wrong: fix the README (or the app), not this test.
@@ -57,7 +57,14 @@ test("README walkthrough", async ({ page, browser }) => {
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByTestId("vault-saved")).toHaveText("Saved. Guests can now pay invoices online.");
 
-  // 7. charge Diego → booking held
+  // 7. approve both payees (rehearsal stand-in for signing add_payee with the operator's wallet)
+  await approveAllPayees(page);
+  await expect(page.getByTestId("payees-table")).not.toContainText("Needs signature");
+  await page.getByTestId("nav-overview").click();
+  await expect(page.getByTestId("overview-metrics")).toBeVisible();
+  await expect(page.getByTestId("setup-checklist")).toHaveCount(0); // set up: the checklist steps aside
+
+  // 8. charge Diego → booking held
   await page.goto("/invoices");
   const cf = page.getByTestId("charge-form");
   await cf.getByLabel("Booking").selectOption({ label: "Diego Santos · Casa Azul · Oct 4 – Oct 9" });
@@ -70,7 +77,7 @@ test("README walkthrough", async ({ page, browser }) => {
   await page.goto("/bookings");
   await expect(page.getByTestId("booking-row-airbnb-HM4003X")).toHaveAttribute("data-recon", "open_penalty");
 
-  // 8–9. guest pays
+  // 9–10. guest pays
   const guest = await (await browser.newContext()).newPage();
   await guest.goto(`/pay/${publicId}`);
   await guest.getByLabel("Pay with").selectOption({ label: "USDC on Arbitrum" });
@@ -86,7 +93,7 @@ test("README walkthrough", async ({ page, browser }) => {
   await page.goto("/bookings");
   await expect(page.getByTestId("booking-row-airbnb-HM4003X")).toHaveAttribute("data-recon", "matched");
 
-  // 10. run agent: the $200 damage payment pushes Diego's owner payout over Owen's $800 cap
+  // 11. run agent: the $200 damage payment pushes Diego's owner payout over Owen's $800 cap
   await page.goto("/payouts");
   await page.getByTestId("agent-run-button").click();
   const result = page.getByTestId("agent-run-result");
@@ -99,12 +106,25 @@ test("README walkthrough", async ({ page, browser }) => {
   await expect(held).toContainText("Held with the rest of this booking");
   await expect(held).toContainText("$60.00");
 
-  // 11–12. rules + audit
+  // 12–13. rules + audit
   await page.goto("/rules");
-  for (const t of ["Pays only these 2 people", "At most $800.00 per payout", "Up to $3,000.00 per day", "New payees wait 24 hours", "Each booking is paid once", "The agent can only call settle"]) {
+  for (const t of ["Pays only these 2 people", "At most $800.00 per payout", "Up to $20,000.00 per day", "New payees wait 24 hours", "Each booking is paid once", "The agent can only call settle"]) {
     await expect(page.locator("main")).toContainText(t);
   }
   await page.goto("/audit");
   await expect(page.getByTestId("audit-feed")).toContainText("Payout batch sent: 40 payouts, $9,917.37");
   await expect(page.getByTestId("audit-feed")).toContainText("Paid $9,917.37 in 40 payouts");
+
+  // 14. overview dashboard
+  await page.getByTestId("nav-overview").click();
+  await expect(page.getByTestId("overview-metric-collected")).toContainText("$12,877.30");
+  await expect(page.getByTestId("setup-checklist")).toHaveCount(0); // after the content loaded
+  await expect(page.getByTestId("overview-metric-ready")).toContainText("$0.00");
+  await expect(page.getByTestId("overview-metric-paid")).toContainText("$9,917.37");
+  await expect(page.getByTestId("overview-metric-paid")).toContainText("in 1 run");
+  await expect(page.getByTestId("overview-metric-attention")).toContainText("3");
+  const attention = page.getByTestId("overview-attention");
+  await expect(attention).toContainText("($20.00 short)");
+  await expect(attention).toContainText("Owen for Diego Santos");
+  await expect(attention).toContainText("Above this payee's per-payout limit · $816.85");
 });
