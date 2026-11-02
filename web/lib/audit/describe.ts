@@ -44,6 +44,8 @@ export function describeActivity(action: string, m: Record<string, unknown>): st
       return `Imported ${FORMAT[String(m.format)] ?? "a payout report"}: ${plural(Number(m.created ?? 0), "booking")} added${Number(m.updated) ? `, ${Number(m.updated)} updated` : ""}`;
     case "invoice.create":
       return `Charged a guest ${usd(m.amount)}`;
+    case "invoice.waive":
+      return `Waived a ${usd(m.amount)} charge${m.description ? `: ${String(m.description)}` : ""}`;
     case "payee.create":
       return `Added ${String(m.role)} ${String(m.nearAccount)} (needs vault approval)`;
     case "payee.approve":

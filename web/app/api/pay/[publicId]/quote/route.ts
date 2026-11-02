@@ -31,13 +31,15 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/pay/[public
       const msg = r.error === "no_vault" ? "This invoice can't be paid online yet." : "This invoice is no longer open for payment.";
       return Response.json({ error: msg }, { status: 409 });
     }
-    await recordPaymentStart(inv.id, {
+    const saved = await recordPaymentStart(inv.id, {
       depositAddress: r.depositAddress,
       depositMemo: r.depositMemo,
       originAsset: parsed.data.originAsset,
       quoteDeadline: r.deadline,
       rawQuoteJson: r.quote, // includes 1Click's signature: kept for disputes
     });
+    // waived or paid while the quote was being made: never show an address for a closed invoice
+    if (!saved) return Response.json({ error: "This invoice is no longer open for payment." }, { status: 409 });
     return Response.json({ depositAddress: r.depositAddress, depositMemo: r.depositMemo ?? null, amountIn: r.amountIn, deadline: r.deadline.toISOString() });
   } catch (e) {
     if (e instanceof OneClickError && e.status === 400) return Response.json({ error: e.message }, { status: 400 });

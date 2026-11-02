@@ -67,6 +67,11 @@ async function Invoice({ params }: { params: Promise<{ publicId: string }> }) {
             <StatusPill kind="invoice" status={inv.status} />
             <span className="text-sm text-muted-foreground">This invoice has been paid. Thank you.</span>
           </div>
+        ) : inv.status === "waived" ? (
+          <div className="flex items-center gap-2" data-testid="pay-waived">
+            <StatusPill kind="invoice" status={inv.status} />
+            <span className="text-sm text-muted-foreground">{inv.businessName} waived this charge. You don&apos;t owe anything.</span>
+          </div>
         ) : !open ? (
           <div className="flex items-center gap-2" data-testid="pay-closed">
             <StatusPill kind="invoice" status={inv.status} />

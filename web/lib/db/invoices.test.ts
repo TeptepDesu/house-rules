@@ -63,6 +63,38 @@ describe("invoices", () => {
     expect((await inv.getPublicInvoice(r.publicId))!.status).toBe("paid");
   });
 
+  it("waive: the operator forgives an open charge; refused while a guest payment is underway or once paid", async () => {
+    const now = new Date("2026-11-05T12:00:00Z");
+    const r = await charge(a);
+    if (!r.ok) throw new Error(r.error);
+    const pub = (await inv.getPublicInvoice(r.publicId))!;
+
+    expect(await inv.waiveInvoice(b, r.publicId, now)).toEqual({ ok: false, error: "not_found" }); // RBAC
+    expect(await inv.waiveInvoice(a, "nope", now)).toEqual({ ok: false, error: "not_found" });
+
+    // a guest has a live deposit address: waiving now could leave their money unaccounted for
+    await inv.recordPaymentStart(pub.id, { depositAddress: "mock-live", originAsset: "x", quoteDeadline: new Date("2026-11-05T13:00:00Z"), rawQuoteJson: {} });
+    expect(await inv.waiveInvoice(a, r.publicId, now)).toEqual({ ok: false, error: "payment_in_progress" });
+    // once that address has expired, it can be waived
+    expect(await inv.waiveInvoice(a, r.publicId, new Date("2026-11-05T13:00:01Z"))).toMatchObject({ ok: true, id: pub.id });
+    expect((await inv.getPublicInvoice(r.publicId))!.status).toBe("waived");
+    expect(await inv.waiveInvoice(a, r.publicId, new Date("2026-11-05T14:00:00Z"))).toEqual({ ok: false, error: "not_open" }); // already waived
+
+    // a deposit 1Click is processing blocks it regardless of the deadline
+    const r2 = await charge(a);
+    if (!r2.ok) throw new Error(r2.error);
+    const pub2 = (await inv.getPublicInvoice(r2.publicId))!;
+    await inv.recordPaymentStart(pub2.id, { depositAddress: "mock-2", originAsset: "x", quoteDeadline: new Date("2026-11-01T00:00:00Z"), rawQuoteJson: {} });
+    const p2 = (await inv.findPayment(pub2.id, "mock-2"))!;
+    await inv.applyPaymentUpdate(pub2.id, p2.id, { paymentStatus: "processing", invoiceStatus: "pending", amountReceived: 0n, raw: {} });
+    expect(await inv.waiveInvoice(a, r2.publicId, now)).toEqual({ ok: false, error: "payment_in_progress" });
+    // delivered but not yet confirmed on-chain: still in flight
+    await inv.applyPaymentUpdate(pub2.id, p2.id, { paymentStatus: "delivered_unverified", invoiceStatus: "pending", amountReceived: 0n, raw: {} });
+    expect(await inv.waiveInvoice(a, r2.publicId, now)).toEqual({ ok: false, error: "payment_in_progress" });
+    await inv.applyPaymentUpdate(pub2.id, p2.id, { paymentStatus: "verified", invoiceStatus: "paid", amountReceived: 200n * U, destinationTx: "tx2", raw: {} });
+    expect(await inv.waiveInvoice(a, r2.publicId, now)).toEqual({ ok: false, error: "not_open" }); // paid
+  });
+
   it("vault account is per operator", async () => {
     await inv.setVaultAccount(a, "vault.op.testnet");
     expect(await inv.getVaultAccount(a)).toBe("vault.op.testnet");

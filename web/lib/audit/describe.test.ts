@@ -23,6 +23,7 @@ describe("describeActivity", () => {
   it.each([
     ["import.confirm", { format: "airbnb", created: 22, updated: 0 }, "Imported an Airbnb payout report: 22 bookings added"],
     ["invoice.create", { type: "penalty", amount: "200000000" }, "Charged a guest $200.00"],
+    ["invoice.waive", { amount: "45000000", description: "Late checkout" }, "Waived a $45.00 charge: Late checkout"],
     ["payee.create", { role: "cleaner", nearAccount: "maria.testnet" }, "Added cleaner maria.testnet (needs vault approval)"],
     ["property.create", { name: "Casa Azul" }, "Added property Casa Azul"],
     ["payee.approve", { nearAccount: "owen.testnet" }, "Approved owen.testnet in the vault (signed with your wallet)"],

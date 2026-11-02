@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/dal";
 import { logActivity } from "@/lib/db";
-import { createChargeInvoice } from "@/lib/db/invoices";
+import { createChargeInvoice, listInvoices, waiveInvoice } from "@/lib/db/invoices";
 import { parseUsd } from "@/lib/money";
 
 export type ChargeState =
@@ -56,5 +56,29 @@ export async function createCharge(_prev: ChargeState, formData: FormData): Prom
   } catch (e) {
     console.error("[invoices.createCharge] failed", e);
     return { error: "Couldn't create the invoice. Try again.", values };
+  }
+}
+
+const PublicId = z.string().regex(/^[A-Za-z0-9_-]{22}$/);
+const WAIVE_ERRORS: Record<string, string> = {
+  payment_in_progress: "The guest is paying right now. Try again once their payment finishes or its address expires (1 hour).",
+  not_open: "This invoice is already paid or closed.",
+  not_found: "Invoice not found.",
+};
+
+/** Forgive an open charge: it stops blocking the booking's payout. Never while a payment can land. */
+export async function waiveCharge(publicId: string): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireUser();
+  if (!PublicId.safeParse(publicId).success) return { ok: false, error: WAIVE_ERRORS.not_found };
+  try {
+    const r = await waiveInvoice(user.id, publicId, new Date());
+    if (!r.ok) return { ok: false, error: WAIVE_ERRORS[r.error] ?? "Couldn't waive it. Try again." };
+    const inv = (await listInvoices(user.id)).find((i) => i.publicId === publicId);
+    await logActivity({ userId: user.id, action: "invoice.waive", entity: "invoice", entityId: r.id, meta: { amount: inv?.amountRaw.toString(), description: inv?.description } });
+    refresh();
+    return { ok: true };
+  } catch (e) {
+    console.error("[invoices.waiveCharge] failed", e);
+    return { ok: false, error: "Couldn't waive it. Try again." };
   }
 }

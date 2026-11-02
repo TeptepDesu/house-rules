@@ -4,9 +4,11 @@ import { Suspense } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { ChargeForm } from "@/components/invoices/charge-form";
 import { CopyPayLink } from "@/components/invoices/copy-pay-link";
+import { WaiveCharge } from "@/components/invoices/waive-charge";
 import { Money } from "@/components/money";
 import { PageHeader } from "@/components/page-header";
 import { StatusPill } from "@/components/status-pill";
+import { formatUsd } from "@/lib/money";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireUser } from "@/lib/auth/dal";
 import { listBookingOptions } from "@/lib/db/bookings";
@@ -84,6 +86,11 @@ async function InvoicesContent() {
                           Open
                         </Link>
                       </div>
+                      {(i.status === "open" || i.status === "expired") && (
+                        <div className="mt-1 sm:hidden">
+                          <WaiveCharge publicId={i.publicId} amount={formatUsd(i.amountRaw)} testidSuffix="-mobile" />
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-right align-top">
                       <Money raw={i.amountRaw} />
@@ -98,6 +105,11 @@ async function InvoicesContent() {
                           Open
                         </Link>
                       </div>
+                      {(i.status === "open" || i.status === "expired") && (
+                        <div className="mt-1 flex justify-end">
+                          <WaiveCharge publicId={i.publicId} amount={formatUsd(i.amountRaw)} />
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

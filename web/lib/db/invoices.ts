@@ -84,11 +84,47 @@ export async function getPublicInvoice(publicId: string) {
   return r ?? null;
 }
 
+const PAYABLE: InvoiceStatus[] = ["open", "expired"];
+
+/**
+ * Save a new deposit address for an invoice. Re-checks, under the invoice's row lock, that it's
+ * still payable: false if it was waived or paid while the quote was being made (the guest is
+ * then told it's no longer open, and the address is never shown).
+ */
 export async function recordPaymentStart(
   invoiceId: string,
   p: { depositAddress: string; depositMemo?: string; originAsset: string; quoteDeadline: Date; rawQuoteJson: unknown },
-) {
-  await (await db()).insert(payments).values({ invoiceId, ...p, rawQuoteJson: p.rawQuoteJson as object, status: "awaiting_deposit" });
+): Promise<boolean> {
+  return (await db()).transaction(async (tx) => {
+    const [inv] = await tx.select({ status: invoices.status }).from(invoices).where(eq(invoices.id, invoiceId)).for("update");
+    if (!inv || !PAYABLE.includes(inv.status)) return false;
+    await tx.insert(payments).values({ invoiceId, ...p, rawQuoteJson: p.rawQuoteJson as object, status: "awaiting_deposit" });
+    return true;
+  });
+}
+
+const IN_FLIGHT: PaymentStatus[] = ["processing", "incomplete_deposit", "delivered_unverified"];
+
+/**
+ * The operator forgives an open charge (it stops blocking the booking). Refused while a guest's
+ * payment could still land: a deposit address that hasn't expired, or a deposit being processed.
+ */
+export async function waiveInvoice(userId: string, publicId: string, now: Date): Promise<Result<{ id: string }>> {
+  return (await db()).transaction(async (tx) => {
+    const [inv] = await tx
+      .select({ id: invoices.id, status: invoices.status })
+      .from(invoices)
+      .where(and(eq(invoices.publicId, publicId), eq(invoices.userId, userId)))
+      .for("update");
+    if (!inv) return { ok: false, error: "not_found" };
+    const ps = await tx.select({ status: payments.status, deadline: payments.quoteDeadline }).from(payments).where(eq(payments.invoiceId, inv.id));
+    if (ps.some((x) => IN_FLIGHT.includes(x.status) || (x.status === "awaiting_deposit" && x.deadline > now))) {
+      return { ok: false, error: "payment_in_progress" };
+    }
+    if (!PAYABLE.includes(inv.status)) return { ok: false, error: "not_open" };
+    await tx.update(invoices).set({ status: "waived" }).where(eq(invoices.id, inv.id));
+    return { ok: true, id: inv.id };
+  });
 }
 
 /** The payment for this invoice + deposit address (a guest can't poll someone else's address). */
