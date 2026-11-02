@@ -111,6 +111,11 @@ Source: docs.near-intents.org/api-reference/oneclick. Client: `web/lib/intents/c
   - `swapDetails` includes `amountOut`, `depositedAmount`, `refundedAmount`, `refundReason`, `nearTxHashes`, and `originChainTxHashes` / `destinationChainTxHashes` (each `{hash, explorerUrl}`).
 - **Confidential mode** (stretch goal): request option `confidentiality: public|basic|advanced`, plus `CONFIDENTIAL_INTENTS` for the deposit, refund and recipient types.
 
+**Confirmed read-only on 2026-11-02** (`GET /v0/tokens` and `dry: true` quotes; no deposit address, no money):
+- **USDC on NEAR:** `USDC_ASSET_ID=nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1`, `USDC_TOKEN_ACCOUNT=17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1` (native USDC, 6 decimals).
+- **Guest origin for the spike:** USDC on Base, `nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near`. Arbitrum (`nep141:arb-0xaf88d065e77c8cc2239327c5edb3a432268e5831.omft.near`) and Solana are also listed. 210 tokens in total.
+- **Cost:** `EXACT_OUTPUT` $1.00 to a NEAR account needs **1.010309** USDC in from Base, $5.00 needs **5.050893** (no API key, 1% slippage). The time estimate is 35 s. $1 is accepted, so the spike can use $1.
+
 **Still to prove in spike #2** (the first real, tiny mainnet payment):
 - That `recipientType: DESTINATION_CHAIN` with a NEAR account as `recipient` delivers via `ft_transfer` to the vault.
 - That the vault being registered on USDC is enough for the delivery to land.
