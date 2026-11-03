@@ -2,18 +2,18 @@
 
 Everything that's blocked on you, in the order it starts to matter. Each item says **why** and **by when**. Tick items off here, or just tell me in chat.
 
-_Last updated: 2026-11-01 (after the testnet deploy)_
+_Last updated: 2026-11-03 (timeline pulled forward: app done Nov 6, enhancements Nov 7–11; plan §9)_
 
 ---
 
-## Whenever you're back at the laptop (5 minutes)
+## Today, Nov 3
 
 - [ ] **Say "push"** when you want the local commits on GitHub. I check that the repo is still private before every push.
+- [ ] **Start buying the mainnet funds now.** They're needed on **Nov 5**, and exchange withdrawals and identity checks can be slow. The full list is under [Mainnet: Nov 5](#mainnet-nov-5).
 - [ ] **Add pnpm to your shell** (one line, once):
   ```bash
   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshenv
   ```
-- [ ] **Quit Docker Desktop** if it's still running; we don't use it. PGlite gives us Postgres without Docker.
 
 ## Testnet: deployed ✅ (one step left for you)
 
@@ -25,29 +25,32 @@ The vault, mock USDC, payees and a settle-only agent key are live on testnet. De
 
 - [x] **Real-wallet flow on testnet.** Done 2026-11-02 with Meteor: linked `houserules-operator.testnet` (NEP-413), connected the vault, approved `houserules-cleaner-2.testnet` via **Approve in vault**; it showed *In waiting period*, then *Active* after the 10-minute delay. Found and fixed a stale-status bug on the People page along the way. Everything after the wallet popup (checking the signer is the vault owner, verifying the tx on-chain, the audit row) is already tested, including against a real testnet `add_payee`.
 
-## The real $1 1Click payment (spike #2): on recording day, Nov 13
-
-**Decision 2026-11-02:** Joseph does the one real $1 payment on recording day instead of by Nov 5. To keep it from being the first try on camera, do it **about an hour before recording** as a rehearsal, then record a second $1 payment (or use the first as the "one I ran earlier" fallback). Fund the two wallets a few days ahead: exchange withdrawals and identity checks can be slow.
-
-- [ ] **A funded mainnet account for testing**, e.g. `houserules-dev.near`, with about **1 NEAR** for gas and storage.
-- [ ] **About $5–10 of a token on another chain** (e.g. USDC on Arbitrum or Base) in a wallet you control. That's the "guest" paying an invoice from another chain.
-- [ ] **A 1Click API key** (optional). Without one, 1Click works but charges **0.2%**. The plan says to apply in prep. The key goes into `web/.env.local` as `ONECLICK_API_KEY`.
-- [ ] **Spike #2 will also confirm** three settings for live mode: `USDC_ASSET_ID`, `USDC_TOKEN_ACCOUNT` and `INTENTS_SENDERS` (see `web/.env.example`). Until then the app runs 1Click in mock mode, and the full guest-payment flow works and is tested.
-- [ ] **Your explicit OK for each mainnet transaction.** I never sign or spend on mainnet without it (CLAUDE.md).
-
-## Before deploying the website: needed by Nov 10
+## Hosting: Nov 4
 
 Step-by-step guide: [deploy.md](deploy.md). The production build is already checked locally.
 
 - [ ] **A hosted Postgres `DATABASE_URL`** for production. Any provider works (Neon's free tier is fine). Locally we don't need one; the app uses PGlite.
 - [ ] **A `SESSION_SECRET`** for production. Generate it with `openssl rand -base64 48`, and put both values into **Vercel** env vars, not into chat or the repo.
-- [ ] **A Vercel project** linked to the GitHub repo.
-- [ ] **Mainnet for the demo** (plan §10):
-  - a few NEAR for the vault deploy, storage and gas;
-  - about **$30 USDC** to collect and pay out on camera;
-  - a mainnet owner and cleaner account (yours or friends', with permission).
+- [ ] **A Vercel project** linked to the GitHub repo (needs the push first).
+- [ ] **Decide:** hosted mainnet straight away, or a hosted testnet preview first. Production refuses mock 1Click, so a testnet deploy can't take guest payments (see the open decision in [deploy.md](deploy.md)).
 
-## For live payouts (after the testnet deploy)
+## Mainnet: Nov 5
+
+**Changed 2026-11-03:** the first real $1 1Click payment moves from recording day to **Nov 5**, so the app is proven on mainnet by Nov 6 and the rest of the week goes to enhancements. On **Nov 13** you still do a rehearsal payment about an hour before recording.
+
+- [ ] **A funded mainnet account**, e.g. `houserules-dev.near`, with about **1 NEAR** for gas and storage, plus a few NEAR for the vault deploy and payee storage.
+- [ ] **$2–5 of USDC plus about $1 of ETH on Base** in MetaMask. That's the "guest" paying an invoice from another chain.
+- [ ] **About $30 USDC** for the demo, to collect and pay out on camera.
+- [ ] **A mainnet owner and cleaner account** (yours or friends', with permission).
+- [ ] **A 1Click API key** (optional). Without one, 1Click works but charges **0.2%**. The key goes into `web/.env.local` as `ONECLICK_API_KEY`.
+- [ ] **The first real payment also confirms** three settings for live mode: `USDC_ASSET_ID`, `USDC_TOKEN_ACCOUNT` and `INTENTS_SENDERS` (see `web/.env.example`).
+- [ ] **Your explicit OK for each mainnet transaction.** I never sign or spend on mainnet without it (CLAUDE.md).
+
+## Enhancements: Nov 7–11 (optional, unblocks backlog items)
+
+- [ ] **A NEAR AI Cloud key** (cloud.near.ai; $10 of credits by joining NEAR Builders). It lets me verify **Polish with NEAR AI** live (backlog item 1). Add `NEAR_AI_API_KEY` and `NEAR_AI_MODEL` to `web/.env.example` by hand; I can't read `.env*` files.
+
+## For live payouts: Nov 5–6
 
 - [ ] **The agent's function-call key in the production server env (Vercel):** `AGENT_ACCOUNT` and `AGENT_PRIVATE_KEY` (the settle-only key). The app checks on-chain that this key can only call `vault.settle` and refuses to run otherwise. Never paste a full-access key there.
 - [ ] **For scheduled runs:** add GitHub repo secrets `APP_URL` and `AGENT_RUN_SECRET` (≥32 random chars, the same value as the app's env). The workflow is in `.github/workflows/agent-schedule.yml` and does nothing until both exist. The **Run agent now** button works without them.
@@ -56,9 +59,9 @@ Step-by-step guide: [deploy.md](deploy.md). The production build is already chec
 
 - [ ] **Paste the official hackathon rules** (or a link). I'll save them as `HACKATHON.md`; CLAUDE.md points there, and it doesn't exist yet.
 - [ ] **The Discord question about pre-hackathon work** (plan §12, still open).
-- [ ] **NEAR AI Cloud credits** ($10 by joining NEAR Builders), only if we do the AI-triage stretch goal.
 - [ ] **Nomad:** ask them before naming them as a design partner (plan §0). Until then, no Nomad names, data or branding anywhere.
-- [ ] **Nov 13:** record the demo video. Script, shot list and a draft X post are in [demo-script.md](demo-script.md). Post only when you're happy with it.
+- [ ] **Nov 12:** code freeze. I run the full suites and the agentshield scan, and we dry-run the demo script.
+- [ ] **Nov 13:** rehearsal $1 payment about an hour before, then record the demo video. Script, shot list and a draft X post are in [demo-script.md](demo-script.md). Post only when you're happy with it.
 - [ ] **Nov 14:** decide on making the repo public. I'll run `npx -y ecc-agentshield scan --path .` first. Submit with tracks `realworld` + `security` + `business`, aiming for 12:00 UTC.
 
 ## Optional, makes my work better

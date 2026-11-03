@@ -1,6 +1,6 @@
 # Deploying the web app (Vercel + hosted Postgres)
 
-For the Nov 10 freeze (plan §9). About 30 minutes, most of it clicking. **Secrets go into Vercel's settings, never into chat, the repo or a file Claude reads.**
+For Nov 4 (plan §9: hosting Nov 4, mainnet Nov 5, app done Nov 6). About 30 minutes, most of it clicking. **Secrets go into Vercel's settings, never into chat, the repo or a file Claude reads.**
 
 Checked locally on 2026-11-02:
 - `pnpm --filter web build` succeeds with **no** env vars, so a missing variable can't break the build.
@@ -44,7 +44,7 @@ Any provider works. Neon's free tier is fine.
 | `NEAR_AI_API_KEY`, `NEAR_AI_MODEL` | optional; set **both** to show *Polish with NEAR AI* on guest follow-ups (key from cloud.near.ai) | key: **yes** |
 | `NEAR_AI_BASE_URL` | optional; defaults to `https://cloud-api.near.ai/v1` | no |
 
-**Open decision (before Nov 10):** production refuses mock 1Click, and 1Click only delivers on mainnet. So a hosted **testnet** deploy can't take guest payments. The rest works there: import, payouts and the vault pages. Either deploy straight to mainnet (the plan), or decide we want a hosted testnet preview and Claude adds a clearly labelled exception.
+**Open decision (Nov 4):** production refuses mock 1Click, and 1Click only delivers on mainnet. So a hosted **testnet** deploy can't take guest payments. The rest works there: import, payouts and the vault pages. Either deploy straight to mainnet (the plan), or decide we want a hosted testnet preview and Claude adds a clearly labelled exception.
 
 ## 4. Scheduled payouts (2 min, optional)
 

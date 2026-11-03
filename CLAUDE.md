@@ -231,8 +231,8 @@ Auth layout: `web/lib/auth/token.ts` (pure JWT, used by `proxy.ts` and tests), `
 
 **Which checks lie:**
 - Playwright with mocked 1Click proves nothing about real 1Click. The real path is only verified by a manual tiny mainnet payment.
-- Testnet settlement with a mock FT proves nothing about mainnet USDC contract IDs or storage registration. Run the full loop on mainnet before Nov 10's freeze.
-- Local PGlite proves the SQL and migrations, not the hosted database's schema or connection limits. Run `db:migrate` against the hosted database and smoke-test sign-in there before the Nov 10 freeze.
+- Testnet settlement with a mock FT proves nothing about mainnet USDC contract IDs or storage registration. Run the full loop on mainnet by Nov 6 ("app done", plan §9).
+- Local PGlite proves the SQL and migrations, not the hosted database's schema or connection limits. Run `db:migrate` against the hosted database and smoke-test sign-in there by Nov 4 (plan §9).
 
 ---
 

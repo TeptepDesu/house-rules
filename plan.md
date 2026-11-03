@@ -235,7 +235,7 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 
 ## 7. Scope
 
-**Core (freeze Nov 10)**
+**Core (done Nov 3; app finished, with mainnet, by Nov 6; see §9)**
 1. Vault contract + near-workspaces tests
 2. Operator auth, properties, payees (wallet-signed `add_payee`)
 3. Invoices + guest pay page + 1Click inflow → vault
@@ -247,9 +247,9 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 
 **Cut line if behind (in this order):** manual column mapping → Guesty importer → cron trigger (keep the button) → payee delay → dashboard charts.
 
-**Stretch (after Nov 10, in order)**
+**Stretch (Nov 7–11, in order; part of the enhancement backlog in §9)**
 1. **Private revenue mode:** guest payments settle via Confidential Intents into the operator's confidential balance; the operator tops up the vault per settlement run. Only if spike #2 shows it's one parameter + simple withdrawal.
-2. **AI exception triage via NEAR AI Cloud** (private inference, so guest data isn't sent to a public LLM): explains each blocked booking and drafts the follow-up with a penalty pay link.
+2. **AI exception triage via NEAR AI Cloud** (private inference, so guest data isn't sent to a public LLM): explains each blocked booking and drafts the follow-up with a penalty pay link. **Built Nov 3; the live NEAR AI call is not yet verified.**
 3. Cross-chain owner payouts (owner receives USDC on another chain).
 
 **Dropped:** direct NEAR-wallet guest payments (Rail A), gasless meta transactions, OTA API integrations, fiat ramps.
@@ -305,21 +305,31 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 | **Fri Oct 30** | **Spike #3:** add a function-call key on `agent` scoped to the spike contract's `settle`; call it from Node with near-api-js; confirm calls to other methods fail. Check what NEAR AI Cloud's API looks like (for stretch). | Key scoping proven from JS |
 | **Sat Oct 31** | Write `docs/`: vault interface spec (§4 refined), schema, edge-case table, wireframes, 3 synthetic payout reports, demo script, `.env.example`. | Day-1 checklist complete |
 
-### Build — Nov 1–14
-| Date | Build | Exit criteria |
+### Build — Nov 1–14 (revised 2026-11-03)
+
+**Why it changed:** the whole core scope (§7, items 1–8) was done on Nov 3, a week early, along with the testnet proof (agent payouts, real-wallet payee approval, `break-it`) and stretch 2 (follow-up messages). The app is now **finished on Nov 6** (hosted, full loop proven on mainnet), not Nov 10. That leaves **Nov 7–11 for enhancements and improvements**, then a code freeze on Nov 12.
+
+**Done, Nov 1–3:** monorepo, auth, vault contract + unit/sandbox tests, testnet deploy, properties/payees, invoices + pay page, 1Click inflow (mock), import + reconciliation, splits + fast-check, agent + Run-now, dashboard + audit log, Playwright suite, README walkthrough, follow-up messages.
+
+| Date | Do | Exit criteria |
 |---|---|---|
-| **Nov 1** | Monorepo init; web scaffold + auth; contract crate skeleton | Login works; contract compiles |
-| **Nov 2–3** | Vault contract complete + all near-workspaces tests; deploy to testnet | Contract test suite green on sandbox |
-| **Nov 4** | Properties + payees (wallet-signed `add_payee`, status sync); invoices + pay page | Payee shows `active` after delay |
-| **Nov 5** | 1Click inflow → vault, status polling, payment verification | Mock + one real payment mark invoice paid |
-| **Nov 6** | Smart import + reconciliation + tests | All reconcile results show on sample data |
-| **Nov 7** | Split engine + fast-check; agent (pre-check, chunk, settle, verify) + Run-now | One click pays owner + cleaner on testnet via agent key |
-| **Nov 8** | Dashboard: cards, settlements, agent runs, audit log from events | Audit log matches chain |
-| **Nov 9** | Full Playwright suite; fix what it finds | All suites green |
-| **Nov 10** | **Freeze.** Deploy web; deploy vault to **mainnet**; full loop with small real amounts | Demo path works on mainnet |
-| **Nov 11–12** | Stretch in order (§7) | Merge only what's tested |
-| **Nov 13** | README (problem, why NEAR, "do X → see Y", vault spec, threat model, test commands), record demo, draft X post | Video done |
+| **Nov 3** | Re-plan. Push (check the repo is private first). Run the agentshield scan early. **Joseph: buy the mainnet funds today** (NEAR, plus USDC and gas on Base); exchange withdrawals can be slow | Plan updated; funds on the way |
+| **Nov 4** | Hosting: hosted Postgres + Vercel, `db:migrate` (`0000`–`0005`), smoke-test sign-in on the hosted app. Decide: hosted mainnet, or a testnet preview (see `docs/deploy.md`). Claude: read-only mainnet preflight script | Hosted app signs in |
+| **Nov 5** | Mainnet: deploy the vault, register it on USDC, add owner and cleaner payees, create the settle-only agent key. **First real $1 1Click payment**, which also confirms `USDC_ASSET_ID`, `USDC_TOKEN_ACCOUNT` and `INTENTS_SENDERS` | A real guest payment marks the invoice paid and USDC is in the vault |
+| **Nov 6** | **App done.** Full mainnet loop: payment → import → reconcile → Run agent → owner and cleaner paid → audit log. Fix whatever it turns up | Demo path works end to end on mainnet, on the hosted app |
+| **Nov 7–11** | **Enhancements and improvements**, in backlog order (below). Merge only what's tested; all suites green at the end of each day | Each item merged with its tests, or dropped |
+| **Nov 12** | **Code freeze.** Fixes only. Final README pass, full suites, agentshield scan, dry run of `docs/demo-script.md` | Everything green; script runs clean |
+| **Nov 13** | Rehearsal $1 payment about an hour before recording, record the demo, draft the X post | Video done |
 | **Nov 14** | Repo public, X post, submit with `realworld` + `security` + `business`. **Aim for 12:00 UTC.** | Submitted |
+
+**Enhancement backlog, Nov 7–11 (in order; reorder freely):**
+1. **Verify the NEAR AI rewording live** (needs a cloud.near.ai key). This finishes stretch 2.
+2. **Polish pass:** a design review of every page on desktop and phone, empty/loading/error states, keyboard and focus, copy. Fix what the mainnet run (Nov 5–6) showed.
+3. **Overview charts** (the last cut-line item).
+4. **Stretch 1, private revenue mode:** only if the real 1Click quote on Nov 5 shows Confidential Intents is one parameter plus a simple withdrawal. Otherwise drop it.
+5. **Stretch 3, cross-chain owner payouts.**
+
+If mainnet slips past Nov 6, it eats into the enhancement days, not the code freeze.
 
 ---
 

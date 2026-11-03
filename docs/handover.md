@@ -6,8 +6,9 @@ Where House Rules stands, what's half-done, and what's next. Read with `CLAUDE.m
 
 - **The app is feature-complete for the plan's core scope.** Every core item in plan §7 is built and tested, and the testnet proof is done.
 - **Stretch: guest follow-up messages are done and committed.** The optional NEAR AI rewording hasn't been tried against the live API. See [Follow-up messages](#follow-up-messages-finished-2026-11-03).
-- **Joseph is moving to a Windows laptop (Ubuntu on WSL).** Setup steps, and what to bring over from the Mac: [`docs/new-machine-windows.md`](new-machine-windows.md). See [Moving machines](#moving-machines).
-- **9 local commits are not pushed.** The repo `TeptepDesu/house-rules` is still private (checked 2026-11-03: the API returns 404). Push before switching laptops. Joseph decides when to push.
+- **Timeline pulled forward (2026-11-03, plan §9):** hosting Nov 4, mainnet Nov 5, **app done Nov 6**, enhancements Nov 7–11, code freeze Nov 12, record Nov 13, submit Nov 14.
+- **The move to Windows is cancelled.** Work stays on the Mac. [`docs/new-machine-windows.md`](new-machine-windows.md) is kept only in case it's needed later.
+- **10 local commits are not pushed.** The repo `TeptepDesu/house-rules` is still private (checked 2026-11-03: the API returns 404). Joseph decides when to push.
 - **What's left is mostly Joseph's:** mainnet funds, hosting, the demo recording and the submission.
 
 ## State of the repo
@@ -16,7 +17,7 @@ Where House Rules stands, what's half-done, and what's next. Read with `CLAUDE.m
 |---|---|
 | Branch | `main` (trunk only) |
 | Last pushed | `07363a7` |
-| Local, unpushed | `2056e4d` → `HEAD` (9 commits: the 7 below, the handover, the follow-up messages) |
+| Local, unpushed | `2056e4d` → `HEAD` (10 commits: the 7 below, the handover, the follow-up messages, the Windows handover) |
 | Uncommitted | Nothing |
 | Servers running | None |
 
@@ -36,15 +37,6 @@ Unpushed commits, oldest first:
 - `pnpm --filter web test:integration`: 14 passed, 1 skipped (live testnet, which needs the key file). Last run at `5e483ad`; nothing it covers has changed since.
 
 Contract suites are unchanged since the last run: 33 unit and 8 sandbox tests.
-
-## Moving machines
-
-The Mac was the only machine so far. On the new laptop:
-- **Code:** clone `main` after the push. Everything else needed comes with it, including `.claude/settings.json`, which denies agent reads of `.env*`.
-- **Not in git, bring by hand:** `web/.env.testnet.local` (settle-only agent key). The testnet deployer keys (`vault.` / `usdc.houserules-operator.testnet`) are in the Mac's Keychain and are only needed to redeploy or upgrade the testnet contracts. The operator account is in Meteor (seed phrase).
-- **Mac-only notes that no longer apply:** "pnpm lives in `~/.local/bin`", "Homebrew belongs to another user", "keys in the macOS Keychain". On WSL: nvm Node, global pnpm, and near-cli's file keychain.
-- **Claude's memory stays on the Mac.** Two notes worth carrying over: (1) before any push, check the repo is private with `curl -s -o /dev/null -w '%{http_code}\n' https://api.github.com/repos/TeptepDesu/house-rules` (`404` = private; on `200`, stop and ask); (2) the repo goes public only at submission, Nov 14, after the agentshield scan.
-- **First check on the new machine:** the suites in step 7 of the setup guide should match the counts below. If they don't, debug before building anything new.
 
 ## What was built this session
 
@@ -87,19 +79,21 @@ The Mac was the only machine so far. On the new laptop:
 
 ## What's next
 
+Dates follow the revised plan §9.
+
 **Claude can do these without Joseph:**
-1. Verify the live NEAR AI call once there's a key (above).
-2. Optional: overview charts (the last cut-line item, low value).
-3. Optional: a mainnet preflight script. It would be read-only, checking USDC registration for Joseph's account, a dry quote and status reachability. It needs Joseph's mainnet account name.
-4. Before the repo goes public: `npx -y ecc-agentshield scan --path .` (CLAUDE.md).
+1. **Nov 3:** run `npx -y ecc-agentshield scan --path .` early, so findings get fixed well before Nov 14. Run it again at the Nov 12 freeze.
+2. **Nov 4:** a read-only mainnet preflight script, checking USDC registration for Joseph's account, a dry quote and status reachability. It needs Joseph's mainnet account name.
+3. **Nov 5–6:** with Joseph's OK for each transaction, the mainnet vault deploy and the full loop. Fix whatever it turns up.
+4. **Nov 7–11, the enhancement backlog in order:** verify NEAR AI live (needs a key), a polish pass, overview charts, then stretch 1 (only if Nov 5 shows it's cheap) and stretch 3.
 
 **Joseph** (details in `docs/needs-from-joseph.md`):
 1. **Push** when ready. Confirm the repo is still private first; it stays private until Nov 14.
-2. **Fund wallets a few days early:**
+2. **Start funding wallets today (needed Nov 5):**
    - about 1 NEAR on a mainnet account (Meteor);
    - $2–5 of USDC plus about $1 of ETH on Base (MetaMask).
-3. **Hosting by Nov 10:** follow `docs/deploy.md`. Apply migrations `0000`–`0005` to the hosted DB with `db:migrate`. Open decision: production refuses mock 1Click, so a hosted testnet deploy can't take guest payments.
-4. **Nov 13:** do the $1 real 1Click rehearsal payment about an hour before recording (`docs/demo-script.md`), then record. Shot 5 is `pnpm --filter web break-it`.
+3. **Hosting on Nov 4:** follow `docs/deploy.md`. Apply migrations `0000`–`0005` to the hosted DB with `db:migrate`. Open decision: production refuses mock 1Click, so a hosted testnet deploy can't take guest payments.
+4. **Nov 5:** the first real $1 1Click payment and the mainnet vault deploy. **Nov 13:** a $1 rehearsal payment about an hour before recording (`docs/demo-script.md`), then record. Shot 5 is `pnpm --filter web break-it`.
 5. **Nov 14:** make the repo public after the agentshield scan, then submit (`realworld` + `security` + `business`, about 12:00 UTC).
 6. Still open:
    - paste the hackathon rules (→ `HACKATHON.md`);
