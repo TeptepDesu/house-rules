@@ -206,6 +206,8 @@ pnpm --filter web test:integration   # ~30s: real vault wasm + mock USDC on a lo
                                      # needs contracts built: (cd contracts/vault && cargo near build non-reproducible-wasm) etc.
 pnpm --filter web test:testnet   # LIVE testnet: the app's agent pays through vault.houserules-operator.testnet (needs web/.env.testnet.local)
 pnpm --filter web break-it       # LIVE testnet demo shot 5: stolen-agent-key attacks, all refused; balance unchanged. Testnet only
+pnpm --filter web preflight -- --account <you>.near [--vault v.near] [--agent a.near] [--payee p.near ...]
+                                 # READ-ONLY mainnet checks: balance, USDC registration, vault/agent key, 1Click dry quote. No keys
 # running the app against testnet: Next dev rejects --env-file, so load the file into the shell:
 #   cd web && set -a && . ./.env.testnet.local && set +a && pnpm exec next dev
 pnpm --filter web db:generate    # drizzle-kit generate → web/drizzle/

@@ -38,7 +38,8 @@ Step-by-step guide: [deploy.md](deploy.md). The production build is already chec
 
 **Changed 2026-11-03:** the first real $1 1Click payment moves from recording day to **Nov 5**, so the app is proven on mainnet by Nov 6 and the rest of the week goes to enhancements. On **Nov 13** you still do a rehearsal payment about an hour before recording.
 
-- [ ] **A funded mainnet account**, e.g. `houserules-dev.near`, with about **1 NEAR** for gas and storage, plus a few NEAR for the vault deploy and payee storage.
+- [ ] **A funded mainnet account**, e.g. `houserules-dev.near`, with about **4 NEAR**: about 2.8 NEAR becomes the vault's contract storage (measured by the preflight script from the 178 KB wasm), plus about 1 NEAR for gas, the agent account and USDC registrations (about 0.001 NEAR each, measured).
+- [ ] **Tell me the account name** and I'll run `pnpm --filter web preflight -- --account <it> --payee <owner> --payee <cleaner>`. It's read-only: no keys, no signing.
 - [ ] **$2–5 of USDC plus about $1 of ETH on Base** in MetaMask. That's the "guest" paying an invoice from another chain.
 - [ ] **About $30 USDC** for the demo, to collect and pay out on camera.
 - [ ] **A mainnet owner and cleaner account** (yours or friends', with permission).

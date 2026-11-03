@@ -83,7 +83,7 @@ Dates follow the revised plan §9.
 
 **Claude can do these without Joseph:**
 1. **Nov 3:** run `npx -y ecc-agentshield scan --path .` early, so findings get fixed well before Nov 14. Run it again at the Nov 12 freeze.
-2. **Nov 4:** a read-only mainnet preflight script, checking USDC registration for Joseph's account, a dry quote and status reachability. It needs Joseph's mainnet account name.
+2. ~~Nov 4: mainnet preflight script~~ **Done Nov 3:** `pnpm --filter web preflight` (read-only). Run it with Joseph's account and payees once he has them, and again after the vault deploy with `--vault` and `--agent`.
 3. **Nov 5–6:** with Joseph's OK for each transaction, the mainnet vault deploy and the full loop. Fix whatever it turns up.
 4. **Nov 7–11, the enhancement backlog in order:** verify NEAR AI live (needs a key), a polish pass, overview charts, then stretch 1 (only if Nov 5 shows it's cheap) and stretch 3.
 
