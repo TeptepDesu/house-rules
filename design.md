@@ -26,13 +26,18 @@ Structure references (patterns only, never their branding):
 
 ## Colour
 
-There's a warm neutral base (stone), one accent ("ledger green", a deep teal-green) and four muted status colours. All tokens live in `web/app/globals.css` as OKLCH; components use the semantic names below, never raw values. **This palette is ours; don't reuse the Nomad Payment Portal's tokens.**
+There are two themes, both behind the same semantic tokens. All tokens live in `web/app/globals.css` as OKLCH; components use the semantic names below, never raw values. **Don't reuse the Nomad Payment Portal's tokens.**
+
+- **Dark (the default, `.dark` on `<html>`):** neutrals and the blue accent follow the NEAR HACKATHON site's dark theme (decided 2026-11-03): green-black background `#161a15`, cream text `#e7dfca`, olive borders, accent blue `#0091fd` with dark text on it. The status colours are ours, tuned for that base.
+- **Light (`:root`):** a warm neutral base (stone), one accent ("ledger green", a deep teal-green) and four muted status colours.
+- **Switching:** the sun/moon button (sidebar, mobile menu, sign-in pages) stores the choice in `localStorage` (`hr-theme`). An inline script in `<head>` applies it before first paint (`web/lib/ui/theme.ts`). The guest pay page has no toggle; it follows the browser's saved choice. The QR code always sits on white so it scans.
+- `e2e/a11y.spec.ts` runs axe on the main screens in both themes.
 
 | Token | Use |
 |---|---|
-| `--background` / `--foreground` | Page and body text (warm off-white / near-black) |
+| `--background` / `--foreground` | Page and body text (dark: green-black / cream; light: warm off-white / near-black) |
 | `--card`, `--muted`, `--border` | Surfaces, quiet fills, hairlines |
-| `--primary` | **Accent:** ledger green. Primary buttons, active nav item, focus ring. Max one primary button per view |
+| `--primary` | **Accent** (dark: blue; light: ledger green). Primary buttons, active nav item, focus ring. Max one primary button per view |
 | `--success` | Paid, settled, active payee, matched |
 | `--warning` | Pending, in delay, awaiting, testnet banner |
 | `--destructive` | Blocked, rejected, failed, underpaid |

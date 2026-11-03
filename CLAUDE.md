@@ -9,7 +9,7 @@ Guests pay invoices from any chain via 1Click → exact USDC lands in the vault.
 **Sources of truth, read before working in an area:**
 - `plan.md` — scope, priorities, cut line, timeline. Don't build anything outside the current day's scope without asking.
 - `docs/vault-spec.md` — contract interface, events, error codes.
-- `design.md` — visual system: palette (stone + ledger green), IBM Plex, components, status map (`web/lib/ui/status.ts`). Written before the second page.
+- `design.md` — visual system: palette (dark default after the NEAR HACKATHON site's dark theme; light = stone + ledger green), IBM Plex, components, status map (`web/lib/ui/status.ts`). Written before the second page.
 - `HACKATHON.md` — official rules. Re-read before anything submission-related.
 
 Record exact framework/library versions here at scaffold time. Don't assume versions from memory; check the installed `package.json` / `Cargo.toml`.

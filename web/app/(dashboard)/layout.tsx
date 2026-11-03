@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { AppNav } from "@/components/app-nav";
 import { NetworkBanner } from "@/components/network-banner";
 import { SessionFooter } from "@/components/session-footer";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function Wordmark() {
   return (
@@ -17,7 +18,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <NetworkBanner />
       <div className="flex flex-1">
         <aside className="hidden w-[232px] shrink-0 flex-col gap-6 border-r bg-sidebar p-4 md:flex" data-testid="app-sidebar">
-          <Wordmark />
+          <div className="flex items-center justify-between gap-2">
+            <Wordmark />
+            <ThemeToggle />
+          </div>
           <div className="flex-1">
             <AppNav />
           </div>
@@ -34,8 +38,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <span className="hidden group-open:inline">Close</span>
               </span>
             </summary>
-            <div className="px-3 pb-3">
+            <div className="space-y-3 px-3 pb-3">
               <AppNav orientation="horizontal" />
+              <div className="flex items-center justify-between border-t pt-3 text-sm text-muted-foreground">
+                Theme
+                <ThemeToggle testid="theme-toggle-mobile" />
+              </div>
             </div>
           </details>
           <main className="mx-auto w-full max-w-[1120px] flex-1 p-6">{children}</main>

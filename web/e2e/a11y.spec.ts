@@ -53,10 +53,20 @@ test("no serious or critical accessibility violations", async ({ page, browser }
   await page.getByTestId("import-confirm").click();
   await page.getByTestId("import-done").waitFor();
 
-  for (const path of ["/bookings", "/invoices", "/payouts", "/rules", "/audit", "/"]) {
+  const screens = ["/bookings", "/invoices", "/payouts", "/rules", "/audit", "/"];
+  for (const path of screens) {
     await page.goto(path);
     await axe(page, path.slice(1) || "overview-with-data");
   }
+  // the same screens in the light theme (dark is the default; the toggle persists per browser)
+  await page.getByTestId("theme-toggle").click();
+  await expect(page.locator("html")).not.toHaveClass(/\bdark\b/);
+  for (const path of screens) {
+    await page.goto(path);
+    await axe(page, `light:${path.slice(1) || "overview-with-data"}`);
+  }
+  await page.getByTestId("theme-toggle").click();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
 
   // guest pay page (no session)
   await page.goto("/invoices");
