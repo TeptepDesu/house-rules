@@ -153,7 +153,7 @@ Paste the reference handler here once the first full one exists (auth + validati
 ### Data layer
 
 - **Postgres only. No SQLite.** `web/lib/db/client.ts` picks the driver:
-  - `DATABASE_URL` set: `pg` (node-postgres). Works with any hosted Postgres (Neon, Supabase, RDS) or a local server.
+  - `DATABASE_URL` set: `pg` (node-postgres). Works with any standard PostgreSQL (Supabase, RDS, Railway, a local server, …); no provider SDK.
   - `DATABASE_URL` unset (dev/tests only): **PGlite**, real Postgres compiled to WASM, running in-process. No Docker or install needed. Data in `web/.data/pglite` (gitignored); tests use `PGLITE_DIR=memory://`. It applies `web/drizzle/` migrations on startup.
   - Production without `DATABASE_URL` throws; it never silently uses PGlite. Same for `SESSION_SECRET`: dev falls back to a labelled insecure constant, production throws.
 - Drizzle with `bigint` columns in `mode: 'bigint'`. Check every money column returns `bigint`, not `string` or `number`.

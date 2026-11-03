@@ -2,7 +2,7 @@ import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import * as schema from "./schema";
 
 // One Postgres client for the whole app.
-//   DATABASE_URL set   → node-postgres (any hosted Postgres: Neon, Supabase, RDS, local server)
+//   DATABASE_URL set   → node-postgres (any standard PostgreSQL: Supabase, RDS, Railway, local server)
 //   DATABASE_URL unset → PGlite (real Postgres compiled to WASM, in-process) for local dev and tests.
 //                        Data lives in PGLITE_DIR (default .data/pglite; "memory://" for tests).
 // Production never falls back to PGlite.

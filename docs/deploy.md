@@ -1,4 +1,4 @@
-# Deploying the web app (Vercel + hosted Postgres)
+# Deploying the web app (Vercel + Postgres)
 
 For Nov 4 (plan §9: hosting Nov 4, mainnet Nov 5, app done Nov 6). About 30 minutes, most of it clicking. **Secrets go into Vercel's settings, never into chat, the repo or a file Claude reads.**
 
@@ -7,12 +7,14 @@ Checked locally on 2026-11-02:
 - A production server with no secrets refuses to work instead of running insecurely: it logs `SESSION_SECRET is not set`.
 - The dev payment simulator returns 404 in production.
 
-## 1. Hosted Postgres (5 min)
+## 1. Postgres (5 min)
 
-Any provider works. Neon's free tier is fine.
+The app talks to **standard PostgreSQL** through `pg` (node-postgres). It uses no provider SDK or vendor-specific features, so any PostgreSQL 13+ reachable from Vercel works (the migrations need only `gen_random_uuid()` and `jsonb`). Examples: Supabase, Railway, Render, AWS RDS, Google Cloud SQL, or your own server.
 
-1. Create a project, e.g. `house-rules`, in a region near Vercel's default (US East).
-2. Copy the **connection string**. For Neon, use the **pooled** one (host contains `-pooler`) and keep `?sslmode=require`.
+1. Create a database, e.g. `house_rules`, in a region close to Vercel's default (US East, `iad1`).
+2. Copy its **connection string**: `postgres://USER:PASSWORD@HOST:PORT/DATABASE?sslmode=require`.
+   - **Use the provider's pooled connection** if it offers one (PgBouncer or a "transaction pooler", often port `6543`). Each Vercel instance opens up to 5 connections, and many can start at once.
+   - Keep `?sslmode=require` for anything that isn't on your own machine.
 3. Apply the migrations once, from the laptop:
    - Put `DATABASE_URL=<string>` into `web/.env.local` (gitignored).
    - Tell Claude "run db:migrate". It runs `pnpm --filter web db:migrate` without reading the file.

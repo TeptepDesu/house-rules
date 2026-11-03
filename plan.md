@@ -339,7 +339,7 @@ If mainnet slips past Nov 6, it eats into the enhancement days, not the code fre
 ## 10. Day-1 checklist
 
 - [ ] Private GitHub repo with MIT `LICENSE`
-- [ ] Hosted Postgres (e.g. Neon) for production + Vercel project. Local dev needs nothing: PGlite
+- [ ] Postgres (any standard PostgreSQL 13+) for production + Vercel project. Local dev needs nothing: PGlite
 - [ ] Testnet + mainnet accounts; keys in a password manager, never in the repo
 - [ ] Mainnet: a few NEAR (vault deploy storage + gas + payee storage deposits) + ~$30 USDC for demo
 - [ ] 1Click JWT (or accept 0.2%)

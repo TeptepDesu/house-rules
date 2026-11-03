@@ -29,7 +29,7 @@ The vault, mock USDC, payees and a settle-only agent key are live on testnet. De
 
 Step-by-step guide: [deploy.md](deploy.md). The production build is already checked locally.
 
-- [ ] **A hosted Postgres `DATABASE_URL`** for production. Any provider works (Neon's free tier is fine). Locally we don't need one; the app uses PGlite.
+- [ ] **A Postgres `DATABASE_URL`** for production: any standard PostgreSQL 13+ that Vercel can reach (Supabase, Railway, Render, RDS, your own server…). Use the pooled connection string if the provider has one. Locally we don't need one; the app uses PGlite.
 - [ ] **A `SESSION_SECRET`** for production. Generate it with `openssl rand -base64 48`, and put both values into **Vercel** env vars, not into chat or the repo.
 - [ ] **A Vercel project** linked to the GitHub repo (needs the push first).
 - [ ] **Decide:** hosted mainnet straight away, or a hosted testnet preview first. Production refuses mock 1Click, so a testnet deploy can't take guest payments (see the open decision in [deploy.md](deploy.md)).
@@ -77,4 +77,4 @@ Step-by-step guide: [deploy.md](deploy.md). The production build is already chec
 - Toolchain: Rust, cargo-near, near-cli, Node and pnpm.
 - Testnet accounts created; keys in the Keychain.
 - Private repo `TeptepDesu/house-rules`, with pushes so far.
-- Database switched to plain Postgres (PGlite locally), so no Neon is needed for development.
+- Database switched to plain Postgres (PGlite locally), so no hosted database is needed for development.
