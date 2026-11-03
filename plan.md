@@ -325,6 +325,9 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 **Enhancement backlog, Nov 7–11 (in order; reorder freely):**
 1. **Verify the NEAR AI rewording live** (needs a cloud.near.ai key). This finishes stretch 2.
 2. **Polish pass:** a design review of every page on desktop and phone, empty/loading/error states, keyboard and focus, copy. Fix what the mainnet run (Nov 5–6) showed.
+   - **Done Nov 3:** dark theme by default (the NEAR HACKATHON site's dark palette) with a light toggle; axe passes in both themes.
+   - **Open, Joseph's call:** a run where every payout was held back (e.g. payees not yet approved) shows a red **Failed** pill (`lib/agent/run.ts:118`). "Held back" would read better, but it changes run statuses, so it needs TDD in `lib/agent`.
+   - **Agentshield (Nov 3): C, 74/100.** Secrets, hooks and MCP score 100. To raise it before going public: add deny rules to `.claude/settings.json` (`rm -rf`, `sudo`, `chmod 777`, `ssh`, `> /dev/`) and a short prompt-injection/data-leak section to CLAUDE.md. The "auto-run instruction" finding is a false positive (it matched "without asking" in "Don't build … without asking").
 3. **Overview charts** (the last cut-line item).
 4. **Stretch 1, private revenue mode:** only if the real 1Click quote on Nov 5 shows Confidential Intents is one parameter plus a simple withdrawal. Otherwise drop it.
 5. **Stretch 3, cross-chain owner payouts.**
