@@ -120,6 +120,7 @@ export async function listBookingsWithRecon(userId: string, now = new Date()): P
           type: invoices.type,
           amount: invoices.amountRaw,
           status: invoices.status,
+          dueDate: invoices.dueDate,
           operatorRevenue: invoices.operatorRevenue,
           received: sql<string>`coalesce(sum(case when ${payments.status} = 'verified' then ${payments.amountReceivedRaw} else 0 end), 0)`,
         })
@@ -130,12 +131,14 @@ export async function listBookingsWithRecon(userId: string, now = new Date()): P
     : [];
 
   return rows.map((r) => {
+    // a direct stay is due when its invoice says; a channel booking has no invoice for the stay
+    const stayInvoice = invs.find((i) => i.bookingId === r.id && i.type === "booking");
     const input: BookingForRecon = {
       id: r.id,
       collectionMode: r.collectionMode,
       expectedGross: r.expectedGrossRaw,
       otaPayout: r.otaPayoutRaw ?? undefined,
-      dueDate: new Date(`${r.checkOut}T23:59:59Z`),
+      dueDate: new Date(`${stayInvoice?.dueDate ?? r.checkOut}T23:59:59Z`),
       acceptedCollected: r.acceptedCollectedRaw ?? undefined,
       invoices: invs
         .filter((i) => i.bookingId === r.id)

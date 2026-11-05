@@ -14,7 +14,7 @@ describe("draftFollowUp (deterministic, no AI)", () => {
     expect(d.body).toContain(PAY_LINK);
     expect(d.body).toContain("any chain");
     expect(d.body).not.toContain("Santos");
-    expect(keepsTheFacts(d.body, ["$200.00"])).toBe(true); // the template itself passes the AI guard
+    expect(keepsTheFacts(d.body, ["$200.00"], d.body)).toBe(true); // the template itself passes the AI guard
   });
 
   it("unpaid direct stay: a reminder with the total and dates", () => {
@@ -41,6 +41,28 @@ describe("keepsTheFacts: an AI rewrite may change words, never money or the link
     expect(keepsTheFacts(`$200.00 ${PAY_LINK} ${PAY_LINK}`, facts)).toBe(false);
     expect(keepsTheFacts(`$200.00 ${PAY_LINK} or pay at https://evil.example/pay`, facts)).toBe(false);
     expect(keepsTheFacts(`$200.00 ${PAY_LINK} and also $5.00 tip`, facts)).toBe(false);
+  });
+  it("catches a bare domain or an email address, not just http links", () => {
+    expect(keepsTheFacts(`$200.00 ${PAY_LINK} or pay at evil.xyz/invoice`, facts)).toBe(false);
+    expect(keepsTheFacts(`$200.00 ${PAY_LINK} or use casa-hosts.co`, facts)).toBe(false);
+    expect(keepsTheFacts(`$200.00 ${PAY_LINK} or write to pay@evil.example`, facts)).toBe(false);
+    expect(keepsTheFacts(`$200.00 ${PAY_LINK} or pay at ｅｖｉｌ．ｘｙｚ`, facts)).toBe(false); // full-width lookalikes
+  });
+  it("catches an amount without a dollar sign, or spelled out", () => {
+    expect(keepsTheFacts(`$200.00 ${PAY_LINK} plus 900 USD`, facts)).toBe(false);
+    expect(keepsTheFacts(`$200.00 ${PAY_LINK} plus 900`, facts)).toBe(false);
+    expect(keepsTheFacts(`$200.00 ${PAY_LINK} plus nine hundred dollars`, facts)).toBe(false);
+    expect(keepsTheFacts(`$200.00 ${PAY_LINK} plus €50`, facts)).toBe(false);
+  });
+  it("refuses invisible characters, which can hide text from the operator", () => {
+    expect(keepsTheFacts(`$200.00\u200b ${PAY_LINK}`, facts)).toBe(false);
+    expect(keepsTheFacts(`$200.00 \u202e${PAY_LINK}`, facts)).toBe(false);
+  });
+  it("numbers and names from the original draft are fine: stay dates, a property called Loft 21", () => {
+    const draft = `Your stay at Loft 21 (Oct 4 – Oct 9) at Stays.co: $200.00 ${PAY_LINK}`;
+    expect(keepsTheFacts(`For Loft 21, Oct 4 – Oct 9, with Stays.co: $200.00 ${PAY_LINK}`, facts, draft)).toBe(true);
+    expect(keepsTheFacts(`For Loft 21, Oct 5 – Oct 9: $200.00 ${PAY_LINK}`, facts, draft)).toBe(false); // a changed date
+    expect(keepsTheFacts(`For Loft 21, Oct 4 – Oct 9: $200.00 ${PAY_LINK} plus 20`, facts, draft)).toBe(false); // "20" isn't "200.00"
   });
 });
 

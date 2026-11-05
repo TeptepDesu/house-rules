@@ -10,7 +10,7 @@ import { WeeklyCollectedChart } from "@/components/weekly-collected-chart";
 import { buttonVariants } from "@/components/ui/button";
 import { planBookingPayouts } from "@/lib/agent/plan";
 import { requireUser } from "@/lib/auth/dal";
-import { listRunsWithTxs, loadAgentInputs, unpaidSplits } from "@/lib/db/agent";
+import { listRunsWithTxs, loadAgentInputs, paidTotals, unpaidSplits } from "@/lib/db/agent";
 import { listBookingsWithRecon } from "@/lib/db/bookings";
 import { listInvoices } from "@/lib/db/invoices";
 import { setupCounts } from "@/lib/db/people";
@@ -33,12 +33,13 @@ export default function OverviewPage() {
 
 async function Overview() {
   const user = await requireUser();
-  const [counts, bookings, invoices, held, runs, { ready, terms }] = await Promise.all([
+  const [counts, bookings, invoices, held, runs, paid, { ready, terms }] = await Promise.all([
     setupCounts(user.id),
     listBookingsWithRecon(user.id),
     listInvoices(user.id),
     unpaidSplits(user.id),
     listRunsWithTxs(user.id, 5),
+    paidTotals(user.id),
     loadAgentInputs(user.id),
   ]);
   // bookings the vault's rules held back count under "Needs attention", not as ready money
@@ -56,7 +57,7 @@ async function Overview() {
     })),
     invoices,
     held,
-    runs,
+    paidTotals: paid,
     readyToPay: plans.reduce((a, p) => a + p.split.owner + p.split.cleaner, 0n),
     readyCount: plans.length,
     today: new Date().toISOString().slice(0, 10),

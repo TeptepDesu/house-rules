@@ -30,6 +30,55 @@ describe("payees", () => {
   });
 });
 
+describe("after removing a payee", () => {
+  const owen = { name: "Owen", role: "owner" as const, nearAccount: "owen.testnet", capRaw: 800n * U };
+
+  it("the same account can be added back: it needs approving again, with the new name and limit", async () => {
+    const r = await people.createPayee(a, owen);
+    if (!r.ok) throw new Error();
+    await people.setPayeeVaultStatus(a, r.id, "removed");
+    expect(await people.createPayee(a, { ...owen, name: "Owen R", capRaw: 900n * U })).toEqual({ ok: true, id: r.id });
+    expect(await people.getPayee(a, r.id)).toMatchObject({ name: "Owen R", capRaw: 900n * U, vaultStatus: "pending_signature" });
+  });
+
+  it("adding it back with a different role is refused: properties still point at this payee", async () => {
+    const r = await people.createPayee(a, owen);
+    if (!r.ok) throw new Error();
+    await people.setPayeeVaultStatus(a, r.id, "removed");
+    expect(await people.createPayee(a, { ...owen, role: "cleaner" })).toEqual({ ok: false, error: "duplicate_account" });
+    expect(await people.getPayee(a, r.id)).toMatchObject({ vaultStatus: "removed" });
+  });
+
+  it("the vault's old 'inactive' record doesn't undo adding them back", async () => {
+    const r = await people.createPayee(a, owen);
+    if (!r.ok) throw new Error();
+    await people.setPayeeVaultStatus(a, r.id, "removed");
+    await people.createPayee(a, owen);
+    await people.syncPayeeStatuses(a, [{ accountId: owen.nearAccount, role: "owner", capPerPayout: owen.capRaw, payableFromNs: 0n, active: false }], 1n);
+    expect(await people.getPayee(a, r.id)).toMatchObject({ vaultStatus: "pending_signature" });
+  });
+
+  it("a property can move to someone else; only the operator's own, right-role, non-removed payees", async () => {
+    const gone = await people.createPayee(a, owen);
+    const next = await people.createPayee(a, { ...owen, name: "Nia", nearAccount: "nia.testnet" });
+    const maria = await people.createPayee(a, { name: "Maria", role: "cleaner", nearAccount: "maria.testnet", capRaw: U });
+    const theirs = await people.createPayee(b, owen);
+    if (!gone.ok || !next.ok || !maria.ok || !theirs.ok) throw new Error();
+    const p = await people.createProperty(a, { name: "Casa Azul", ownerPayeeId: gone.id, cleanerPayeeId: maria.id, cleaningFeeRaw: 80n * U, mgmtFeeBps: 1500 });
+    if (!p.ok) throw new Error();
+    await people.setPayeeVaultStatus(a, gone.id, "removed");
+
+    expect(await people.setPropertyPayees(a, p.id, { ownerPayeeId: next.id, cleanerPayeeId: maria.id })).toEqual({ ok: true });
+    expect((await people.listProperties(a))[0]).toMatchObject({ ownerName: "Nia", cleanerName: "Maria" });
+
+    expect(await people.setPropertyPayees(a, p.id, { ownerPayeeId: gone.id, cleanerPayeeId: maria.id })).toEqual({ ok: false, error: "invalid_owner" });
+    expect(await people.setPropertyPayees(a, p.id, { ownerPayeeId: theirs.id })).toEqual({ ok: false, error: "invalid_owner" });
+    expect(await people.setPropertyPayees(a, p.id, { ownerPayeeId: next.id, cleanerPayeeId: next.id })).toEqual({ ok: false, error: "invalid_cleaner" });
+    expect(await people.setPropertyPayees(b, p.id, { ownerPayeeId: theirs.id })).toEqual({ ok: false, error: "not_found" });
+    expect(await people.setPropertyPayees(a, "not-a-uuid", {})).toEqual({ ok: false, error: "not_found" });
+  });
+});
+
 describe("properties", () => {
   it("links owner and cleaner payees and lists their names", async () => {
     const owen = await people.createPayee(a, { name: "Owen", role: "owner", nearAccount: "owen.testnet", capRaw: U });

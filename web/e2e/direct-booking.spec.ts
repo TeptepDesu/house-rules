@@ -37,6 +37,7 @@ test("direct booking → guest pays from another chain → reconciled → paid o
   await expect(page.getByTestId("direct-checkout-error")).toHaveText("Check-out must be after check-in");
   await expect(form.getByLabel("Guest name")).toHaveValue("Lena Park");
   await form.getByLabel("Check-out").fill("2026-10-23");
+  await form.getByLabel("Guest pays by").fill("2026-10-24");
   await page.getByTestId("direct-booking-submit").click();
   const created = page.getByTestId("direct-booking-created");
   await expect(created).toContainText("created for Lena Park");
@@ -44,11 +45,16 @@ test("direct booking → guest pays from another chain → reconciled → paid o
   const href = (await page.getByTestId("direct-booking-open").getAttribute("href"))!;
   const publicId = href.replace("/pay/", "");
 
-  // on Bookings: the stay is over and nothing has arrived, so it's unpaid (blocked)
+  // on Bookings: the pay-by date has passed and nothing has arrived, so it's unpaid (blocked)
   await page.getByTestId("direct-booking-done").click();
   const ref = (await page.locator('[data-testid^="booking-row-direct-"]').getAttribute("data-testid"))!.replace("booking-row-direct-", "");
+  // the stay itself can't be waived: reconciliation still expects it
+  await page.getByTestId("nav-invoices").click();
+  await expect(page.getByTestId(`invoice-row-${publicId}`)).toBeVisible();
+  await expect(page.getByTestId(`invoice-waive-${publicId}`)).toHaveCount(0);
+  await page.getByTestId("nav-bookings").click();
   await expect(page.getByTestId(`booking-row-direct-${ref}`)).toHaveAttribute("data-recon", "unpaid");
-  await expect(page.getByTestId(`booking-note-${ref}`)).toHaveText("Nothing collected; due Oct 23, 2026");
+  await expect(page.getByTestId(`booking-note-${ref}`)).toHaveText("Nothing collected; due Oct 24, 2026");
 
   // the guest pays from Arbitrum
   const guest = await (await browser.newContext()).newPage();

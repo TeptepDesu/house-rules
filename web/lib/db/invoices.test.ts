@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 process.env.PGLITE_DIR = "memory://";
@@ -7,6 +8,7 @@ const people = await import("./people");
 const inv = await import("./invoices");
 const { db: conn } = await import("./conn");
 const s = await import("./schema");
+const { syncPayments } = await import("@/lib/payments/sync");
 
 const U = 1_000_000n;
 let a: string, b: string, bookingA: string;
@@ -93,6 +95,75 @@ describe("invoices", () => {
     expect(await inv.waiveInvoice(a, r2.publicId, now)).toEqual({ ok: false, error: "payment_in_progress" });
     await inv.applyPaymentUpdate(pub2.id, p2.id, { paymentStatus: "verified", invoiceStatus: "paid", amountReceived: 200n * U, destinationTx: "tx2", raw: {} });
     expect(await inv.waiveInvoice(a, r2.publicId, now)).toEqual({ ok: false, error: "not_open" }); // paid
+  });
+
+  it("a stay invoice can't be waived: reconciliation still expects it, so waiving would block the booking for good", async () => {
+    const r = await charge(a);
+    if (!r.ok) throw new Error(r.error);
+    await (await conn()).update(s.invoices).set({ type: "booking" }).where(eq(s.invoices.publicId, r.publicId));
+    expect(await inv.waiveInvoice(a, r.publicId, new Date())).toEqual({ ok: false, error: "not_waivable" });
+    expect((await inv.getPublicInvoice(r.publicId))!.status).toBe("open");
+  });
+
+  it("money that really arrived beats a waiver; a stale poll doesn't", async () => {
+    const r = await charge(a);
+    if (!r.ok) throw new Error(r.error);
+    const pub = (await inv.getPublicInvoice(r.publicId))!;
+    await inv.recordPaymentStart(pub.id, { depositAddress: "mock-late", originAsset: "x", quoteDeadline: new Date("2026-11-01T00:00:00Z"), rawQuoteJson: {} });
+    expect(await inv.waiveInvoice(a, r.publicId, new Date("2026-11-05T00:00:00Z"))).toMatchObject({ ok: true });
+    const p = (await inv.findPayment(pub.id, "mock-late"))!;
+    await inv.applyPaymentUpdate(pub.id, p.id, { paymentStatus: "processing", invoiceStatus: "pending", amountReceived: 0n, raw: {} });
+    expect((await inv.getPublicInvoice(r.publicId))!.status).toBe("waived");
+    await inv.applyPaymentUpdate(pub.id, p.id, { paymentStatus: "verified", invoiceStatus: "paid", amountReceived: 200n * U, destinationTx: "tx9", raw: {} });
+    expect((await inv.getPublicInvoice(r.publicId))!.status).toBe("paid");
+  });
+
+  describe("syncPayments: the server checks payments itself, even after the guest closes the tab", () => {
+    const deps = (status: string, credited = 0n) => ({
+      oneClick: {
+        quote: async () => { throw new Error("unused"); },
+        status: async () => ({ status, updatedAt: "", swapDetails: { originChainTxHashes: [], destinationChainTxHashes: status === "SUCCESS" ? [{ hash: "dest1", explorerUrl: "" }] : [] } }),
+      },
+      verifyDelivery: async () => credited,
+      now: () => new Date("2026-11-05T12:00:00Z"),
+    }) as never;
+    const started = async (userId = a) => {
+      const r = await charge(userId);
+      if (!r.ok) throw new Error(r.error);
+      const pub = (await inv.getPublicInvoice(r.publicId))!;
+      await inv.recordPaymentStart(pub.id, { depositAddress: `addr-${r.publicId}`, originAsset: "x", quoteDeadline: new Date("2026-11-05T13:00:00Z"), rawQuoteJson: {} });
+      return r.publicId;
+    };
+
+    it("a guest who paid and left is marked paid, from the chain", async () => {
+      const id = await started();
+      expect(await syncPayments(a, { deps: () => deps("SUCCESS", 200n * U) })).toEqual({ checked: 1, failed: 0 });
+      expect((await inv.getPublicInvoice(id))!.status).toBe("paid");
+      expect(await syncPayments(a, { deps: () => deps("SUCCESS", 200n * U) })).toEqual({ checked: 0, failed: 0 }); // nothing left to ask
+    });
+
+    it("only touches this operator's payments, and one invoice when asked", async () => {
+      const mine = await started();
+      await started();
+      expect((await syncPayments(b, { deps: () => deps("SUCCESS", 200n * U) })).checked).toBe(0);
+      expect((await syncPayments(a, { publicId: mine, deps: () => deps("SUCCESS", 200n * U) })).checked).toBe(1);
+    });
+
+    it("reports a failed check, so a waive can refuse rather than guess", async () => {
+      await started();
+      const broken = () => ({ ...(deps("SUCCESS") as object), oneClick: { status: async () => { throw new Error("1Click down"); } } }) as never;
+      expect(await syncPayments(a, { deps: broken })).toEqual({ checked: 1, failed: 1 });
+    });
+
+    it("a row stuck at processing stops blocking a waive once 1Click says it failed", async () => {
+      const id = await started();
+      const pub = (await inv.getPublicInvoice(id))!;
+      const p = (await inv.findPayment(pub.id, `addr-${id}`))!;
+      await inv.applyPaymentUpdate(pub.id, p.id, { paymentStatus: "processing", invoiceStatus: "pending", amountReceived: 0n, raw: {} });
+      expect(await inv.waiveInvoice(a, id, new Date("2026-11-05T12:00:00Z"))).toEqual({ ok: false, error: "payment_in_progress" });
+      await syncPayments(a, { publicId: id, deps: () => deps("FAILED") });
+      expect(await inv.waiveInvoice(a, id, new Date("2026-11-05T12:00:00Z"))).toMatchObject({ ok: true });
+    });
   });
 
   it("vault account is per operator", async () => {

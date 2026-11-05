@@ -10,9 +10,10 @@ import { StatusPill } from "@/components/status-pill";
 import { requireUser } from "@/lib/auth/dal";
 import { getOperatorAccount } from "@/lib/db";
 import { VaultControls } from "@/components/rules/vault-controls";
-import { formatUsd } from "@/lib/money";
+import { formatUsd, usdInput } from "@/lib/money";
 import { explorerAccountUrl, networkId } from "@/lib/near/network";
 import { cn } from "@/lib/utils";
+import { delayMinutesInput } from "@/lib/vault/owner-actions";
 import { describeRules } from "@/lib/vault/rules";
 import { loadVaultView } from "@/lib/vault/load";
 
@@ -152,7 +153,7 @@ async function RulesContent() {
         {v.mode === "live" && operator ? (
           <VaultControls
             dailyLimit={usdInput(v.policy.dailyLimit)}
-            delayHours={(v.policy.payeeDelayNs / 3_600_000_000_000n).toString()}
+            delayMinutes={delayMinutesInput(v.policy.payeeDelayNs)}
             balance={v.balance !== null ? formatUsd(v.balance) : "your USDC"}
             owner={operator}
           />
@@ -165,6 +166,3 @@ async function RulesContent() {
     </div>
   );
 }
-
-/** 20_000_000_000n → "20000.00" for an editable input. */
-const usdInput = (raw: bigint) => `${raw / 1_000_000n}.${(raw % 1_000_000n).toString().padStart(6, "0").slice(0, 2)}`;

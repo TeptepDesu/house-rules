@@ -1,5 +1,6 @@
 import "server-only";
 import { logActivity } from "@/lib/db";
+import { syncPaymentsQuietly } from "@/lib/payments/sync";
 import { failRun, finishRun, loadAgentInputs, startRun } from "@/lib/db/agent";
 import { listPayees } from "@/lib/db/people";
 import { planBookingPayouts } from "./plan";
@@ -15,6 +16,7 @@ export async function runAgentForUser(userId: string, trigger: "manual" | "cron"
   const runId = await startRun(userId, trigger);
   if (!runId) return { ok: false, error: "busy", message: "A payout run is already in progress." };
   try {
+    await syncPaymentsQuietly(userId); // pay out on what's really been collected, not the last poll
     const { ready, terms } = await loadAgentInputs(userId);
     const plans = planBookingPayouts(ready, terms);
     const outcome = await runAgent({ vault, nowNs }, plans);

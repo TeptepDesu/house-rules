@@ -52,7 +52,7 @@ export function ManagePayee({ payeeId, name, account, cap, onVault, rehearsal }:
 
         <div className="grid gap-2 border-t pt-4">
           <p className="font-medium">Remove from vault</p>
-          <p className="text-xs text-muted-foreground">The vault stops paying {name}. Payouts for their properties are held until you choose someone else.</p>
+          <p className="text-xs text-muted-foreground">The vault stops paying {name}. Payouts for their properties are held until you choose someone else under Properties. You can add them back later.</p>
           {!confirmRemove ? (
             <Button type="button" variant="outline" className="justify-self-start" disabled={busy} onClick={() => setConfirmRemove(true)} data-testid="payee-remove">
               Remove {name}

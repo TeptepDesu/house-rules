@@ -179,8 +179,8 @@ Postgres (PGlite locally, any hosted Postgres in production) · Drizzle
 |---|---|---|
 | Contract: unit | `cd contracts && cargo test -p vault --lib` | 33 |
 | Contract: sandbox | `cd contracts && cargo test -p vault --test sandbox` | 8 |
-| App: unit, property and DB | `pnpm --filter web test` | 378 |
-| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and the main screens in both themes, plus no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 27, plus 3 optional screenshot captures |
+| App: unit, property and DB | `pnpm --filter web test` | 402 |
+| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and the main screens in both themes, plus no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 28, plus 3 optional screenshot captures |
 | App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 14, plus 1 that needs the agent key |
 
 Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p vault --target wasm32-unknown-unknown -- -D warnings`.

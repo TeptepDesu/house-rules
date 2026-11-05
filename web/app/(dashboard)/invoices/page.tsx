@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { requireUser } from "@/lib/auth/dal";
 import { listBookingOptions } from "@/lib/db/bookings";
 import { getVaultAccount, listInvoices } from "@/lib/db/invoices";
+import { syncPaymentsQuietly } from "@/lib/payments/sync";
 
 export const metadata: Metadata = { title: "Invoices · House Rules" };
 
@@ -38,6 +39,7 @@ async function loadInvoicesPage(userId: string) {
 
 async function InvoicesContent() {
   const user = await requireUser();
+  await syncPaymentsQuietly(user.id); // a guest may have paid and closed the tab
   const { invoices, bookings, vault, due } = await loadInvoicesPage(user.id);
 
   return (
@@ -86,7 +88,7 @@ async function InvoicesContent() {
                           Open
                         </Link>
                       </div>
-                      {(i.status === "open" || i.status === "expired") && (
+                      {i.type !== "booking" && (i.status === "open" || i.status === "expired") && (
                         <div className="mt-1 sm:hidden">
                           <WaiveCharge publicId={i.publicId} amount={formatUsd(i.amountRaw)} testidSuffix="-mobile" />
                         </div>
@@ -105,7 +107,7 @@ async function InvoicesContent() {
                           Open
                         </Link>
                       </div>
-                      {(i.status === "open" || i.status === "expired") && (
+                      {i.type !== "booking" && (i.status === "open" || i.status === "expired") && (
                         <div className="mt-1 flex justify-end">
                           <WaiveCharge publicId={i.publicId} amount={formatUsd(i.amountRaw)} />
                         </div>

@@ -10,8 +10,9 @@ import {
   removePayeeCalls,
   removedOnChain,
   setLimitsCalls,
-  verifyWithdrawn,
+  delayMinutesInput,
   withdrawCalls,
+  withdrawalOutcome,
 } from "./owner-actions";
 
 const U = 1_000_000n;
@@ -79,19 +80,27 @@ describe("the server confirms from the chain, never from the browser", () => {
     }) as unknown as TxOutcome;
 
   it("a withdrawal counts only with the vault's own `withdrawn` event for exactly that amount and receiver", () => {
-    const ev = { event: "withdrawn", data: { amount: "126000000", receiver_id: "op.testnet" } };
-    expect(verifyWithdrawn(tx([ev]), "vault.op.testnet", 126n * U, "op.testnet")).toBe(true);
-    expect(verifyWithdrawn(tx([ev]), "vault.op.testnet", 127n * U, "op.testnet")).toBe(false);
-    expect(verifyWithdrawn(tx([ev]), "vault.op.testnet", 126n * U, "thief.testnet")).toBe(false);
-    expect(verifyWithdrawn(tx([ev], true, "evil.testnet"), "vault.op.testnet", 126n * U, "op.testnet")).toBe(false); // not from the vault
-    expect(verifyWithdrawn(tx([ev], false), "vault.op.testnet", 126n * U, "op.testnet")).toBe(false); // reverted receipt
-    expect(verifyWithdrawn(tx([{ event: "withdraw_failed", data: ev.data }]), "vault.op.testnet", 126n * U, "op.testnet")).toBe(false);
+    const ev = { event: "withdrawn", data: { amount: (126n * U).toString(), receiver_id: "op.testnet" } };
+    expect(withdrawalOutcome(tx([ev]), "vault.op.testnet", 126n * U, "op.testnet")).toBe("withdrawn");
+    expect(withdrawalOutcome(tx([ev]), "vault.op.testnet", 127n * U, "op.testnet")).toBe("unknown");
+    expect(withdrawalOutcome(tx([ev]), "vault.op.testnet", 126n * U, "thief.testnet")).toBe("unknown");
+    expect(withdrawalOutcome(tx([ev], true, "evil.testnet"), "vault.op.testnet", 126n * U, "op.testnet")).toBe("unknown"); // not from the vault
+    expect(withdrawalOutcome(tx([ev], false), "vault.op.testnet", 126n * U, "op.testnet")).toBe("unknown"); // reverted receipt
+  });
+
+  it("a failed withdrawal says so, instead of 'check again' forever", () => {
+    const failed = { event: "withdraw_failed", data: { amount: (126n * U).toString(), receiver_id: "op.testnet" } };
+    expect(withdrawalOutcome(tx([failed]), "vault.op.testnet", 126n * U, "op.testnet")).toBe("failed");
+    expect(withdrawalOutcome(tx([failed], true, "evil.testnet"), "vault.op.testnet", 126n * U, "op.testnet")).toBe("unknown");
+    expect(withdrawalOutcome(tx([failed]), "vault.op.testnet", 1n, "op.testnet")).toBe("unknown"); // some other amount
   });
 });
 
 describe("parseLimits (operator input)", () => {
-  it("dollars and hours to raw units", () => {
-    expect(parseLimits("5,000", "24")).toEqual({ ok: true, dailyLimit: 5_000n * U, payeeDelayNs: 24n * H });
+  const MIN = 60n * 1_000_000_000n;
+  it("dollars and minutes to raw units", () => {
+    expect(parseLimits("5,000", "1440")).toEqual({ ok: true, dailyLimit: 5_000n * U, payeeDelayNs: 24n * H });
+    expect(parseLimits("50", "10")).toEqual({ ok: true, dailyLimit: 50n * U, payeeDelayNs: 10n * MIN });
     expect(parseLimits("250.50", "0")).toEqual({ ok: true, dailyLimit: 250_500_000n, payeeDelayNs: 0n });
   });
   it("rejects nonsense with field-specific messages", () => {
@@ -100,6 +109,14 @@ describe("parseLimits (operator input)", () => {
     expect(parseLimits("2000000", "24")).toMatchObject({ ok: false, field: "daily" });
     expect(parseLimits("5000", "-1")).toMatchObject({ ok: false, field: "delay" });
     expect(parseLimits("5000", "1.5")).toMatchObject({ ok: false, field: "delay" });
-    expect(parseLimits("5000", "721")).toMatchObject({ ok: false, field: "delay" });
+    expect(parseLimits("5000", "43201")).toMatchObject({ ok: false, field: "delay" });
+  });
+  it("the form's starting value keeps the vault's wait: a 10-minute delay is never shown as 0", () => {
+    expect(delayMinutesInput(10n * MIN)).toBe("10");
+    expect(delayMinutesInput(24n * H)).toBe("1440");
+    expect(delayMinutesInput(0n)).toBe("0");
+    expect(delayMinutesInput(90n * 1_000_000_000n)).toBe("2"); // rounds up: saving can't shorten the wait
+    const round = parseLimits("50", delayMinutesInput(10n * MIN));
+    expect(round).toMatchObject({ ok: true, payeeDelayNs: 10n * MIN });
   });
 });

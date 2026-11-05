@@ -13,7 +13,7 @@ const booking = (id: string, o: Partial<OverviewInput["bookings"][number]> = {})
   ...o,
 });
 
-const base: OverviewInput = { bookings: [], invoices: [], held: [], runs: [], readyToPay: 0n, readyCount: 0, today: "2026-11-10" };
+const base: OverviewInput = { bookings: [], invoices: [], held: [], paidTotals: { total: 0n, runs: 0 }, readyToPay: 0n, readyCount: 0, today: "2026-11-10" };
 
 describe("overviewMetrics", () => {
   it("is all zeros with no data", () => {
@@ -28,11 +28,7 @@ describe("overviewMetrics", () => {
         booking("b", { collected: 300n * U, settlementStatus: "blocked", note: "Collected $300.00 vs expected $320.00" }),
         booking("c", { settlementStatus: "unreconciled" }),
       ],
-      runs: [
-        { id: "r1", status: "succeeded", paidTotalRaw: 700n * U, startedAt: new Date("2026-11-09T10:00:00Z"), txs: [] },
-        { id: "r2", status: "partial", paidTotalRaw: 100n * U, startedAt: new Date("2026-11-09T11:00:00Z"), txs: [] },
-        { id: "r3", status: "failed", paidTotalRaw: 0n, startedAt: new Date("2026-11-09T12:00:00Z"), txs: [] },
-      ],
+      paidTotals: { total: 800n * U, runs: 2 },
       held: [{ bookingId: "a", role: "owner", amountRaw: 900n * U, reason: "OverCap", guestName: "Guest a", payeeName: "Owen" }],
       invoices: [
         { publicId: "p1", status: "open", type: "penalty", amountRaw: 45n * U, dueDate: "2026-11-01", guestName: "Guest c", description: "Late checkout" },

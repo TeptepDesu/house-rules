@@ -88,6 +88,18 @@ describe("accept a short payout as final", () => {
 });
 
 describe("direct bookings", () => {
+  it("is overdue from the invoice's pay-by date, not check-out", async () => {
+    const [casa] = await seedPropsOnce(a);
+    const r = await bk.createDirectBooking(a, { propertyId: casa.id, guestName: "Lena Park", checkIn: "2026-11-05", checkOut: "2026-11-07", totalRaw: 600_000_000n, dueDate: "2026-11-12" });
+    if (!r.ok) throw new Error(r.error);
+    const at = async (d: string) => (await bk.listBookingsWithRecon(a, new Date(d))).find((x) => x.id === r.id)!.recon;
+    expect(await at("2026-11-08T00:00:00Z")).toMatchObject({ result: "awaiting_payment", settlementStatus: "unreconciled" });
+    expect(await at("2026-11-12T23:00:00Z")).toMatchObject({ result: "awaiting_payment" });
+    const late = await at("2026-11-13T00:00:00Z");
+    expect(late).toMatchObject({ result: "unpaid", settlementStatus: "blocked" });
+    expect(late.note).toContain("Nov 12, 2026");
+  });
+
   it("creates the booking and its stay invoice together; open until paid, then ready to pay out", async () => {
     const [casa] = await seedPropsOnce(a);
     const r = await bk.createDirectBooking(a, { propertyId: casa.id, guestName: "Lena Park", checkIn: "2026-11-20", checkOut: "2026-11-23", totalRaw: 600_000_000n, dueDate: "2026-11-18" });

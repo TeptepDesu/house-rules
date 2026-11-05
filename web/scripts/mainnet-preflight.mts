@@ -19,6 +19,7 @@ const BYTE_COST = 10n ** 19n; // yoctoNEAR per byte of storage
 const VAULT_WASM = new URL("../../contracts/target/near/vault/vault.wasm", import.meta.url);
 
 const { values: o } = parseArgs({
+  args: process.argv.slice(2).filter((a) => a !== "--"), // pnpm passes its own `--` through
   options: {
     account: { type: "string" },
     vault: { type: "string" },

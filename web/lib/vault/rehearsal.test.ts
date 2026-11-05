@@ -19,6 +19,12 @@ function setup(start = 1_000n * H) {
 const item = (key: string, payee: string, amount: bigint) => ({ key, payee, amount });
 
 describe("rehearsal vault applies the same rules as the real vault", () => {
+  it("a key repeated inside one batch is AlreadyPaid, like the contract (docs/vault-spec.md)", async () => {
+    const { vault } = setup();
+    const r = await vault.settle([item("b9:owner", "owen.testnet", 10n * U), item("b9:owner", "owen.testnet", 10n * U)], 100);
+    expect(r).toMatchObject({ kind: "rejected", code: "AlreadyPaid" });
+  });
+
   it("only approved payees are on its list", async () => {
     const { vault } = setup();
     expect((await vault.getPayees()).map((p) => p.accountId)).toEqual(["owen.testnet", "maria.testnet"]);

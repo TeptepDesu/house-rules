@@ -19,7 +19,8 @@ export type OverviewInput = {
   invoices: { publicId: string; status: string; type: string; amountRaw: bigint; dueDate: string; guestName: string | null; description: string }[];
   /** Payouts the agent couldn't make (pending/rejected splits). */
   held: { bookingId: string; role: string; amountRaw: bigint; reason: string | null; guestName: string; payeeName: string | null }[];
-  runs: { id: string; status: string; paidTotalRaw: bigint; startedAt: Date; txs: unknown[] }[];
+  /** Every run's paid total, all time (from the database, not a recent-runs list). */
+  paidTotals: { total: bigint; runs: number };
   /** From the payout plan (same numbers as the Payouts page). */
   readyToPay: bigint;
   readyCount: number;
@@ -33,14 +34,13 @@ const isShort = (i: OverviewInput["invoices"][number]) => i.status === "underpai
 
 export function overviewMetrics(i: OverviewInput) {
   const withMoney = i.bookings.filter((b) => b.collected + b.penaltiesCollected > 0n);
-  const paid = i.runs.filter((r) => r.paidTotalRaw > 0n);
   return {
     collected: withMoney.reduce((a, b) => a + b.collected + b.penaltiesCollected, 0n),
     collectedBookings: withMoney.length,
     readyToPay: i.readyToPay,
     readyCount: i.readyCount,
-    paidOut: paid.reduce((a, r) => a + r.paidTotalRaw, 0n),
-    paidRuns: paid.length,
+    paidOut: i.paidTotals.total,
+    paidRuns: i.paidTotals.runs,
     attention:
       i.bookings.filter((b) => b.settlementStatus === "blocked").length +
       i.held.length +

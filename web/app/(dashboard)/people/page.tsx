@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Money } from "@/components/money";
 import { PageHeader } from "@/components/page-header";
 import { ApprovePayee } from "@/components/people/approve-payee";
+import { EditPropertyPeople } from "@/components/people/edit-property-people";
 import { ManagePayee } from "@/components/people/manage-payee";
 import { PayeeForm } from "@/components/people/payee-form";
 import { PropertyForm } from "@/components/people/property-form";
@@ -12,7 +13,7 @@ import { StatusPill } from "@/components/status-pill";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireUser } from "@/lib/auth/dal";
 import { listPayees, listProperties } from "@/lib/db/people";
-import { formatBps } from "@/lib/money";
+import { formatBps, usdInput } from "@/lib/money";
 import { networkId } from "@/lib/near/network";
 import { agentMode } from "@/lib/agent/vault-factory";
 import { getVaultAccount } from "@/lib/db/invoices";
@@ -22,8 +23,6 @@ export const metadata: Metadata = { title: "People & properties · House Rules" 
 
 const ROLE = { owner: "Owner", cleaner: "Cleaner" } as const;
 /** 800_000_000n → "800.00" for an editable input (display elsewhere goes through formatUsd). */
-const capInput = (raw: bigint) => `${raw / 1_000_000n}.${(raw % 1_000_000n).toString().padStart(6, "0").slice(0, 2)}`;
-
 export default function PeoplePage() {
   return (
     <>
@@ -81,7 +80,7 @@ async function PeopleContent() {
                         {p.vaultStatus !== "removed" && (
                           <div className="mt-2 flex flex-wrap items-start gap-2">
                             {p.vaultStatus === "pending_signature" && vault && <ApprovePayee payeeId={p.id} rehearsal={rehearsal} />}
-                            <ManagePayee payeeId={p.id} name={p.name} account={p.nearAccount} cap={capInput(p.capRaw)} onVault={p.vaultStatus !== "pending_signature"} rehearsal={rehearsal} />
+                            <ManagePayee payeeId={p.id} name={p.name} account={p.nearAccount} cap={usdInput(p.capRaw)} onVault={p.vaultStatus !== "pending_signature"} rehearsal={rehearsal} />
                           </div>
                         )}
                       </TableCell>
@@ -137,6 +136,16 @@ async function PeopleContent() {
                         <div className="font-medium">{p.name}</div>
                         <div className="mt-0.5 text-xs text-muted-foreground md:hidden">
                           Owner: {p.ownerName ?? "not set"} · Cleaner: {p.cleanerName ?? "not set"}
+                        </div>
+                        <div className="mt-2">
+                          <EditPropertyPeople
+                            propertyId={p.id}
+                            name={p.name}
+                            ownerId={p.ownerPayeeId}
+                            cleanerId={p.cleanerPayeeId}
+                            owners={owners.map(({ id, name }) => ({ id, name }))}
+                            cleaners={cleaners.map(({ id, name }) => ({ id, name }))}
+                          />
                         </div>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">

@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, or } from "drizzle-orm";
 import { newPublicId } from "@/lib/ids";
 import type { PaymentStatus } from "@/lib/intents";
 import type { InvoiceStatus } from "@/lib/reconcile";
@@ -109,22 +109,41 @@ const IN_FLIGHT: PaymentStatus[] = ["processing", "incomplete_deposit", "deliver
  * The operator forgives an open charge (it stops blocking the booking). Refused while a guest's
  * payment could still land: a deposit address that hasn't expired, or a deposit being processed.
  */
-export async function waiveInvoice(userId: string, publicId: string, now: Date): Promise<Result<{ id: string }>> {
+export async function waiveInvoice(userId: string, publicId: string, now: Date): Promise<Result<{ id: string; amountRaw: bigint; description: string }>> {
   return (await db()).transaction(async (tx) => {
     const [inv] = await tx
-      .select({ id: invoices.id, status: invoices.status })
+      .select({ id: invoices.id, type: invoices.type, status: invoices.status, amountRaw: invoices.amountRaw, description: invoices.description })
       .from(invoices)
       .where(and(eq(invoices.publicId, publicId), eq(invoices.userId, userId)))
       .for("update");
     if (!inv) return { ok: false, error: "not_found" };
+    // the stay itself: reconciliation still expects this money, so waiving it would block the booking
+    if (inv.type === "booking") return { ok: false, error: "not_waivable" };
     const ps = await tx.select({ status: payments.status, deadline: payments.quoteDeadline }).from(payments).where(eq(payments.invoiceId, inv.id));
     if (ps.some((x) => IN_FLIGHT.includes(x.status) || (x.status === "awaiting_deposit" && x.deadline > now))) {
       return { ok: false, error: "payment_in_progress" };
     }
     if (!PAYABLE.includes(inv.status)) return { ok: false, error: "not_open" };
     await tx.update(invoices).set({ status: "waived" }).where(eq(invoices.id, inv.id));
-    return { ok: true, id: inv.id };
+    return { ok: true, id: inv.id, amountRaw: inv.amountRaw, description: inv.description };
   });
+}
+
+const UNFINISHED: PaymentStatus[] = ["awaiting_deposit", ...IN_FLIGHT];
+
+/**
+ * Payments still worth asking 1Click about. One invoice: all of them. Otherwise the newest few that
+ * aren't long dead; each check moves a row to a final status, so the list drains itself.
+ */
+export async function paymentsToSync(userId: string, o: { publicId?: string; deadlineAfter: Date; limit: number }) {
+  const scope = o.publicId ? eq(invoices.publicId, o.publicId) : or(gt(payments.quoteDeadline, o.deadlineAfter), inArray(payments.status, IN_FLIGHT));
+  return (await db())
+    .select({ id: payments.id, invoiceId: payments.invoiceId, depositAddress: payments.depositAddress, deadline: payments.quoteDeadline, invoiceAmount: invoices.amountRaw })
+    .from(payments)
+    .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
+    .where(and(eq(invoices.userId, userId), inArray(payments.status, UNFINISHED), scope))
+    .orderBy(desc(payments.quoteDeadline))
+    .limit(o.limit);
 }
 
 /** The payment for this invoice + deposit address (a guest can't poll someone else's address). */
@@ -157,7 +176,8 @@ export async function applyPaymentUpdate(
       .where(eq(payments.id, paymentId));
     // only move forward: a verified payment's invoice never goes back to open/pending
     const [inv] = await tx.select({ status: invoices.status }).from(invoices).where(eq(invoices.id, invoiceId));
-    const settled: InvoiceStatus[] = ["paid", "underpaid", "overpaid", "waived", "refunded"];
+    // ...except that money which really arrived beats a waiver: it has to be counted
+    const settled: InvoiceStatus[] = ["paid", "underpaid", "overpaid", "refunded", ...(u.paymentStatus === "verified" ? [] : ["waived" as const])];
     if (inv && !settled.includes(inv.status)) {
       await tx
         .update(invoices)

@@ -4,7 +4,8 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/dal";
 import { logActivity } from "@/lib/db";
-import { createChargeInvoice, listInvoices, waiveInvoice } from "@/lib/db/invoices";
+import { createChargeInvoice, waiveInvoice } from "@/lib/db/invoices";
+import { syncPayments } from "@/lib/payments/sync";
 import { parseUsd } from "@/lib/money";
 
 export type ChargeState =
@@ -63,6 +64,7 @@ const PublicId = z.string().regex(/^[A-Za-z0-9_-]{22}$/);
 const WAIVE_ERRORS: Record<string, string> = {
   payment_in_progress: "The guest is paying right now. Try again once their payment finishes or its address expires (1 hour).",
   not_open: "This invoice is already paid or closed.",
+  not_waivable: "This is the stay itself, so it can't be waived.",
   not_found: "Invoice not found.",
 };
 
@@ -71,10 +73,12 @@ export async function waiveCharge(publicId: string): Promise<{ ok: boolean; erro
   const user = await requireUser();
   if (!PublicId.safeParse(publicId).success) return { ok: false, error: WAIVE_ERRORS.not_found };
   try {
+    // ask 1Click first: our rows only know what the last poll saw
+    const { failed } = await syncPayments(user.id, { publicId });
+    if (failed > 0) return { ok: false, error: "Couldn't check the guest's payment, so nothing was waived. Try again in a moment." };
     const r = await waiveInvoice(user.id, publicId, new Date());
     if (!r.ok) return { ok: false, error: WAIVE_ERRORS[r.error] ?? "Couldn't waive it. Try again." };
-    const inv = (await listInvoices(user.id)).find((i) => i.publicId === publicId);
-    await logActivity({ userId: user.id, action: "invoice.waive", entity: "invoice", entityId: r.id, meta: { amount: inv?.amountRaw.toString(), description: inv?.description } });
+    await logActivity({ userId: user.id, action: "invoice.waive", entity: "invoice", entityId: r.id, meta: { amount: r.amountRaw.toString(), description: r.description } });
     refresh();
     return { ok: true };
   } catch (e) {

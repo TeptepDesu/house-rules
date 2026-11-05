@@ -9,19 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useOwnerAction } from "@/components/vault/use-owner-action";
 
-type Props = { dailyLimit: string; delayHours: string; balance: string; owner: string };
+type Props = { dailyLimit: string; delayMinutes: string; balance: string; owner: string };
 
 /** The operator's own controls over the vault. Each one is signed by the owner's wallet. */
-export function VaultControls({ dailyLimit, delayHours, balance, owner }: Props) {
+export function VaultControls({ dailyLimit, delayMinutes, balance, owner }: Props) {
   return (
     <div className="flex flex-wrap gap-2">
-      <LimitsDialog dailyLimit={dailyLimit} delayHours={delayHours} />
+      <LimitsDialog dailyLimit={dailyLimit} delayMinutes={delayMinutes} />
       <WithdrawDialog balance={balance} owner={owner} />
     </div>
   );
 }
 
-function LimitsDialog({ dailyLimit, delayHours }: { dailyLimit: string; delayHours: string }) {
+function LimitsDialog({ dailyLimit, delayMinutes }: { dailyLimit: string; delayMinutes: string }) {
   const [open, setOpen] = useState(false);
   const a = useOwnerAction(() => setOpen(false));
   const err = (f: string) => (a.state.phase === "error" && a.state.field === f ? a.state.text : null);
@@ -41,7 +41,7 @@ function LimitsDialog({ dailyLimit, delayHours }: { dailyLimit: string; delayHou
           onSubmit={(e) => {
             e.preventDefault();
             const f = new FormData(e.currentTarget);
-            a.run({ kind: "limits", daily: String(f.get("daily") ?? ""), delayHours: String(f.get("delayHours") ?? "") });
+            a.run({ kind: "limits", daily: String(f.get("daily") ?? ""), delayMinutes: String(f.get("delayMinutes") ?? "") });
           }}
         >
           <div className="grid gap-1.5">
@@ -50,8 +50,9 @@ function LimitsDialog({ dailyLimit, delayHours }: { dailyLimit: string; delayHou
             {err("daily") && <p className="text-xs text-destructive" data-testid="vault-limits-daily-error">{err("daily")}</p>}
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor="limits-delay">New payees wait (hours)</Label>
-            <Input id="limits-delay" name="delayHours" inputMode="numeric" defaultValue={delayHours} required data-testid="vault-limits-delay" aria-invalid={!!err("delay") || undefined} />
+            <Label htmlFor="limits-delay">New payees wait (minutes)</Label>
+            <Input id="limits-delay" name="delayMinutes" inputMode="numeric" defaultValue={delayMinutes} required data-testid="vault-limits-delay" aria-invalid={!!err("delay") || undefined} />
+            <p className="text-xs text-muted-foreground">1440 minutes is 24 hours. 0 means no wait.</p>
             {err("delay") && <p className="text-xs text-destructive" data-testid="vault-limits-delay-error">{err("delay")}</p>}
           </div>
           <Button type="submit" className="justify-self-start" disabled={a.pending} data-testid="vault-limits-save">

@@ -15,10 +15,14 @@ import { SESSION_COOKIE, resolveSessionSecret, verifySession } from "@/lib/auth/
 export async function GET(req: NextRequest) {
   const userId = await verifySession(req.cookies.get(SESSION_COOKIE)?.value, resolveSessionSecret());
   if (userId) {
-    const user = await findUserById(userId).catch((e: unknown) => {
+    let user;
+    try {
+      user = await findUserById(userId);
+    } catch (e) {
+      // a failed lookup isn't proof the user is gone: keep the session, the dashboard shows the error
       console.error("reset-session: user lookup failed", e);
-      return undefined;
-    });
+      return NextResponse.redirect(new URL("/", req.url));
+    }
     if (user) return NextResponse.redirect(new URL("/", req.url));
     console.warn("reset-session: clearing a session for a user that doesn't exist in this database");
   }

@@ -6,7 +6,7 @@ Deadline: **Nov 14, 23:59 UTC**. Aim to submit around 12:00 UTC.
 
 ## Required to submit
 
-1. [ ] **Say "push".** The local commits aren't on GitHub yet, so this is also your backup. I check the repo is still private first.
+1. [x] **Say "push".** Done 2026-11-05. Later commits need your word again; I check the repo is still private first.
 2. [ ] **Create the mainnet account for the prize payout** in any NEAR wallet, e.g. `yourname.near`. Only you can create it, and it can also be the operator account below.
 3. [ ] **Nov 13: record the 2-minute demo and publish the X post.** The script, shot list and post draft are in [demo-script.md](demo-script.md). A video is required if judges can't open a hosted demo (`HACKATHON.md`, Q-012).
 4. [ ] **Nov 14: say "make it public".** I re-run the secret and harness scans first, then you make the repo public.

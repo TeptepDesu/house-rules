@@ -27,6 +27,9 @@ export function formatUsd(raw: bigint, opts: { exact?: boolean } = {}): string {
 const USD_INPUT = /^\$?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,6}))?$/;
 
 /** Parse operator input like "1,234.56" or "$800" into raw units. Throws on anything else. */
+/** 20_000_000_000n → "20000.00": a starting value for an editable input, not for display. */
+export const usdInput = (raw: bigint) => `${raw / 1_000_000n}.${(raw % 1_000_000n).toString().padStart(6, "0").slice(0, 2)}`;
+
 export function parseUsd(input: string): bigint {
   const m = USD_INPUT.exec(input.trim());
   if (!m) throw new Error(`Not a dollar amount: ${JSON.stringify(input)}`);

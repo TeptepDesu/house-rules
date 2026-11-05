@@ -58,12 +58,12 @@ export function createRehearsalVault(userId: string, listPayees: () => Promise<R
       const list = new Map((await approved()).map((p) => [p.accountId, p]));
       const keys = new Set<string>();
       for (const i of items) {
-        if (i.amount <= 0n || i.key.length === 0 || i.key.length > MAX_KEY_LEN || keys.has(i.key)) return reject("InvalidItem");
-        keys.add(i.key);
+        if (i.amount <= 0n || i.key.length === 0 || i.key.length > MAX_KEY_LEN) return reject("InvalidItem");
         const p = list.get(i.payee);
         if (!p) return reject("PayeeNotAllowed");
         if (i.amount > p.capPerPayout) return reject("OverCap");
-        if (store.paid.has(i.key)) return reject("AlreadyPaid");
+        if (store.paid.has(i.key) || keys.has(i.key)) return reject("AlreadyPaid");
+        keys.add(i.key);
       }
       const total = items.reduce((a, i) => a + i.amount, 0n);
       const w = current(store, userId, now);

@@ -24,8 +24,8 @@ import {
   removedOnChain,
   setLimitsCalls,
   untilOnChain,
-  verifyWithdrawn,
   withdrawCalls,
+  withdrawalOutcome,
 } from "@/lib/vault/owner-actions";
 import { payeeVaultStatus } from "@/lib/vault/rules";
 
@@ -41,7 +41,7 @@ const MAX_CAP = parseUsd("50000");
 const Input = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("remove"), payeeId: z.string().uuid() }),
   z.object({ kind: z.literal("cap"), payeeId: z.string().uuid(), cap: z.string().max(20) }),
-  z.object({ kind: z.literal("limits"), daily: z.string().max(20), delayHours: z.string().max(6) }),
+  z.object({ kind: z.literal("limits"), daily: z.string().max(20), delayMinutes: z.string().max(6) }),
   z.object({ kind: z.literal("withdraw"), amount: z.string().max(20) }),
 ]);
 export type OwnerActionInput = z.infer<typeof Input>;
@@ -60,7 +60,7 @@ type Plan =
   | { kind: "withdraw"; amount: bigint; onChain: true };
 
 /** Validate and resolve everything from the server's own records. Never trusts ids from the client. */
-async function plan(userId: string, raw: unknown, opts: { checkBalance?: boolean } = {}): Promise<{ plan: Plan; vault: string | null } | { error: string; field?: string }> {
+async function plan(userId: string, raw: unknown, opts: { checkBalance?: boolean; confirming?: boolean } = {}): Promise<{ plan: Plan; vault: string | null } | { error: string; field?: string }> {
   const parsed = Input.safeParse(raw);
   if (!parsed.success) return { error: "That request isn't valid." };
   const i = parsed.data;
@@ -68,7 +68,8 @@ async function plan(userId: string, raw: unknown, opts: { checkBalance?: boolean
   const live = agentMode() === "live";
   if (i.kind === "remove" || i.kind === "cap") {
     const payee = await getPayee(userId, i.payeeId);
-    if (!payee || payee.vaultStatus === "removed") return { error: "Payee not found." };
+    // when confirming, the change may already be recorded by an attempt that failed partway
+    if (!payee || (payee.vaultStatus === "removed" && !opts.confirming)) return { error: "Payee not found." };
     let cap: bigint | undefined;
     if (i.kind === "cap") {
       try {
@@ -77,7 +78,7 @@ async function plan(userId: string, raw: unknown, opts: { checkBalance?: boolean
         return { error: "Enter a dollar amount, e.g. 900", field: "cap" };
       }
       if (cap <= 0n || cap > MAX_CAP) return { error: "Enter between $0.01 and $50,000", field: "cap" };
-      if (cap === payee.capRaw) return { error: "That's the current limit.", field: "cap" };
+      if (cap === payee.capRaw && !opts.confirming) return { error: "That's the current limit.", field: "cap" };
     }
     // a payee that was never approved isn't on the vault: the change is app-only
     return { plan: { kind: i.kind, payee, cap, onChain: live && payee.vaultStatus !== "pending_signature" }, vault };
@@ -85,7 +86,7 @@ async function plan(userId: string, raw: unknown, opts: { checkBalance?: boolean
   if (!live) return { error: "Changing limits and withdrawing need your live vault (rehearsal mode has no chain)." };
   if (!vault) return { error: "Connect your vault in Settings first." };
   if (i.kind === "limits") {
-    const l = parseLimits(i.daily, i.delayHours);
+    const l = parseLimits(i.daily, i.delayMinutes);
     if (!l.ok) return { error: l.error, field: l.field };
     return { plan: { kind: "limits", dailyLimit: l.dailyLimit, payeeDelayNs: l.payeeDelayNs, onChain: true }, vault };
   }
@@ -124,46 +125,61 @@ function callsFor(p: Plan, owner: string): WalletCall[] {
 
 export async function prepareOwnerAction(input: OwnerActionInput): Promise<OwnerPrepared> {
   const user = await requireUser();
-  const r = await plan(user.id, input, { checkBalance: true });
-  if ("error" in r) return fail(r.error, r.field);
-  if (!r.plan.onChain) return { ok: true, mode: "direct" };
-  const c = await ownerContext(user.id, r.vault);
-  if ("error" in c) return fail(c.error!);
-  return { ok: true, mode: "live", network: networkId(), vault: c.vault, owner: c.owner, calls: callsFor(r.plan, c.owner) };
+  try {
+    const r = await plan(user.id, input, { checkBalance: true });
+    if ("error" in r) return fail(r.error, r.field);
+    if (!r.plan.onChain) return { ok: true, mode: "direct" };
+    const c = await ownerContext(user.id, r.vault);
+    if ("error" in c) return fail(c.error!);
+    return { ok: true, mode: "live", network: networkId(), vault: c.vault, owner: c.owner, calls: callsFor(r.plan, c.owner) };
+  } catch (e) {
+    console.error("[owner-actions.prepare] failed", e);
+    return fail("Couldn't reach your vault, so nothing changed. Try again.");
+  }
 }
 
 /** Rehearsal, or a payee that isn't on the vault yet: apply in the app only. */
 export async function applyDirect(input: OwnerActionInput): Promise<OwnerConfirmed> {
   const user = await requireUser();
-  const r = await plan(user.id, input);
-  if ("error" in r) return fail(r.error);
-  const p = r.plan;
-  if (p.onChain || (p.kind !== "remove" && p.kind !== "cap")) return fail("Sign this with your wallet.");
-  if (p.kind === "remove") await setPayeeVaultStatus(user.id, p.payee.id, "removed");
-  else await setPayeeCap(user.id, p.payee.id, p.cap!);
-  await logActivity({
-    userId: user.id,
-    action: p.kind === "remove" ? "payee.remove" : "payee.cap_change",
-    entity: "payee",
-    entityId: p.payee.id,
-    meta: { nearAccount: p.payee.nearAccount, from: p.payee.capRaw.toString(), to: p.cap?.toString(), onChain: false },
-  });
-  refresh();
-  return { ok: true };
+  try {
+    const r = await plan(user.id, input);
+    if ("error" in r) return fail(r.error);
+    const p = r.plan;
+    if (p.onChain || (p.kind !== "remove" && p.kind !== "cap")) return fail("Sign this with your wallet.");
+    if (p.kind === "remove") await setPayeeVaultStatus(user.id, p.payee.id, "removed");
+    else await setPayeeCap(user.id, p.payee.id, p.cap!);
+    await logActivity({
+      userId: user.id,
+      action: p.kind === "remove" ? "payee.remove" : "payee.cap_change",
+      entity: "payee",
+      entityId: p.payee.id,
+      meta: { nearAccount: p.payee.nearAccount, from: p.payee.capRaw.toString(), to: p.cap?.toString(), onChain: false },
+    });
+    refresh();
+    return { ok: true };
+  } catch (e) {
+    console.error("[owner-actions.apply] failed", e);
+    return fail("Couldn't save that. Try again.");
+  }
 }
 
-/** After the wallet signed (or "Check again"): read the vault and only then record the change. */
+/**
+ * After the wallet signed (or "Check again"): read the vault and only then record the change. By
+ * now the transaction is done, so every failure here is retryable: the hook keeps the tx hash and
+ * offers "Check again" rather than asking the wallet to sign twice. Each write is safe to repeat.
+ */
 export async function confirmOwnerAction(input: OwnerActionInput, txHash?: string): Promise<OwnerConfirmed> {
   const user = await requireUser();
-  const r = await plan(user.id, input);
-  if ("error" in r) return fail(r.error);
-  const p = r.plan;
-  if (!p.onChain) return fail("Nothing to confirm on-chain.");
-  const c = await ownerContext(user.id, r.vault);
-  if ("error" in c) return fail(c.error!);
-  const hash = txHash && TX_HASH_RE.test(txHash) ? txHash : undefined;
   try {
+    const r = await plan(user.id, input, { confirming: true });
+    if ("error" in r) return fail(r.error);
+    const p = r.plan;
+    if (!p.onChain) return fail("Nothing to confirm on-chain.");
+    const c = await ownerContext(user.id, r.vault);
+    if ("error" in c) return fail(c.error!);
+    const hash = txHash && TX_HASH_RE.test(txHash) ? txHash : undefined;
     const reader = () => createVaultReader(rpcUrl(), c.vault);
+    let tx: Awaited<ReturnType<typeof fetchTxOutcome>> = null; // only a tx the owner signed is fetched
     let ok = false;
     switch (p.kind) {
       case "remove":
@@ -180,8 +196,14 @@ export async function confirmOwnerAction(input: OwnerActionInput, txHash?: strin
         break;
       case "withdraw": {
         if (!hash) return fail("Couldn't find that withdrawal. Check your wallet's activity.");
-        const tx = await fetchTxOutcome(hash, c.owner);
-        ok = !!tx && verifyWithdrawn(tx, c.vault, p.amount, c.owner);
+        tx = await fetchTxOutcome(hash, c.owner);
+        const outcome = tx ? withdrawalOutcome(tx, c.vault, p.amount, c.owner) : "unknown";
+        if (tx && outcome === "failed") {
+          await recordVaultEvents(user.id, hash, vaultEvents(tx, c.vault));
+          refresh();
+          return fail("The withdrawal failed, so the money is still in your vault. Your wallet may not be set up to hold USDC yet: receive a small amount of USDC there, then try again.");
+        }
+        ok = outcome === "withdrawn";
         break;
       }
     }
@@ -193,9 +215,9 @@ export async function confirmOwnerAction(input: OwnerActionInput, txHash?: strin
       const chain = await reader().getPayee(p.payee.nearAccount);
       await setPayeeVaultStatus(user.id, p.payee.id, payeeVaultStatus(chain ?? undefined, BigInt(Date.now()) * 1_000_000n));
     }
-    // audit trail: the vault's own events from that tx (only a tx the owner signed is fetched)
+    // audit trail: the vault's own events from that tx. Read last: the chain has it by now
     if (hash) {
-      const tx = await fetchTxOutcome(hash, c.owner);
+      tx ??= await fetchTxOutcome(hash, c.owner);
       if (tx) await recordVaultEvents(user.id, hash, vaultEvents(tx, c.vault));
     }
     await logActivity({ userId: user.id, ...auditEntry(p, c.owner, hash) });

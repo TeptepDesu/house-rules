@@ -52,14 +52,33 @@ export function draftFollowUp(i: FollowUpInput): Draft | null {
 
 const MONEY_RE = /\$\s?[\d,]+(?:\.\d+)?/g;
 const URL_RE = /\bhttps?:\/\/|\bwww\./i;
+const DOMAIN_RE = /[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/gi; // also matches the host in an email address
+const NUMBER_RE = /\d+(?:[.,]\d+)*/g;
+const MONEY_WORD_RE = /\b(?:usdc?|eur|gbp|dollars?|bucks|euros?|pounds?|hundred|thousand|million)\b|[€£¥₩₱]/gi;
+const INVISIBLE_RE = /[\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]/;
 
-/** True if `text` keeps every fact, has exactly one pay link, no other URL and no other amounts. */
-export function keepsTheFacts(text: string, facts: string[]): boolean {
-  if (text.split(PAY_LINK).length !== 2) return false;
-  if (URL_RE.test(text)) return false;
-  if (!facts.every((f) => text.includes(f))) return false;
-  const amounts = text.match(MONEY_RE) ?? [];
-  return amounts.every((a) => facts.includes(a.replace(/\s/g, "")));
+/**
+ * True if `text` keeps every fact and has exactly one pay link, no other URL and no other amounts.
+ * The rest is anything-new detection against `draft`, the template it reworded: a domain, a number
+ * or a money word the draft didn't have is refused, so a rewrite can't add "pay at evil.xyz" or
+ * "900 USD" or shift a date. Refusing is safe: the operator gets the template. NFKC first, so
+ * full-width lookalikes can't slip through.
+ */
+export function keepsTheFacts(text: string, facts: string[], draft = ""): boolean {
+  if (INVISIBLE_RE.test(text)) return false;
+  const t = text.normalize("NFKC");
+  if (t.split(PAY_LINK).length !== 2) return false;
+  if (URL_RE.test(t)) return false;
+  if (!facts.every((f) => t.includes(f))) return false;
+  const amounts = t.match(MONEY_RE) ?? [];
+  if (!amounts.every((a) => facts.includes(a.replace(/\s/g, "")))) return false;
+  const original = [draft, ...facts].join(" ").normalize("NFKC").toLowerCase();
+  // whole tokens, not substrings: "20" isn't already there just because "$200.00" is
+  const isNew = (re: RegExp) => {
+    const known = new Set(original.match(re) ?? []);
+    return (t.toLowerCase().match(re) ?? []).some((x) => !known.has(x));
+  };
+  return !isNew(DOMAIN_RE) && !isNew(NUMBER_RE) && !isNew(MONEY_WORD_RE);
 }
 
 export type NearAiConfig = { apiKey: string; model: string; baseUrl: string };
@@ -97,7 +116,7 @@ export async function polishWithNearAi(draft: Draft, facts: string[], cfg: NearA
     if (!res.ok) return null;
     const j = (await res.json()) as { choices?: { message?: { content?: string } }[] };
     const text = j.choices?.[0]?.message?.content?.trim();
-    return text && keepsTheFacts(text, facts) ? text : null;
+    return text && keepsTheFacts(text, facts, draft.body) ? text : null;
   } catch {
     return null;
   }

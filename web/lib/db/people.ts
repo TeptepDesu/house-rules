@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "./conn";
 import type { VaultPayee } from "@/lib/near/policy";
@@ -20,12 +20,16 @@ export async function createPayee(
   userId: string,
   p: { name: string; role: "owner" | "cleaner"; nearAccount: string; capRaw: bigint },
 ): Promise<Result<{ id: string }>> {
-  const [row] = await (await db())
-    .insert(payees)
-    .values({ userId, ...p })
-    .onConflictDoNothing()
+  const d = await db();
+  const [row] = await d.insert(payees).values({ userId, ...p }).onConflictDoNothing().returning({ id: payees.id });
+  if (row) return { ok: true, id: row.id };
+  // someone removed from the vault can be added back. Same role only: properties still point here
+  const [back] = await d
+    .update(payees)
+    .set({ name: p.name, capRaw: p.capRaw, vaultStatus: "pending_signature", addedTx: null })
+    .where(and(eq(payees.userId, userId), eq(payees.nearAccount, p.nearAccount), eq(payees.role, p.role), eq(payees.vaultStatus, "removed")))
     .returning({ id: payees.id });
-  return row ? { ok: true, id: row.id } : { ok: false, error: "duplicate_account" };
+  return back ? { ok: true, id: back.id } : { ok: false, error: "duplicate_account" };
 }
 
 async function ownsPayee(userId: string, id: string | undefined, role: "owner" | "cleaner") {
@@ -34,7 +38,7 @@ async function ownsPayee(userId: string, id: string | undefined, role: "owner" |
   const [r] = await (await db())
     .select({ id: payees.id })
     .from(payees)
-    .where(and(eq(payees.id, id), eq(payees.userId, userId), eq(payees.role, role)))
+    .where(and(eq(payees.id, id), eq(payees.userId, userId), eq(payees.role, role), ne(payees.vaultStatus, "removed")))
     .limit(1);
   return !!r;
 }
@@ -53,6 +57,19 @@ export async function createProperty(
   return row ? { ok: true, id: row.id } : { ok: false, error: "duplicate_name" };
 }
 
+/** Who a property pays. Undefined clears that role; payouts for it are then held. */
+export async function setPropertyPayees(userId: string, propertyId: string, p: { ownerPayeeId?: string; cleanerPayeeId?: string }): Promise<Result> {
+  if (!UUID_RE.test(propertyId)) return { ok: false, error: "not_found" };
+  const mine = and(eq(properties.id, propertyId), eq(properties.userId, userId));
+  const d = await db();
+  const [prop] = await d.select({ id: properties.id }).from(properties).where(mine);
+  if (!prop) return { ok: false, error: "not_found" };
+  if (!(await ownsPayee(userId, p.ownerPayeeId, "owner"))) return { ok: false, error: "invalid_owner" };
+  if (!(await ownsPayee(userId, p.cleanerPayeeId, "cleaner"))) return { ok: false, error: "invalid_cleaner" };
+  await d.update(properties).set({ ownerPayeeId: p.ownerPayeeId ?? null, cleanerPayeeId: p.cleanerPayeeId ?? null }).where(mine);
+  return { ok: true };
+}
+
 export async function listProperties(userId: string) {
   const owner = alias(payees, "owner");
   const cleaner = alias(payees, "cleaner");
@@ -62,6 +79,8 @@ export async function listProperties(userId: string) {
       name: properties.name,
       cleaningFeeRaw: properties.cleaningFeeRaw,
       mgmtFeeBps: properties.mgmtFeeBps,
+      ownerPayeeId: properties.ownerPayeeId,
+      cleanerPayeeId: properties.cleanerPayeeId,
       ownerName: owner.name,
       ownerAccount: owner.nearAccount,
       cleanerName: cleaner.name,
@@ -103,6 +122,8 @@ export async function syncPayeeStatuses(userId: string, chain: VaultPayee[], now
   const byAccount = new Map(chain.map((p) => [p.accountId, p]));
   for (const p of await listPayees(userId)) {
     const status = payeeVaultStatus(byAccount.get(p.nearAccount), nowNs);
+    // added back and awaiting approval: the vault still has their old, inactive record
+    if (status === "removed" && p.vaultStatus === "pending_signature") continue;
     if (status !== p.vaultStatus) {
       await d.update(payees).set({ vaultStatus: status }).where(and(eq(payees.id, p.id), eq(payees.userId, userId)));
     }

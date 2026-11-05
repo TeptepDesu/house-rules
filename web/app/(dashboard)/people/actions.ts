@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth/dal";
 import { logActivity } from "@/lib/db";
-import { createPayee, createProperty } from "@/lib/db/people";
+import { createPayee, createProperty, setPropertyPayees } from "@/lib/db/people";
 import { parsePercentToBps, parseUsd } from "@/lib/money";
 import { checkAccountForNetwork } from "@/lib/near/account";
 import { networkId } from "@/lib/near/network";
@@ -114,6 +114,29 @@ export async function addProperty(_prev: FormState, formData: FormData): Promise
   } catch (e) {
     console.error("[people.addProperty] failed", e);
     return { error: "Couldn't save the property. Try again.", values };
+  }
+  refresh();
+  return { ok: true };
+}
+
+const propertyPeopleSchema = z.object({ propertyId: z.string().uuid(), ownerPayeeId: optionalId, cleanerPayeeId: optionalId });
+
+/** Change who a property pays, e.g. after removing a cleaner. Takes effect from the next payout run. */
+export async function updatePropertyPeople(formData: FormData): Promise<{ ok: boolean; error?: string }> {
+  const user = await requireUser();
+  const parsed = propertyPeopleSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { ok: false, error: "That request isn't valid." };
+  const { propertyId, ownerPayeeId, cleanerPayeeId } = parsed.data;
+  try {
+    const r = await setPropertyPayees(user.id, propertyId, { ownerPayeeId, cleanerPayeeId });
+    if (!r.ok) {
+      const map: Record<string, string> = { not_found: "Property not found.", invalid_owner: "Choose one of your owners.", invalid_cleaner: "Choose one of your cleaners." };
+      return { ok: false, error: map[r.error] ?? "Couldn't save that. Try again." };
+    }
+    await logActivity({ userId: user.id, action: "property.update", entity: "property", entityId: propertyId, meta: { ownerPayeeId, cleanerPayeeId } });
+  } catch (e) {
+    console.error("[people.updatePropertyPeople] failed", e);
+    return { ok: false, error: "Couldn't save that. Try again." };
   }
   refresh();
   return { ok: true };

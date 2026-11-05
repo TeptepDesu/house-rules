@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, gt, inArray } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import type { PropertyTerms, ReadyBooking } from "@/lib/agent/plan";
 import type { RunOutcome } from "@/lib/agent/run";
 import { vaultEventRows } from "./audit";
@@ -162,6 +162,15 @@ export async function unpaidSplits(userId: string) {
 }
 
 /** Recent runs with their settlement txs, for the Payouts history. */
+/** All-time payouts: the Overview's "Paid out", which mustn't depend on how many runs are listed. */
+export async function paidTotals(userId: string) {
+  const [r] = await (await db())
+    .select({ total: sql<string>`coalesce(sum(${agentRuns.paidTotalRaw}), 0)::text`, runs: count() })
+    .from(agentRuns)
+    .where(and(eq(agentRuns.userId, userId), gt(agentRuns.paidTotalRaw, 0n)));
+  return { total: BigInt(r.total), runs: r.runs };
+}
+
 export async function listRunsWithTxs(userId: string, limit = 10) {
   const runs = await listRuns(userId, limit);
   if (runs.length === 0) return [];

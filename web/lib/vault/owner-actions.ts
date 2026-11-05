@@ -39,18 +39,29 @@ export const capChangedOnChain = (p: VaultPayee | null | undefined, role: PayeeR
 export const limitsOnChain = (policy: { dailyLimit: bigint; payeeDelayNs: bigint }, dailyLimit: bigint, payeeDelayNs: bigint) =>
   policy.dailyLimit === dailyLimit && policy.payeeDelayNs === payeeDelayNs;
 
-/** Only the vault's own `withdrawn` event, on a successful receipt, for exactly this amount + receiver. */
-export function verifyWithdrawn(tx: TxOutcome, vault: string, amount: bigint, receiver: string): boolean {
-  return vaultEvents(tx, vault).some((e) => e.event === "withdrawn" && String(e.data.amount) === amount.toString() && e.data.receiver_id === receiver);
+export type WithdrawalOutcome = "withdrawn" | "failed" | "unknown";
+
+/**
+ * Read from the vault's own events only, on a successful receipt, for exactly this amount + receiver.
+ * "failed" is final: on_withdrawn logs withdraw_failed when the transfer bounced (typically a wallet
+ * not registered on USDC), inside a transaction that itself succeeds, so the money never left.
+ */
+export function withdrawalOutcome(tx: TxOutcome, vault: string, amount: bigint, receiver: string): WithdrawalOutcome {
+  const mine = vaultEvents(tx, vault).filter((e) => String(e.data.amount) === amount.toString() && e.data.receiver_id === receiver);
+  if (mine.some((e) => e.event === "withdrawn")) return "withdrawn";
+  return mine.some((e) => e.event === "withdraw_failed") ? "failed" : "unknown";
 }
 
 const MAX_DAILY = 1_000_000n * 1_000_000n;
-const MAX_DELAY_H = 720n; // 30 days
-const HOUR_NS = 3_600n * 1_000_000_000n;
+const MAX_DELAY_MIN = 43_200n; // 30 days
+const MINUTE_NS = 60n * 1_000_000_000n;
 
 export type ParsedLimits = { ok: true; dailyLimit: bigint; payeeDelayNs: bigint } | { ok: false; field: "daily" | "delay"; error: string };
 
-export function parseLimits(dailyUsd: string, delayHours: string): ParsedLimits {
+/** The vault's wait for the form, rounded up so that saving the form can never shorten it. */
+export const delayMinutesInput = (ns: bigint) => ((ns + MINUTE_NS - 1n) / MINUTE_NS).toString();
+
+export function parseLimits(dailyUsd: string, delayMinutes: string): ParsedLimits {
   let daily: bigint;
   try {
     daily = parseUsd(dailyUsd);
@@ -58,9 +69,9 @@ export function parseLimits(dailyUsd: string, delayHours: string): ParsedLimits 
     return { ok: false, field: "daily", error: "Enter a dollar amount, e.g. 5,000" };
   }
   if (daily <= 0n || daily > MAX_DAILY) return { ok: false, field: "daily", error: "Enter between $0.01 and $1,000,000" };
-  const h = delayHours.trim();
-  if (!/^\d+$/.test(h) || BigInt(h) > MAX_DELAY_H) return { ok: false, field: "delay", error: "Enter whole hours from 0 to 720 (30 days)" };
-  return { ok: true, dailyLimit: daily, payeeDelayNs: BigInt(h) * HOUR_NS };
+  const m = delayMinutes.trim();
+  if (!/^\d+$/.test(m) || BigInt(m) > MAX_DELAY_MIN) return { ok: false, field: "delay", error: "Enter whole minutes from 0 to 43,200 (30 days)" };
+  return { ok: true, dailyLimit: daily, payeeDelayNs: BigInt(m) * MINUTE_NS };
 }
 
 /**

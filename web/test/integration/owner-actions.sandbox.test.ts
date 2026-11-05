@@ -5,7 +5,7 @@
 import { actions, nearToYocto, teraToGas } from "near-api-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { TxOutcome } from "@/lib/near/outcome";
-import { type WalletCall, capChangeCalls, capChangedOnChain, limitsOnChain, removePayeeCalls, removedOnChain, setLimitsCalls, untilOnChain, verifyWithdrawn, withdrawCalls } from "@/lib/vault/owner-actions";
+import { type WalletCall, capChangeCalls, capChangedOnChain, limitsOnChain, removePayeeCalls, removedOnChain, setLimitsCalls, untilOnChain, withdrawCalls, withdrawalOutcome } from "@/lib/vault/owner-actions";
 import { type Sandbox, WASM, sandboxAvailable, startSandbox } from "./sandbox";
 
 const U = 1_000_000n;
@@ -67,8 +67,8 @@ describe.skipIf(!sandboxAvailable())("operator's wallet actions on a real vault 
   it("withdraw to the operator: tokens move and the app's check finds the vault's `withdrawn` event", async () => {
     const [v0, o0] = [await balance(VAULT), await balance(OPERATOR)];
     const tx = await sign(OPERATOR, withdrawCalls(126n * U, OPERATOR));
-    expect(verifyWithdrawn(tx, VAULT, 126n * U, OPERATOR)).toBe(true);
-    expect(verifyWithdrawn(tx, VAULT, 126n * U, AGENT)).toBe(false);
+    expect(withdrawalOutcome(tx, VAULT, 126n * U, OPERATOR)).toBe("withdrawn");
+    expect(withdrawalOutcome(tx, VAULT, 126n * U, AGENT)).toBe("unknown");
     await new Promise((r) => setTimeout(r, 1_500));
     expect(v0 - (await balance(VAULT))).toBe(126n * U);
     expect((await balance(OPERATOR)) - o0).toBe(126n * U);
