@@ -6,7 +6,14 @@
       "Read(./**/.env)",
       "Read(./**/.env.*)",
       "Bash(cat *.env*)",
-      "Bash(cat **/.env*)"
+      "Bash(cat **/.env*)",
+      "Bash(rm -rf *)",
+      "Bash(sudo *)",
+      "Bash(chmod 777 *)",
+      "Bash(ssh *)",
+      "Bash(* > /dev/sd*)",
+      "Bash(* > /dev/disk*)",
+      "Bash(* > /dev/mem*)"
     ]
   }
 }

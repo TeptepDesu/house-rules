@@ -55,3 +55,12 @@ test("phone: the theme switch is in the menu", async ({ page }) => {
   await page.getByTestId("theme-toggle-mobile").click();
   await expect(html(page)).not.toHaveClass(/\bdark\b/);
 });
+
+test("an unknown address gets our own 404 in the app's theme, and the site has its own icon", async ({ page }) => {
+  // the pay page streams inside <Suspense>, so Next keeps HTTP 200 and marks the page noindex
+  await page.goto("/pay/not-a-real-invoice");
+  await expect(page.getByTestId("not-found")).toBeVisible();
+  await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute("content", /noindex/);
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  await expect(page.locator('link[rel="icon"]').first()).toHaveAttribute("href", /icon/);
+});

@@ -18,8 +18,8 @@
 - **Hosted demo** is a plus. Keep it up through 18 Nov, ideally 25 Nov (Q-012).
 - **AI judges screen, humans decide** (Q-017): the README must make the project reproducible with "do X → see Y" steps.
 - **NEAR AI credits:** $10 free by joining NEAR Builders (for the AI triage stretch).
-- **No Nomad code, data, or branding.** Synthetic data only. Ask Nomad before naming them as a design partner.
-- **Working hours:** daily from 8 AM PH until the second job starts. The timeline assumes ~6 focused hours/day. If a day runs short, use the cut line in §7.
+- **Synthetic data only.** No third-party code, data or branding, and no design partner is named.
+- **Pace:** the timeline assumes ~6 focused hours/day. If a day runs short, use the cut line in §7.
 
 ---
 

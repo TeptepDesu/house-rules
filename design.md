@@ -26,7 +26,7 @@ Structure references (patterns only, never their branding):
 
 ## Colour
 
-There are two themes, both behind the same semantic tokens. All tokens live in `web/app/globals.css` as OKLCH; components use the semantic names below, never raw values. **Don't reuse the Nomad Payment Portal's tokens.**
+There are two themes, both behind the same semantic tokens. All tokens live in `web/app/globals.css` as OKLCH; components use the semantic names below, never raw values. **Never reuse another company's design system or tokens.**
 
 - **Dark (the default, `.dark` on `<html>`):** neutrals and the blue accent follow the NEAR HACKATHON site's dark theme (decided 2026-11-03): green-black background `#161a15`, cream text `#e7dfca`, olive borders, accent blue `#0091fd` with dark text on it. The status colours are ours, tuned for that base.
 - **Light (`:root`):** a warm neutral base (stone), one accent ("ledger green", a deep teal-green) and four muted status colours.

@@ -13,8 +13,8 @@ const bookingsLabel = (n: number) => `${n} ${n === 1 ? "booking" : "bookings"}`;
 export function WeeklyCollectedChart({ weeks }: { weeks: WeekCollected[] }) {
   const max = weeks.reduce((a, w) => (w.collected > a ? w.collected : a), 0n);
   const peak = weeks.findIndex((w) => w.collected === max);
-  // keep labels and tooltips inside the card at both ends of the row
-  const align = (i: number) => (i === 0 ? "left-0" : i === weeks.length - 1 ? "right-0" : "left-1/2 -translate-x-1/2");
+  // with many weeks the end columns are narrow: keep labels and tooltips inside the card
+  const align = (i: number) => (weeks.length > 5 && i === 0 ? "left-0" : weeks.length > 5 && i === weeks.length - 1 ? "right-0" : "left-1/2 -translate-x-1/2");
 
   return (
     <section aria-labelledby="collected-chart-title" className="min-w-0" data-testid="overview-collected-chart">
@@ -34,10 +34,10 @@ export function WeeklyCollectedChart({ weeks }: { weeks: WeekCollected[] }) {
               data-testid={`overview-collected-week-${w.weekStart}`}
               className="group relative flex min-w-0 flex-1 flex-col justify-end rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <div className="relative flex flex-1 items-end border-b">
+              <div className="relative flex flex-1 items-end justify-center border-b">
                 {w.collected > 0n && (
                   <div
-                    className="w-full rounded-t-[4px] bg-chart-1 transition-opacity group-hover:opacity-80 group-focus-visible:opacity-80"
+                    className="w-full max-w-12 rounded-t-[4px] bg-chart-1 transition-opacity group-hover:opacity-80 group-focus-visible:opacity-80"
                     style={{ height: `${barPermille(w.collected, max) / 10}%`, minHeight: 2 }}
                   />
                 )}
