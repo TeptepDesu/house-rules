@@ -6,6 +6,7 @@ import { MetricCard } from "@/components/metric-card";
 import { Money } from "@/components/money";
 import { PageHeader } from "@/components/page-header";
 import { StatusPill } from "@/components/status-pill";
+import { WeeklyCollectedChart } from "@/components/weekly-collected-chart";
 import { buttonVariants } from "@/components/ui/button";
 import { planBookingPayouts } from "@/lib/agent/plan";
 import { requireUser } from "@/lib/auth/dal";
@@ -13,7 +14,7 @@ import { listRunsWithTxs, loadAgentInputs, unpaidSplits } from "@/lib/db/agent";
 import { listBookingsWithRecon } from "@/lib/db/bookings";
 import { listInvoices } from "@/lib/db/invoices";
 import { setupCounts } from "@/lib/db/people";
-import { attentionItems, overviewMetrics } from "@/lib/overview";
+import { attentionItems, overviewMetrics, weeklyCollected } from "@/lib/overview";
 import { cn } from "@/lib/utils";
 
 const when = (d: Date) => d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -62,6 +63,7 @@ async function Overview() {
   };
   const m = overviewMetrics(input);
   const items = attentionItems(input);
+  const weeks = weeklyCollected(bookings.map((b) => ({ checkIn: b.checkIn, collected: b.recon.collected, penaltiesCollected: b.recon.penaltiesCollected })));
   const setupDone = counts.payees > 0 && counts.activePayees > 0 && counts.properties > 0;
 
   return (
@@ -74,6 +76,8 @@ async function Overview() {
         <MetricCard label="Paid out" value={<Money raw={m.paidOut} />} context={`in ${plural(m.paidRuns, "run")}`} data-testid="overview-metric-paid" />
         <MetricCard label="Needs attention" value={m.attention} context={m.attention ? "Blocked, held back or overdue" : "Nothing right now"} data-testid="overview-metric-attention" />
       </div>
+
+      {weeks.length > 0 && <WeeklyCollectedChart weeks={weeks} />}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <section aria-labelledby="attention-title" className="min-w-0">

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type OverviewInput, attentionItems, overviewMetrics } from "./index";
+import { type OverviewInput, attentionItems, barPermille, overviewMetrics, weeklyCollected } from "./index";
 
 const U = 1_000_000n;
 const booking = (id: string, o: Partial<OverviewInput["bookings"][number]> = {}): OverviewInput["bookings"][number] => ({
@@ -73,5 +73,54 @@ describe("attentionItems", () => {
     expect(attentionItems(base)).toEqual([]);
     const many = Array.from({ length: 9 }, (_, i) => booking(`b${i}`, { settlementStatus: "blocked", note: "x" }));
     expect(attentionItems({ ...base, bookings: many }, 6)).toHaveLength(6);
+  });
+});
+
+describe("weeklyCollected", () => {
+  const row = (checkIn: string, collected: bigint, penaltiesCollected = 0n) => ({ checkIn, collected, penaltiesCollected });
+
+  it("is empty when nothing was collected", () => {
+    expect(weeklyCollected([])).toEqual([]);
+    expect(weeklyCollected([row("2026-10-05", 0n)])).toEqual([]);
+  });
+
+  it("buckets by the Monday of the stay's check-in week, in bigint, revenue plus penalties", () => {
+    const w = weeklyCollected([row("2026-10-05", 100n * U), row("2026-10-11", 50n * U, 5n * U), row("2026-10-12", 20n * U)]);
+    expect(w).toEqual([
+      { weekStart: "2026-10-05", collected: 155n * U, bookings: 2 },
+      { weekStart: "2026-10-12", collected: 20n * U, bookings: 1 },
+    ]);
+  });
+
+  it("keeps a quiet week between busy ones, so the gap stays visible", () => {
+    const w = weeklyCollected([row("2026-10-05", 10n * U), row("2026-10-19", 10n * U)]);
+    expect(w.map((x) => x.collected)).toEqual([10n * U, 0n, 10n * U]);
+    expect(w.map((x) => x.weekStart)).toEqual(["2026-10-05", "2026-10-12", "2026-10-19"]);
+  });
+
+  it("shows at most the latest N weeks of data, whatever today's date is", () => {
+    const w = weeklyCollected([row("2026-01-05", 1n * U), row("2026-10-05", 1n * U), row("2026-10-12", 1n * U), row("2026-10-19", 1n * U)], 2);
+    expect(w.map((x) => x.weekStart)).toEqual(["2026-10-12", "2026-10-19"]);
+  });
+
+  it("adds up exactly to the Collected metric when every stay is in the window", () => {
+    const rows = [row("2026-10-01", 123_456_789n, 1n), row("2026-10-09", 7n), row("2026-10-20", 999_999_999_999n, 3n)];
+    const total = weeklyCollected(rows).reduce((a, x) => a + x.collected, 0n);
+    const m = overviewMetrics({ ...base, bookings: rows.map((r, i) => booking(String(i), r)) });
+    expect(total).toBe(m.collected);
+  });
+});
+
+describe("barPermille", () => {
+  it("scales in integers: never float math on money", () => {
+    expect(barPermille(1n, 3n)).toBe(333);
+    expect(barPermille(3n, 3n)).toBe(1000);
+    expect(barPermille(0n, 3n)).toBe(0);
+    expect(barPermille(0n, 0n)).toBe(0);
+  });
+
+  it("keeps full precision past Number.MAX_SAFE_INTEGER", () => {
+    const huge = 2n ** 80n;
+    expect(barPermille(huge / 2n, huge)).toBe(500);
   });
 });
