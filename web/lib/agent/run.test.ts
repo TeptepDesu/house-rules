@@ -77,6 +77,23 @@ describe("runAgent", () => {
     expect(r.rejectedCount).toBe(2);
   });
 
+  it("everything held by the pre-check → held, not failed: nothing was sent, so nothing went wrong", async () => {
+    const { v, calls } = fakeVault({ remaining: 0n });
+    const r = await runAgent(deps(v), plansFor(2));
+    expect(calls).toHaveLength(0);
+    expect(r.status).toBe("held");
+    expect(r.paidTotal).toBe(0n);
+    expect(r.rejectedCount).toBe(4);
+    expect(r.bookings.every((b) => b.status === "pending")).toBe(true);
+  });
+
+  it("the rest held after an earlier run paid part of it → partial, not held", async () => {
+    const { v, calls } = fakeVault({ remaining: 0n, paid: ["bk00:owner"] });
+    const r = await runAgent(deps(v), plansFor(1));
+    expect(calls).toHaveLength(0);
+    expect(r.status).toBe("partial");
+  });
+
   it("a reverted batch pays nothing: its bookings stay pending with the reason", async () => {
     const { v } = fakeVault({ settle: (items) => ({ kind: "reverted", keys: items.map((i) => i.key), total: 0n, txHash: "txR" }) });
     const r = await runAgent(deps(v), plansFor(1));

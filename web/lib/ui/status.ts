@@ -47,6 +47,7 @@ const MAPS = {
     running: { label: "Running", tone: "warning" },
     succeeded: { label: "Completed", tone: "success" },
     partial: { label: "Partly paid", tone: "warning" },
+    held: { label: "Held back", tone: "warning" },
     failed: { label: "Failed", tone: "destructive" },
   },
   importRow: {

@@ -42,7 +42,8 @@ export type BookingOutcome = {
 export type ChunkOutcome = { index: number; keys: string[]; result: SettleResult | { kind: "error"; error: ClassifiedError } };
 
 export type RunOutcome = {
-  status: "succeeded" | "partial" | "failed";
+  /** held: the pre-check stopped every payout, so nothing was sent. failed: something was sent (or the run stopped) and went wrong. */
+  status: "succeeded" | "partial" | "held" | "failed";
   plannedTotal: bigint;
   paidTotal: bigint;
   rejectedCount: number;
@@ -115,6 +116,6 @@ export async function runAgent(d: AgentDeps, plans: BookingPlan[]): Promise<RunO
   const paidTotal = all.filter((i) => i.status === "paid").reduce((a, i) => a + i.amount, 0n);
   const notPaid = all.filter((i) => i.status !== "paid");
   const anyPaid = all.some((i) => i.status === "paid");
-  const status: RunOutcome["status"] = stoppedBecause ? "failed" : notPaid.length === 0 ? "succeeded" : anyPaid ? "partial" : "failed";
+  const status: RunOutcome["status"] = stoppedBecause ? "failed" : notPaid.length === 0 ? "succeeded" : anyPaid ? "partial" : chunks.length === 0 ? "held" : "failed";
   return { status, plannedTotal, paidTotal, rejectedCount: notPaid.length, bookings, chunks, stoppedBecause };
 }

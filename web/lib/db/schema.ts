@@ -40,7 +40,7 @@ export const paymentStatus = pgEnum("payment_status", [
 ]);
 export const reconResult = pgEnum("recon_result", ["matched", "mismatch", "open_penalty", "unpaid", "awaiting_payment", "orphan_payment"]);
 export const runTrigger = pgEnum("run_trigger", ["cron", "manual"]);
-export const runStatus = pgEnum("run_status", ["running", "succeeded", "partial", "failed"]);
+export const runStatus = pgEnum("run_status", ["running", "succeeded", "partial", "held", "failed"]);
 export const txStatus = pgEnum("tx_status", ["submitted", "paid", "reverted", "rejected", "failed"]);
 export const splitRole = pgEnum("split_role", ["owner", "cleaner", "manager"]);
 export const splitStatus = pgEnum("split_status", ["pending", "paid", "retained", "rejected"]);
