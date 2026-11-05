@@ -4,12 +4,14 @@
 import { describe, expect, it } from "vitest";
 
 const RPC = "https://rpc.testnet.near.org";
+// These txs are from Nov 2026 and regular nodes prune history after a few days, so old txs need an archival node.
+const ARCHIVAL_RPC = "https://archival-rpc.testnet.near.org";
 const VAULT = "vault.houserules-operator.testnet";
 const OPERATOR = "houserules-operator.testnet";
 
 describe("public testnet (read-only)", () => {
   it("the operator's wallet-signed add_payee for owner-1 verifies, and nothing else does", async () => {
-    process.env.NEAR_RPC_URL = RPC;
+    process.env.NEAR_RPC_URL = ARCHIVAL_RPC;
     const { fetchTxOutcome } = await import("@/lib/near/rpc");
     const { verifyPayeeAdded } = await import("@/lib/near/payee-approval");
     const tx = await fetchTxOutcome("EyLo6na9gnReu4jkmiCha6kQhW9uwap96Vmtd7BUaHQP", OPERATOR);
@@ -20,7 +22,7 @@ describe("public testnet (read-only)", () => {
   });
 
   it("the testnet payout tx parses as paid, with the vault's events, via the app's parser", async () => {
-    process.env.NEAR_RPC_URL = RPC;
+    process.env.NEAR_RPC_URL = ARCHIVAL_RPC;
     const { fetchTxOutcome } = await import("@/lib/near/rpc");
     const { settleResult, vaultEvents } = await import("@/lib/near/outcome");
     const tx = await fetchTxOutcome("5zJgtUU7UyyCJrg9ynVgWoggPRTKLT5ctZahckM5Gqas", OPERATOR);
