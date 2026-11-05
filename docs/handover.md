@@ -1,104 +1,55 @@
-# Handover — 2026-11-03
+# Handover — 2026-11-05
 
-Where House Rules stands, what's half-done, and what's next. Read with `CLAUDE.md` (rules, commands, versions), `plan.md` (scope) and `docs/needs-from-joseph.md` (Joseph's checklist).
+Where House Rules stands. Read with `CLAUDE.md` (rules, commands, versions), `plan.md` (scope, §9 timeline), `HACKATHON.md` (official rules) and `docs/needs-from-joseph.md` (what's left).
 
 ## TL;DR
 
-- **The app is feature-complete for the plan's core scope.** Every core item in plan §7 is built and tested, and the testnet proof is done.
-- **Stretch: guest follow-up messages are done and committed.** The optional NEAR AI rewording hasn't been tried against the live API. See [Follow-up messages](#follow-up-messages-finished-2026-11-03).
-- **Timeline pulled forward (2026-11-03, plan §9):** hosting Nov 4, mainnet Nov 5, **app done Nov 6**, enhancements Nov 7–11, code freeze Nov 12, record Nov 13, submit Nov 14.
-- **The move to Windows is cancelled.** Work stays on the Mac. [`docs/new-machine-windows.md`](new-machine-windows.md) is kept only in case it's needed later.
-- **10 local commits are not pushed.** The repo `TeptepDesu/house-rules` is still private (checked 2026-11-03: the API returns 404). Joseph decides when to push.
-- **What's left is mostly Joseph's:** mainnet funds, hosting, the demo recording and the submission.
+- **Everything that doesn't need Joseph is done.** Every remaining step needs his money, accounts, camera or explicit yes: see `docs/needs-from-joseph.md`.
+- **Not pushed.** `main` is ahead of `origin/main`; the repo is still private (the API returned 404 on 2026-11-05). Joseph decides when to push.
+- **Not on mainnet.** Nothing has been deployed or paid there. `docs/mainnet-runbook.md` has every step. The real 1Click path is still unproven, and so is `INTENTS_SENDERS`.
+- **Not verified live:** the NEAR AI rewording (no key).
 
-## State of the repo
+## Last full verification (2026-11-05)
 
-| | |
+| Check | Result |
 |---|---|
-| Branch | `main` (trunk only) |
-| Last pushed | `07363a7` |
-| Local, unpushed | `2056e4d` → `HEAD` (10 commits: the 7 below, the handover, the follow-up messages, the Windows handover) |
-| Uncommitted | Nothing |
-| Servers running | None |
+| typecheck, lint | clean |
+| `pnpm --filter web test` | 378 passed |
+| `pnpm --filter web e2e` | 27 passed, 3 screenshot specs skipped |
+| `pnpm --filter web test:integration` (rebuilt wasm) | 14 passed, 1 skipped (needs the key file) |
+| `pnpm --filter web test:testnet` | passed, live |
+| `pnpm --filter web break-it` | all 5 attacks refused, balance unchanged, live |
+| `cargo test -p vault --lib` / `--test sandbox` | 33 / 8 passed |
+| clippy, `cargo fmt --check` | clean |
+| Production build + server on a real Postgres wire connection | all 7 migrations, sign-up, import, every page, sign-in passed |
+| Secrets in git history | none: long `ed25519:` strings are tx signatures in fixtures |
+| agentshield | A (98/100) |
 
-Unpushed commits, oldest first:
-1. `2056e4d` Overview dashboard. The rehearsal vault now applies the real vault's rules.
-2. `9633d5d` Waive a charge. It's refused while a guest payment could still arrive.
-3. `8ece030` Owner vault actions: exact wallet calls and chain checks, proven on a real vault in the sandbox.
-4. `2e7c280` Manage payees (change limit, remove) and vault limits/withdraw from the app, signed by the owner's wallet.
-5. `f868f43` Accept a short or over payout as final. Adds migration `0005`.
-6. `5e483ad` Direct bookings: a booking plus its stay invoice, paid from any chain.
-7. `464effe` Design-review screenshot spec for the action screens.
+**One check lies a little:** the wire-protocol test used PGlite's socket server, so it proves the `pg` driver path and the migrations, not a hosted provider's connection limits or TLS. Run `db:migrate` and a sign-in on the real host.
 
-**Last full verification**, at the follow-up commit (2026-11-03):
-- typecheck and lint: clean;
-- `pnpm --filter web test`: 367 passed;
-- `pnpm --filter web e2e`: 20 passed, 3 screenshot specs skipped;
-- `pnpm --filter web test:integration`: 14 passed, 1 skipped (live testnet, which needs the key file). Last run at `5e483ad`; nothing it covers has changed since.
+## What changed Nov 3–5
 
-Contract suites are unchanged since the last run: 33 unit and 8 sandbox tests.
-
-## What was built this session
-
-**Verified on testnet with Joseph:**
-- **The app's agent paid live through `vault.houserules-operator.testnet`** with the settle-only key, using `pnpm --filter web test:testnet`.
-- **Real-wallet flow with Meteor:**
-  - linked the wallet (NEP-413);
-  - connected the vault;
-  - approved `houserules-cleaner-2.testnet`, which went *In waiting period* → *Active*.
-- **`pnpm --filter web break-it`:** five stolen-agent-key attacks, all refused on testnet (results in `docs/testnet-deployment.md`):
-  - refused by the vault: a stranger, over the cap, and an already-paid booking;
-  - refused by NEAR's key permissions: `withdraw` and `add_payee`.
-
-**Bugs found and fixed:**
-- **The rehearsal vault paid unapproved payees and ignored its daily limit.** It's now `lib/vault/rehearsal.ts`, which applies the contract's rules in the contract's order. The rehearsal limit is $20,000/day.
-- **The People page kept showing *In waiting period* after the delay.** Statuses now sync from the vault while a payee is waiting.
-- **The waive/quote race.** `recordPaymentStart` and `waiveInvoice` both take the invoice row lock.
-- **Approve and Manage were unreachable on phones.** Payee actions now sit under the name at every width.
-
-**New features:** listed in the README's **Also try** section, each with its own browser test.
-
-**Docs:**
-- `docs/deploy.md`: Vercel + hosted Postgres guide. The production build was checked with no env vars.
-- Confirmed 1Click values and dry-quote costs in `docs/notes.md`.
-- The README walkthrough is now 14 steps (adds "approve payees" and "Overview").
-
-## Follow-up messages (finished 2026-11-03)
-
-**Guest follow-up messages + optional NEAR AI rewording** (plan §7 stretch 2) are committed. Code is in `web/lib/triage/`, `web/app/(dashboard)/bookings/follow-up-actions.ts`, `web/components/bookings/follow-up.tsx` and `web/e2e/follow-up.spec.ts`.
-
-**Safety design:**
-- The model never sees the pay link, only the `{PAY_LINK}` placeholder. The browser swaps it in after any AI step.
-- A rewrite is discarded if it changes or adds a dollar amount, drops or duplicates the link, or adds any URL.
-- Nothing is ever sent.
-- Config: `NEAR_AI_API_KEY` + `NEAR_AI_MODEL` (optionally `NEAR_AI_BASE_URL`, default `https://cloud-api.near.ai/v1`). The feature is off unless both are set. These are listed in `docs/deploy.md`. **`web/.env.example` doesn't list them yet**, because agent reads of `.env*` are denied. Joseph: add them there by hand.
-
-**Verified at this commit:** typecheck and lint clean; `test` 367 passed; `e2e` 20 passed, 3 screenshot specs skipped. `test:integration` was not re-run because nothing in `lib/near` or `lib/agent` changed.
-
-**Still unverified: the live NEAR AI call.** There's no key, and the endpoint and model names come from desk research. Get a key from cloud.near.ai, list the models (`/v1/model/list`), set both env vars, and try **Polish with NEAR AI** once. Until then the README marks it as untested live.
+- **Dark theme by default**, after the NEAR HACKATHON site's dark palette, with a light toggle. axe passes in both themes.
+- **Sign-in redirect loop fixed:** a validly signed cookie for a user missing from this database bounced between `/login` and `/` forever. `requireUser()` now goes through `/api/auth/reset-session`, which clears only that kind of cookie.
+- **Run status `held`** (migration `0006`): the pre-check stopped everything, so nothing was sent. `failed` now means something was sent and went wrong, or the run was stopped.
+- **Overview: Collected by week**, server-rendered, bigint sums, integer bar heights, table view.
+- **Own 404 and error pages**, an icon, starter assets removed. Next 16's error boundary prop is `retry`, not `reset`.
+- **`pnpm --filter web preflight`:** read-only mainnet checks. It measured about 2.8 NEAR for the vault.
+- **Hosting docs are provider-neutral:** any PostgreSQL 13+.
+- **Pre-public cleanup:** agent safety rules in CLAUDE.md, deny rules in `.claude/settings.json`, client and personal names out of current docs. Old commits still contain the client's name inside rule text; nothing claims a partnership. Rewriting history would need a force-push, so it's left alone.
+- **`HACKATHON.md`** is a snapshot of the live rules (Q-001 settles the pre-hackathon question). Re-read the live copy before submitting.
+- **`airbnb-style-small.csv`:** the normal demo file is about $11,000, far over a $50 mainnet limit.
+- **Testnet read-only tests use the archival RPC:** regular nodes prune transactions after a few days.
 
 ## What's next
 
-Dates follow the revised plan §9.
-
-**Claude can do these without Joseph:**
-1. **Nov 3:** run `npx -y ecc-agentshield scan --path .` early, so findings get fixed well before Nov 14. Run it again at the Nov 12 freeze.
-2. ~~Nov 4: mainnet preflight script~~ **Done Nov 3:** `pnpm --filter web preflight` (read-only). Run it with Joseph's account and payees once he has them, and again after the vault deploy with `--vault` and `--agent`.
-3. **Nov 5–6:** with Joseph's OK for each transaction, the mainnet vault deploy and the full loop. Fix whatever it turns up.
-4. **Nov 7–11, the enhancement backlog in order:** verify NEAR AI live (needs a key), a polish pass, overview charts, then stretch 1 (only if Nov 5 shows it's cheap) and stretch 3.
-
-**Joseph** (details in `docs/needs-from-joseph.md`):
-1. **Push** when ready. Confirm the repo is still private first; it stays private until Nov 14.
-2. **Start funding wallets today (needed Nov 5):**
-   - about 1 NEAR on a mainnet account (Meteor);
-   - $2–5 of USDC plus about $1 of ETH on Base (MetaMask).
-3. **Hosting on Nov 4:** follow `docs/deploy.md`. Apply migrations `0000`–`0005` to the hosted DB with `db:migrate`. Open decision: production refuses mock 1Click, so a hosted testnet deploy can't take guest payments.
-4. **Nov 5:** the first real $1 1Click payment and the mainnet vault deploy. **Nov 13:** a $1 rehearsal payment about an hour before recording (`docs/demo-script.md`), then record. Shot 5 is `pnpm --filter web break-it`.
-5. **Nov 14:** make the repo public after the agentshield scan, then submit (`realworld` + `security` + `business`, about 12:00 UTC).
-6. Still open:
-   - paste the hackathon rules (→ `HACKATHON.md`);
-   - the Discord question;
-   - ask Nomad before naming them.
+**Claude, when Joseph says so:**
+1. Push, after checking the repo is private.
+2. Run the preflight with his account names, then support `docs/mainnet-runbook.md` and fix what mainnet turns up. Write `docs/mainnet-deployment.md` and update the README's status table.
+3. `db:migrate` on the hosted database.
+4. Test the NEAR AI call once there's a key: list models with `/v1/model/list`, set both env vars, try **Polish with NEAR AI** once.
+5. Nov 12: full suites, agentshield, dry run of the demo script.
+6. Nov 14: re-run the secret scan, re-read the live rules, build and print the submission payload, and send it only after his yes.
 
 ## Things to know before touching code
 

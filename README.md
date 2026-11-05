@@ -86,6 +86,8 @@ This whole walkthrough is a browser test, [`web/e2e/readme.spec.ts`](web/e2e/rea
 - **Invoices → Waive** on an open charge: the booking unblocks. Waiving is refused while a guest's payment could still arrive (`waive.spec.ts`).
 - **People → Manage** a payee: change their limit or remove them. On a live vault your wallet signs it, and changing a limit restarts the payee's waiting period (`manage-payee.spec.ts`).
 - **Bookings → Message guest** on a booking blocked by an open charge or an unpaid stay: a ready-to-copy message with the exact amount and the guest's pay link. Nothing is sent from the app. If NEAR AI is configured, **Polish with NEAR AI** rewords it with private inference, and any rewrite that changes an amount, drops the link or adds a URL is thrown away (`follow-up.spec.ts`).
+- **Overview → Collected by week:** a chart of collected money with keyboard-reachable tooltips and a table view. A run where the vault's rules held every payout reads *Held back*, not *Failed* (`overview.spec.ts`).
+- **Sun/moon button:** dark is the default; light is one click away and remembered in this browser (`theme.spec.ts`).
 
 ---
 
@@ -177,9 +179,9 @@ Postgres (PGlite locally, any hosted Postgres in production) · Drizzle
 |---|---|---|
 | Contract: unit | `cd contracts && cargo test -p vault --lib` | 33 |
 | Contract: sandbox | `cd contracts && cargo test -p vault --test sandbox` | 8 |
-| App: unit, property and DB | `pnpm --filter web test` | 367 |
-| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 20, plus 3 optional screenshot captures |
-| App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 14 |
+| App: unit, property and DB | `pnpm --filter web test` | 378 |
+| App: browser (Playwright), incl. an axe-core accessibility scan of every screen and the main screens in both themes, plus no-overflow checks at phone width | `pnpm --filter web e2e` (first time: `pnpm --filter web exec playwright install chromium`) | 27, plus 3 optional screenshot captures |
+| App on a real vault (sandbox) and public testnet (read-only) | `pnpm --filter web test:integration` | 14, plus 1 that needs the agent key |
 
 Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p vault --target wasm32-unknown-unknown -- -D warnings`.
 
@@ -194,7 +196,7 @@ Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p 
 | ⏳ Before submission | Mainnet deploy and full loop with small real amounts |
 | ⏳ Before submission | **A real 1Click payment** on mainnet (the client is checked against the API docs; live delivery is unproven so far) |
 | ✅ Stretch, built | Guest follow-up messages for blocked bookings, with optional rewording on NEAR AI Cloud (private inference). The guard that rejects unsafe rewrites is unit-tested; **a live NEAR AI call hasn't been made yet** (no key) |
-| Stretch, not built | Confidential Intents for private revenue |
+| Stretch, dropped | Confidential Intents for private revenue: 1Click requires user authentication for confidential quotes, so it isn't the one-parameter change the plan allowed for ([`docs/notes.md`](docs/notes.md)). Cross-chain owner payouts: they'd need a vault contract change |
 
 Spike notes and measured numbers: [`docs/notes.md`](docs/notes.md). Design system: [`design.md`](design.md).
 

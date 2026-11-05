@@ -235,7 +235,7 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 
 ## 7. Scope
 
-**Core (done Nov 3; app finished, with mainnet, by Nov 6; see §9)**
+**Core (done Nov 3; see §9)**
 1. Vault contract + near-workspaces tests
 2. Operator auth, properties, payees (wallet-signed `add_payee`)
 3. Invoices + guest pay page + 1Click inflow → vault
@@ -247,7 +247,7 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 
 **Cut line if behind (in this order):** manual column mapping → Guesty importer → cron trigger (keep the button) → payee delay → dashboard charts.
 
-**Stretch (Nov 7–11, in order; part of the enhancement backlog in §9)**
+**Stretch (outcomes in §9)**
 1. **Private revenue mode:** guest payments settle via Confidential Intents into the operator's confidential balance; the operator tops up the vault per settlement run. Only if spike #2 shows it's one parameter + simple withdrawal.
 2. **AI exception triage via NEAR AI Cloud** (private inference, so guest data isn't sent to a public LLM): explains each blocked booking and drafts the follow-up with a penalty pay link. **Built Nov 3; the live NEAR AI call is not yet verified.**
 3. Cross-chain owner payouts (owner receives USDC on another chain).
@@ -307,32 +307,27 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 
 ### Build — Nov 1–14 (revised 2026-11-03)
 
-**Why it changed:** the whole core scope (§7, items 1–8) was done on Nov 3, a week early, along with the testnet proof (agent payouts, real-wallet payee approval, `break-it`) and stretch 2 (follow-up messages). The app is now **finished on Nov 6** (hosted, full loop proven on mainnet), not Nov 10. That leaves **Nov 7–11 for enhancements and improvements**, then a code freeze on Nov 12.
+**Why it changed:** the whole core scope (§7, items 1–8) was done on Nov 3, a week early, along with the testnet proof (agent payouts, real-wallet payee approval, `break-it`) and stretch 2 (follow-up messages). On Nov 5 Claude finished everything that doesn't need Joseph: the enhancement backlog below is done or decided. **Every remaining step is Joseph's, or needs his OK** (`docs/needs-from-joseph.md`). The dates below replace the first revision, whose hosting and mainnet days (Nov 4–6) passed without those steps.
 
-**Done, Nov 1–3:** monorepo, auth, vault contract + unit/sandbox tests, testnet deploy, properties/payees, invoices + pay page, 1Click inflow (mock), import + reconciliation, splits + fast-check, agent + Run-now, dashboard + audit log, Playwright suite, README walkthrough, follow-up messages.
+**Done, Nov 1–5:** monorepo, auth, vault contract + unit/sandbox tests, testnet deploy, properties/payees, invoices + pay page, 1Click inflow (mock), import + reconciliation, splits + fast-check, agent + Run-now, dashboard + audit log, Playwright suite, README walkthrough, follow-up messages, dark theme, weekly chart, mainnet preflight, mainnet runbook, submission draft, production smoke test on a real Postgres connection.
 
-| Date | Do | Exit criteria |
-|---|---|---|
-| **Nov 3** | Re-plan. Push (check the repo is private first). Run the agentshield scan early. **Joseph: buy the mainnet funds today** (NEAR, plus USDC and gas on Base); exchange withdrawals can be slow | Plan updated; funds on the way |
-| **Nov 4** | Hosting: hosted Postgres + Vercel, `db:migrate` (`0000`–`0005`), smoke-test sign-in on the hosted app. Decide: hosted mainnet, or a testnet preview (see `docs/deploy.md`). Claude: read-only mainnet preflight script | Hosted app signs in |
-| **Nov 5** | Mainnet: deploy the vault, register it on USDC, add owner and cleaner payees, create the settle-only agent key. **First real $1 1Click payment**, which also confirms `USDC_ASSET_ID`, `USDC_TOKEN_ACCOUNT` and `INTENTS_SENDERS` | A real guest payment marks the invoice paid and USDC is in the vault |
-| **Nov 6** | **App done.** Full mainnet loop: payment → import → reconcile → Run agent → owner and cleaner paid → audit log. Fix whatever it turns up | Demo path works end to end on mainnet, on the hosted app |
-| **Nov 7–11** | **Enhancements and improvements**, in backlog order (below). Merge only what's tested; all suites green at the end of each day | Each item merged with its tests, or dropped |
-| **Nov 12** | **Code freeze.** Fixes only. Final README pass, full suites, agentshield scan, dry run of `docs/demo-script.md` | Everything green; script runs clean |
-| **Nov 13** | Rehearsal $1 payment about an hour before recording, record the demo, draft the X post | Video done |
-| **Nov 14** | Repo public, X post, submit with `realworld` + `security` + `business`. **Aim for 12:00 UTC.** | Submitted |
+| Date | Do | Who | Exit criteria |
+|---|---|---|---|
+| **By Nov 8** | Push. Fund the mainnet account and the Base wallet | Joseph | Funds in the wallets |
+| **By Nov 9** | Hosted Postgres + Vercel, `db:migrate` (`0000`–`0006`), smoke-test sign-in | Joseph, Claude runs the migrate | Hosted app signs in |
+| **By Nov 11** | `docs/mainnet-runbook.md`: deploy, payees, first real $1 payment, full loop. Fix what it turns up | Joseph signs, Claude supports | Demo path works end to end on mainnet |
+| **Nov 12** | **Code freeze.** Fixes only. Full suites, agentshield, dry run of `docs/demo-script.md` | Claude, Joseph for the dry run | Everything green; script runs clean |
+| **Nov 13** | Rehearsal $1 payment about an hour before recording, record the demo, publish the X post | Joseph | Video and post live |
+| **Nov 14** | Repo public, then submit with `realworld` + `security` + `business`. **Aim for 12:00 UTC.** Hard deadline 23:59 UTC | Joseph approves, Claude sends | Submitted |
 
-**Enhancement backlog, Nov 7–11 (in order; reorder freely):**
-1. **Verify the NEAR AI rewording live** (needs a cloud.near.ai key). This finishes stretch 2.
-2. **Polish pass:** a design review of every page on desktop and phone, empty/loading/error states, keyboard and focus, copy. Fix what the mainnet run (Nov 5–6) showed.
-   - **Done Nov 3:** dark theme by default (the NEAR HACKATHON site's dark palette) with a light toggle; axe passes in both themes.
-   - **Open, Joseph's call:** a run where every payout was held back (e.g. payees not yet approved) shows a red **Failed** pill (`lib/agent/run.ts:118`). "Held back" would read better, but it changes run statuses, so it needs TDD in `lib/agent`.
-   - **Agentshield (Nov 3): C, 74/100.** Secrets, hooks and MCP score 100. To raise it before going public: add deny rules to `.claude/settings.json` (`rm -rf`, `sudo`, `chmod 777`, `ssh`, `> /dev/`) and a short prompt-injection/data-leak section to CLAUDE.md. The "auto-run instruction" finding is a false positive (it matched "without asking" in "Don't build … without asking").
-3. **Overview charts** (the last cut-line item).
-4. **Stretch 1, private revenue mode:** only if the real 1Click quote on Nov 5 shows Confidential Intents is one parameter plus a simple withdrawal. Otherwise drop it.
-5. **Stretch 3, cross-chain owner payouts.**
+**If time runs short:** only the Nov 14 row and the video are required. Hosting and mainnet add points but aren't required (`HACKATHON.md`, Q-010, Q-012).
 
-If mainnet slips past Nov 6, it eats into the enhancement days, not the code freeze.
+**Enhancement backlog: outcome, Nov 5**
+1. **NEAR AI rewording live:** waiting on a cloud.near.ai key (optional). The feature stays off without one.
+2. **Polish pass: done.** Dark theme with light toggle, axe clean in both themes, own 404 and error pages, icon, starter assets removed. A run the pre-check held entirely now reads **Held back**, not Failed. Agentshield went from C (74) to A (98).
+3. **Overview charts: done.** Collected by week, with a table view and keyboard tooltips.
+4. **Stretch 1, private revenue mode: dropped.** 1Click answers 401 without user authentication, so it isn't one parameter (`docs/notes.md`).
+5. **Stretch 3, cross-chain owner payouts: dropped.** It needs a vault contract change after the testnet proof and before mainnet has run. Not worth the risk to the core demo.
 
 ---
 
@@ -361,9 +356,9 @@ If mainnet slips past Nov 6, it eats into the enhancement days, not the code fre
 
 ## 12. Open questions (resolve in prep)
 
-- [ ] Discord answer on pre-hackathon work
+- [x] Pre-hackathon work: allowed from the Oct 19 announcement (`HACKATHON.md`, Q-001). No Discord question needed
 - [x] `MAX_BATCH` (spike #1): **40** at 5 TGas/transfer with 300 TGas prepaid; protocol hard cap is 100 actions/receipt. Revisit with real testnet USDC gas. See `docs/notes.md`
-- [ ] Mainnet USDC contract ID; mock FT for testnet/sandbox
-- [ ] Cheapest 1Click origin routes + minimums; confidentiality option requirements (spike #2)
+- [x] Mainnet USDC contract ID (`docs/notes.md`); mock FT for testnet/sandbox
+- [x] 1Click origin routes: USDC on Base, about $1.01 for $1. Confidentiality needs user authentication (`docs/notes.md`)
 - [x] Scheduling: free-plan Vercel cron runs once a day, so use the Run-now button + GitHub Actions schedule
 - [x] NEAR AI Cloud API shape and access (stretch): OpenAI-compatible, `https://cloud-api.near.ai/v1`, `sk-` keys from cloud.near.ai. See `docs/notes.md`

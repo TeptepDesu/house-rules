@@ -1,6 +1,8 @@
 # Deploying the web app (Vercel + Postgres)
 
-For Nov 4 (plan §9: hosting Nov 4, mainnet Nov 5, app done Nov 6). About 30 minutes, most of it clicking. **Secrets go into Vercel's settings, never into chat, the repo or a file Claude reads.**
+Hosting is a plus, not a requirement: a public repo, a reproducible README and an X post with a video are enough (`HACKATHON.md`, Q-012). If you host, keep it up until Nov 18, ideally Nov 25. About 30 minutes, most of it clicking. **Secrets go into Vercel's settings, never into chat, the repo or a file Claude reads.**
+
+Checked locally on 2026-11-05: all 7 migrations over a real Postgres wire connection through `pg` (and a second run is a no-op), then the production build and server on that database. Sign-up, import, every page, sign-out and sign-in all passed in a real browser.
 
 Checked locally on 2026-11-02:
 - `pnpm --filter web build` succeeds with **no** env vars, so a missing variable can't break the build.
@@ -46,7 +48,7 @@ The app talks to **standard PostgreSQL** through `pg` (node-postgres). It uses n
 | `NEAR_AI_API_KEY`, `NEAR_AI_MODEL` | optional; set **both** to show *Polish with NEAR AI* on guest follow-ups (key from cloud.near.ai) | key: **yes** |
 | `NEAR_AI_BASE_URL` | optional; defaults to `https://cloud-api.near.ai/v1` | no |
 
-**Open decision (Nov 4):** production refuses mock 1Click, and 1Click only delivers on mainnet. So a hosted **testnet** deploy can't take guest payments. The rest works there: import, payouts and the vault pages. Either deploy straight to mainnet (the plan), or decide we want a hosted testnet preview and Claude adds a clearly labelled exception.
+**Default: deploy to mainnet** (`docs/mainnet-runbook.md`). Production refuses mock 1Click, and 1Click only delivers on mainnet. So a hosted **testnet** deploy can't take guest payments. The rest works there: import, payouts and the vault pages. If you'd rather have a hosted testnet preview, ask Claude to add a clearly labelled exception.
 
 ## 4. Scheduled payouts (2 min, optional)
 

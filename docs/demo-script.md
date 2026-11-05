@@ -3,7 +3,7 @@
 For recording on **Nov 13**. Follows plan §11, matched to what the app actually does. Every on-screen claim below is checked by `web/e2e/readme.spec.ts` or the integration tests.
 
 **Which mode to record in:**
-- **Best: live on mainnet.** Needs spike #2 and the mainnet deploy.
+- **Best: live on mainnet.** Needs the mainnet deploy (`docs/mainnet-runbook.md`). Use `web/test/fixtures/payout-reports/airbnb-style-small.csv` for shot 3: the normal demo file is about $11,000, far over the mainnet vault's $50 daily limit. Shots 3 and 4 then show **"4 will match"** and small amounts, so read the numbers off the screen rather than from this script.
 - **Good: live on testnet.** Needs the agent key in `web/.env.testnet.local`. "View on-chain" links then open real testnet transactions.
 - **Fallback: rehearsal mode.** Works today with no setup. Say "rehearsal" out loud; screens show *Simulated*.
 
@@ -48,7 +48,7 @@ It signs every attempt with **the agent's own settle-only key**, as a thief woul
 4. `withdraw` the vault's USDC: refused by NEAR, the key can only call `settle`;
 5. add itself as a payee: refused by NEAR, same reason.
 
-It ends with the vault's balance before and after: nothing moved. Takes about 20 seconds; run it once before recording so the terminal is warm. Recorded run: `docs/testnet-deployment.md`.
+It ends with the vault's balance before and after: nothing moved. Takes about 20 seconds; run it once before recording so the terminal is warm. It's testnet only, which suits this shot: nobody risks real money to prove the vault says no. Recorded run: `docs/testnet-deployment.md`.
 
 ## Fallback lines (if something misbehaves on camera)
 
@@ -74,4 +74,4 @@ Must say "built at NEAR HACKATHON", tag @NEARProtocol and #NEARHackathon, lead w
 1. Guests pay damage fees and direct bookings from other chains via NEAR Intents. The vault receives exact USDC.
 2. Drop in an Airbnb payout report: matched, flagged, blocked if short. Only reconciled bookings get paid.
 3. The vault enforces the operator's rules on-chain: allowlist, per-payout caps, a daily limit, a wait for new payees, each booking paid once. Our own agent can't break them.
-4. Code, threat model and tests: (repo link once public)
+4. Code, threat model and tests: (repo link once public). Operators: what would you need to see before letting software pay your cleaners?

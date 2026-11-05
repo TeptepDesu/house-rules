@@ -38,6 +38,24 @@ describe("detectFormat", () => {
   });
 });
 
+describe("small report (mainnet demo file)", () => {
+  const r = importReport(fixture("airbnb-style-small.csv"), { properties, existing: new Map() });
+
+  it("imports cleanly and totals under the $30 the mainnet demo holds", () => {
+    expect(r.format).toBe("airbnb");
+    expect(summarize(r.rows)).toEqual({ ok: 4, flagged: 0, duplicate: 0, ignored: 0 });
+    const total = r.rows.reduce((a, row) => a + (row.booking?.payout ?? 0n), 0n);
+    expect(total).toBe(26_270_000n);
+    expect(total).toBeLessThan(30n * U);
+  });
+
+  it("has exactly one short booking, by $1.85, so the blocked state still shows on camera", () => {
+    const short = r.rows.filter((row) => row.booking!.payout !== row.booking!.expectedNet);
+    expect(short.map((row) => row.ref)).toEqual(["HM5003X"]);
+    expect(short[0].booking!.expectedNet! - short[0].booking!.payout!).toBe(1_850_000n);
+  });
+});
+
 describe("Airbnb-style report (demo file)", () => {
   const r = importReport(fixture("airbnb-style.csv"), { properties, existing: new Map() });
 
