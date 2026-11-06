@@ -5,7 +5,7 @@ test("operator sets up payees and a property; overview checklist follows", async
   await signUp(page);
   await expect(page.getByTestId("setup-step-payees")).toHaveAttribute("data-done", "false");
   await page.getByTestId("setup-step-payees-cta").click();
-  await expect(page.getByRole("heading", { name: "People & properties" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Homes & people" })).toBeVisible();
   await expect(page.getByTestId("payees-empty")).toBeVisible();
 
   await addPayee(page, { name: "Owen Reyes", role: "Property owner", account: "houserules-owner-1.testnet", cap: "800" });

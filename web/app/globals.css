@@ -7,10 +7,15 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-plex-sans);
+  --font-sans: var(--font-body);
   --font-mono: var(--font-plex-mono);
-  --font-heading: var(--font-plex-sans);
+  --font-heading: var(--font-display);
   --color-primary-hover: var(--primary-hover);
+  --color-brand-panel: var(--brand-panel);
+  --color-brand-panel-foreground: var(--brand-panel-foreground);
+  --color-brand-panel-muted: var(--brand-panel-muted);
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lift: var(--shadow-lift);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -18,14 +23,6 @@
   --color-destructive-soft: var(--destructive-soft);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -57,48 +54,46 @@
 }
 
 :root {
-  /* Light theme (design.md): warm stone neutrals, one accent (ledger green), muted statuses. */
+  /* Light theme (design.md): cream and signal blue, in the NEAR HACKATHON site's spirit. */
   color-scheme: light;
-  --background: oklch(0.99 0.003 80);
-  --foreground: oklch(0.2 0.01 60);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.01 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.01 60);
-  --primary: oklch(0.46 0.085 172);
-  --primary-hover: oklch(0.4 0.08 172); /* darker, never lighter: keeps white text ≥ 4.5:1 */
-  --primary-foreground: oklch(0.99 0.003 80);
-  --secondary: oklch(0.96 0.006 80);
-  --secondary-foreground: oklch(0.25 0.01 60);
-  --muted: oklch(0.965 0.005 80);
-  --muted-foreground: oklch(0.5 0.012 60);
-  --accent: oklch(0.96 0.006 80);
-  --accent-foreground: oklch(0.25 0.01 60);
-  --destructive: oklch(0.5 0.17 27);
-  --destructive-soft: oklch(0.955 0.025 27);
-  --success: oklch(0.45 0.11 150);
-  --success-soft: oklch(0.955 0.035 150);
-  --warning: oklch(0.47 0.1 65);
-  --warning-soft: oklch(0.955 0.055 85);
-  --info: oklch(0.45 0.06 250);
-  --info-soft: oklch(0.955 0.018 250);
-  --border: oklch(0.91 0.006 80);
-  --input: oklch(0.89 0.008 80);
-  --ring: oklch(0.6 0.08 172);
-  --chart-1: oklch(0.46 0.1 172);
-  --chart-2: oklch(0.62 0.07 172);
-  --chart-3: oklch(0.47 0.1 65);
-  --chart-4: oklch(0.45 0.06 250);
-  --chart-5: oklch(0.7 0.01 60);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.975 0.005 80);
-  --sidebar-foreground: oklch(0.25 0.01 60);
-  --sidebar-primary: oklch(0.46 0.085 172);
-  --sidebar-primary-foreground: oklch(0.99 0.003 80);
-  --sidebar-accent: oklch(0.94 0.008 80);
-  --sidebar-accent-foreground: oklch(0.2 0.01 60);
-  --sidebar-border: oklch(0.91 0.006 80);
-  --sidebar-ring: oklch(0.6 0.08 172);
+  --background: #efe8d9;
+  --foreground: #2b2820;
+  --card: #fbf7ee;
+  --card-foreground: #2b2820;
+  --popover: #fbf7ee;
+  --popover-foreground: #2b2820;
+  --primary: #0a5bcc;
+  --primary-hover: #084ba8; /* darker, never lighter: keeps white text at AA */
+  --primary-foreground: #ffffff;
+  --secondary: #e4dcc9;
+  --secondary-foreground: #2b2820;
+  --muted: #e6dfce;
+  --muted-foreground: #5f584a;
+  --accent: #e6dfce;
+  --accent-foreground: #2b2820;
+  --destructive: #a8321f;
+  --destructive-soft: #f6dcd3;
+  --success: #1c6a3f;
+  --success-soft: #d6ecd9;
+  --warning: #7a4e06;
+  --warning-soft: #f6e4b8;
+  --info: #24527e;
+  --info-soft: #d9e6f0;
+  --border: #d8cfba;
+  --input: #c9bfa8;
+  --ring: #0a5bcc;
+  --chart-1: #0a5bcc;
+  --chart-2: #5a93df;
+  --chart-3: #7a4e06;
+  --chart-4: #1c6a3f;
+  --chart-5: #8d8571;
+  --radius: 0.875rem;
+  /* the saturated blue panel, the same in both themes */
+  --brand-panel: #0a5bcc;
+  --brand-panel-foreground: #ffffff;
+  --brand-panel-muted: #d5e4fb;
+  --shadow-soft: 0 1px 2px rgb(43 40 32 / 0.05), 0 6px 18px rgb(43 40 32 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(43 40 32 / 0.06), 0 14px 32px rgb(43 40 32 / 0.12);
 }
 /* Dark theme (the default; html starts with .dark and the toggle removes it).
    Neutrals and the blue accent follow the NEAR HACKATHON site's dark theme; status
@@ -128,7 +123,7 @@
   --warning-soft: oklch(0.32 0.06 75);
   --info: oklch(0.8 0.07 225); /* sky-leaning, so "open" never reads as a link */
   --info-soft: oklch(0.3 0.035 225);
-  --border: oklch(0.426 0.029 128.1); /* #4a5241 */
+  --border: oklch(0.33 0.022 130); /* softer than the site's olive: cards carry the edge now */
   --input: oklch(0.426 0.029 128.1);
   --ring: oklch(0.65 0.19 251.1);
   --chart-1: oklch(0.65 0.19 251.1);
@@ -136,14 +131,8 @@
   --chart-3: oklch(0.82 0.12 80);
   --chart-4: oklch(0.78 0.12 150);
   --chart-5: oklch(0.756 0.029 111.5);
-  --sidebar: oklch(0.24 0.015 136.7);
-  --sidebar-foreground: oklch(0.904 0.029 89.6);
-  --sidebar-primary: oklch(0.65 0.19 251.1);
-  --sidebar-primary-foreground: oklch(0.22 0.013 135.1);
-  --sidebar-accent: oklch(0.31 0.023 132.4);
-  --sidebar-accent-foreground: oklch(0.904 0.029 89.6);
-  --sidebar-border: oklch(0.408 0.028 129.3); /* #454d3d */
-  --sidebar-ring: oklch(0.65 0.19 251.1);
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.2), 0 6px 18px rgb(0 0 0 / 0.18);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.25), 0 14px 32px rgb(0 0 0 / 0.32);
 }
 
 @layer base {
@@ -152,6 +141,12 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.015em;
   }
   /* money and counts line up like a statement */
   .tabular {
@@ -169,4 +164,25 @@
   html {
     @apply font-sans;
   }
+}
+
+/* The small mono caps label above numbers and tables. In a layer, so utilities can override it. */
+@layer components {
+  .label-caps {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+/* Sign-in strip. Decorative and aria-hidden; reduced motion stops it (see @layer base). */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee {
+  animation: marquee 48s linear infinite;
 }

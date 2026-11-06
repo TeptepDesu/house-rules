@@ -15,7 +15,7 @@ export function ThemeToggle({ className, testid = "theme-toggle" }: { className?
       data-testid={testid}
       onClick={() => applyTheme(currentTheme() === "dark" ? "light" : "dark")}
       className={cn(
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-lg border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+        "inline-flex size-9 shrink-0 items-center justify-center rounded-full border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
         className,
       )}
     >

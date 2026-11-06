@@ -29,6 +29,14 @@ test("collected-by-week chart: none before data; then bars, keyboard tooltip and
   await page.getByTestId("import-confirm").click();
   await expect(page.getByTestId("import-done-summary")).toContainText("22 bookings added");
 
+  // Your homes: a picture-first card per home, with what it has earned
+  await page.goto("/");
+  await expect(page.getByTestId("overview-homes").locator('[data-testid^="home-card-"]')).toHaveCount(3);
+  const casa = page.getByTestId("overview-homes").locator('[data-testid^="home-card-"]').filter({ hasText: "Casa Azul" });
+  await expect(casa).toContainText("Owen Reyes · Maria Santos");
+  await expect(casa).toContainText(/\$[\d,]+\.\d\d/);
+  await expect(casa.locator("[data-scene]")).toHaveAttribute("data-scene", "villa");
+
   await page.goto("/");
   const chart = page.getByTestId("overview-collected-chart");
   await expect(chart.getByRole("heading", { name: "Collected by week" })).toBeVisible();
@@ -56,4 +64,34 @@ test("collected-by-week chart: none before data; then bars, keyboard tooltip and
   await page.goto("/");
   await expect(page.getByTestId("overview-runs")).toContainText("Held back");
   await expect(page.getByTestId("overview-runs")).not.toContainText("Failed");
+});
+
+test("phones get a bottom tab bar, and the sign-in page keeps its form on screen", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/login");
+  await expect(page.getByTestId("auth-showcase")).toContainText("Your homes.");
+  await expect(page.getByTestId("login-submit")).toBeInViewport();
+  await signUp(page, "Casa Hosts");
+  await expect(page.getByTestId("app-header")).toBeHidden();
+  await expect(page.getByTestId("app-tabbar")).toBeVisible();
+  await page.getByTestId("tab-bookings").click();
+  await expect(page.getByRole("heading", { name: "Bookings" })).toBeVisible();
+  await expect(page.getByTestId("tab-bookings")).toHaveAttribute("aria-current", "page");
+  await page.getByTestId("app-menu-toggle").click();
+  await expect(page.getByTestId("session-mobile-user-name")).toHaveText("Casa Hosts"); // phones can sign out now
+  await expect(page.getByTestId("session-mobile-logout")).toBeVisible();
+  await page.getByTestId("nav-mobile-invoices").click();
+  await expect(page.getByRole("heading", { name: "Invoices", exact: true })).toBeVisible();
+  await expect(page.getByTestId("nav-mobile-invoices")).toBeHidden(); // the menu closes itself instead of covering the page
+});
+
+test("on a tablet every tab stays on screen, and the sign-in fields show where you are", async ({ page }) => {
+  await page.setViewportSize({ width: 820, height: 1000 });
+  await page.goto("/login");
+  await page.getByLabel("Email").focus();
+  const shadow = await page.getByLabel("Email").locator("..").evaluate((el) => getComputedStyle(el).boxShadow);
+  expect(shadow).not.toBe("none");
+  await signUp(page, "Casa Hosts");
+  await expect(page.getByTestId("app-header")).toBeVisible();
+  for (const t of ["nav-overview", "nav-settings"]) await expect(page.getByTestId(t)).toBeInViewport({ ratio: 1 });
 });

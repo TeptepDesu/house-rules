@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Bricolage_Grotesque, Figtree, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { THEME_INIT_SCRIPT } from "@/lib/ui/theme";
 
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-plex-sans",
+const body = Figtree({
+  variable: "--font-body",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const display = Bricolage_Grotesque({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
 });
 
 const plexMono = IBM_Plex_Mono({
@@ -27,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     // suppressHydrationWarning lets React keep that class (lib/ui/theme.ts).
     <html
       lang="en"
-      className={cn(plexSans.variable, plexMono.variable, "dark h-full antialiased")}
+      className={cn(body.variable, display.variable, plexMono.variable, "dark h-full antialiased")}
       suppressHydrationWarning
     >
       <head>

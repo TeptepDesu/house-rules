@@ -9,7 +9,7 @@ Guests pay invoices from any chain via 1Click → exact USDC lands in the vault.
 **Sources of truth, read before working in an area:**
 - `plan.md` — scope, priorities, cut line, timeline. Ask Joseph before building anything outside the current day's scope.
 - `docs/vault-spec.md` — contract interface, events, error codes.
-- `design.md` — visual system: palette (dark default after the NEAR HACKATHON site's dark theme; light = stone + ledger green), IBM Plex, components, status map (`web/lib/ui/status.ts`). Written before the second page.
+- `design.md` — visual system: palette (dark default after the NEAR HACKATHON site's dark theme; light = cream + signal blue), Bricolage Grotesque / Figtree / IBM Plex Mono, home covers, components, status map (`web/lib/ui/status.ts`).
 - `HACKATHON.md` — official rules. Re-read before anything submission-related.
 
 Record exact framework/library versions here at scaffold time. Don't assume versions from memory; check the installed `package.json` / `Cargo.toml`.
@@ -96,7 +96,7 @@ Read the skill's `SKILL.md` before hand-rolling UI when one covers the task:
 
 ### UI direction (summary; `design.md` is the full version)
 
-- Structure references: Stripe Dashboard (overview, payments list, payout detail, events log, test-mode banner), Stripe hosted invoice page (guest pay page), Ramp spend controls (vault policy cards). Patterns only, never their branding.
+- References: the Airbnb app (picture-first home cards, tab strip, bottom tab bar, soft corners, stacked sign-in fields) and the NEAR HACKATHON site (cream and blue, heavy headlines, mono caps labels, dot-matrix graphics). Patterns only, never their branding.
 - **Fintech, not crypto.** Names before addresses ("Maria – cleaner", account in small text), dollars before tokens, tx hashes behind "view on-chain". No neon, no gradients.
 - **Own palette and type.** Never reuse another company's design system or tokens.
 

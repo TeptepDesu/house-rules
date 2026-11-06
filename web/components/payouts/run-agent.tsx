@@ -30,7 +30,7 @@ export function RunAgent({ disabled, explorerBase }: { disabled: boolean; explor
         </p>
       )}
       {!pending && state?.ok && (
-        <div role="status" className="rounded-[10px] border bg-card p-3 text-sm" data-testid="agent-run-result" data-status={state.status}>
+        <div role="status" className="rounded-2xl border bg-card p-3 text-sm" data-testid="agent-run-result" data-status={state.status}>
           {state.payouts > 0 ? (
             <p>
               Paid <Money raw={BigInt(state.paid)} className="font-semibold" /> to {state.payouts} payee{state.payouts === 1 ? "" : "s"} in {state.txs.length}{" "}

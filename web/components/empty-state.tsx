@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/brand";
 import { cn } from "@/lib/utils";
 
 export function EmptyState({
@@ -8,10 +9,11 @@ export function EmptyState({
   ...props
 }: { title: string; body: string; action?: React.ReactNode } & Omit<React.ComponentProps<"div">, "children" | "title">) {
   return (
-    <div className={cn("rounded-[10px] border border-dashed px-6 py-10 text-center", className)} {...props}>
-      <p className="font-medium">{title}</p>
+    <div className={cn("rounded-2xl border bg-card px-6 py-11 text-center", className)} {...props}>
+      <BrandMark className="mx-auto mb-3 size-7 text-muted-foreground/50" />
+      <p className="font-heading text-lg font-bold tracking-tight">{title}</p>
       <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">{body}</p>
-      {action && <div className="mt-4">{action}</div>}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }

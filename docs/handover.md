@@ -14,8 +14,8 @@ Where House Rules stands. Read with `CLAUDE.md` (rules, commands, versions), `pl
 | Check | Result |
 |---|---|
 | typecheck, lint | clean |
-| `pnpm --filter web test` | 402 passed |
-| `pnpm --filter web e2e` | 28 passed, 3 screenshot specs skipped |
+| `pnpm --filter web test` | 426 passed |
+| `pnpm --filter web e2e` | 30 passed, 3 screenshot specs skipped |
 | `pnpm --filter web test:integration` (rebuilt wasm) | 14 passed, 1 skipped (needs the key file) |
 | `pnpm --filter web test:testnet` | passed, live |
 | `pnpm --filter web break-it` | all 5 attacks refused, balance unchanged, live |

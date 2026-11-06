@@ -54,7 +54,7 @@ export function ImportFlow() {
 
   if (done) {
     return (
-      <div className="max-w-xl rounded-[10px] border bg-card p-5" data-testid="import-done">
+      <div className="max-w-xl rounded-2xl border bg-card p-5" data-testid="import-done">
         <p className="font-medium">Import complete</p>
         <p className="mt-1 text-sm text-muted-foreground" data-testid="import-done-summary">
           {done.created} booking{done.created === 1 ? "" : "s"} added
@@ -90,7 +90,7 @@ export function ImportFlow() {
           load(e.dataTransfer.files[0]);
         }}
         className={cn(
-          "flex cursor-pointer flex-col items-center gap-2 rounded-[10px] border border-dashed px-6 py-10 text-center transition-colors has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50",
+          "flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-dashed px-6 py-10 text-center transition-colors has-[:focus-visible]:border-ring has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50",
           dragging ? "border-primary bg-primary/5" : "hover:bg-muted/50",
         )}
       >
@@ -131,7 +131,7 @@ export function ImportFlow() {
               <p className="text-xs text-muted-foreground" data-testid="import-format">
                 {FORMAT_LABEL[state.format] ?? state.format}
               </p>
-              <h2 id="preview-title" className="text-[15px] font-semibold" data-testid="import-preview-summary">
+              <h2 id="preview-title" className="text-[20px] font-bold tracking-tight" data-testid="import-preview-summary">
                 {state.summaryText}
               </h2>
             </div>
@@ -139,7 +139,7 @@ export function ImportFlow() {
               {confirming ? "Importing…" : state.counts.ok === 0 ? "Nothing new to import" : `Import ${state.counts.ok} booking${state.counts.ok === 1 ? "" : "s"}`}
             </Button>
           </div>
-          <div className="overflow-hidden rounded-[10px] border">
+          <div className="overflow-hidden rounded-2xl border">
             <Table data-testid="import-preview-table">
               <TableHeader>
                 <TableRow>
@@ -187,7 +187,7 @@ export function ImportFlow() {
 function MappingForm({ headers, onSubmit }: { headers: string[]; onSubmit: (mappingJson: string) => void }) {
   return (
     <form
-      className="grid max-w-xl gap-3 rounded-[10px] border bg-card p-4"
+      className="grid max-w-xl gap-3 rounded-2xl border bg-card p-4"
       data-testid="import-mapping-form"
       onSubmit={(e) => {
         e.preventDefault();

@@ -19,12 +19,12 @@ export function WeeklyCollectedChart({ weeks }: { weeks: WeekCollected[] }) {
   return (
     <section aria-labelledby="collected-chart-title" className="min-w-0" data-testid="overview-collected-chart">
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 id="collected-chart-title" className="text-[15px] font-semibold">
+        <h2 id="collected-chart-title" className="text-[20px] font-bold tracking-tight">
           Collected by week
         </h2>
         <p className="text-xs text-muted-foreground">Week of check-in</p>
       </div>
-      <div className="rounded-[10px] border bg-card p-4">
+      <div className="rounded-2xl border bg-card p-4">
         <ol className="flex h-44 items-stretch gap-0.5 pt-6">
           {weeks.map((w, i) => (
             <li

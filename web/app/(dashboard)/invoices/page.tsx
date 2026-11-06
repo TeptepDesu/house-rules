@@ -49,7 +49,7 @@ async function InvoicesContent() {
           All invoices
         </h2>
         {!vault && (
-          <p className="mb-4 rounded-[10px] border bg-warning-soft px-4 py-3 text-sm text-warning" data-testid="invoices-no-vault">
+          <p className="mb-4 rounded-2xl border bg-warning-soft px-4 py-3 text-sm text-warning" data-testid="invoices-no-vault">
             Guests can&apos;t pay online until you connect your vault.{" "}
             <Link href="/settings" className="font-medium underline underline-offset-4">
               Connect it in Settings
@@ -60,7 +60,7 @@ async function InvoicesContent() {
         {invoices.length === 0 ? (
           <EmptyState data-testid="invoices-empty" title="No invoices yet" body="Create one to charge a guest. They'll get a link to pay from any wallet, on any chain." />
         ) : (
-          <div className="overflow-hidden rounded-[10px] border">
+          <div className="overflow-hidden rounded-2xl border">
             <Table data-testid="invoices-table">
               <TableHeader>
                 <TableRow>
@@ -120,7 +120,7 @@ async function InvoicesContent() {
           </div>
         )}
       </section>
-      <section aria-labelledby="charge-title" className="h-fit rounded-[10px] border bg-card p-4">
+      <section aria-labelledby="charge-title" className="h-fit rounded-2xl border bg-card p-4">
         <h2 id="charge-title" className="mb-3 text-sm font-semibold">
           Charge a guest
         </h2>

@@ -4,15 +4,13 @@ import Link from "next/link";
 import { useActionState } from "react";
 import type { AuthState } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type Mode = "login" | "signup";
 
 const copy = {
-  login: { title: "Sign in to House Rules", desc: "Your payout rules, enforced on-chain.", cta: "Sign in", alt: "No account yet?", altLink: "Create one", altHref: "/signup" },
-  signup: { title: "Create your operator account", desc: "Set the rules once. The vault enforces them.", cta: "Create account", alt: "Already have an account?", altLink: "Sign in", altHref: "/login" },
+  login: { title: "Welcome back", desc: "Sign in to see what's collected and who's due.", cta: "Sign in", alt: "New to House Rules?", altLink: "Create an account", altHref: "/signup" },
+  signup: { title: "Set your house rules", desc: "Decide once who gets paid and how much. The vault holds everyone to it.", cta: "Create account", alt: "Already have an account?", altLink: "Sign in", altHref: "/login" },
 } as const;
 
 export function AuthForm({ mode, action }: { mode: Mode; action: (s: AuthState, f: FormData) => Promise<AuthState> }) {
@@ -20,58 +18,64 @@ export function AuthForm({ mode, action }: { mode: Mode; action: (s: AuthState, 
   const c = copy[mode];
   const fe = state?.fieldErrors ?? {};
   const values: Record<string, string | undefined> = state?.values ?? {};
-
-  const field = (name: string, label: string, type: string, autoComplete: string) => (
-    <div className="grid gap-1.5">
-      <Label htmlFor={`${mode}-${name}`}>{label}</Label>
-      <Input
-        id={`${mode}-${name}`}
-        name={name}
-        type={type}
-        autoComplete={autoComplete}
-        aria-invalid={fe[name] ? true : undefined}
-        aria-describedby={fe[name] ? `${mode}-${name}-error` : undefined}
-        data-testid={`${mode}-${name}-input`}
-        defaultValue={type === "password" ? undefined : values[name]}
-        required
-      />
-      {fe[name] && (
-        <p id={`${mode}-${name}-error`} className="text-sm text-destructive" data-testid={`${mode}-${name}-error`}>
-          {fe[name]}
-        </p>
-      )}
-    </div>
-  );
+  const fields = [
+    ...(mode === "signup" ? [{ name: "name", label: "Name", type: "text", auto: "name" }] : []),
+    { name: "email", label: "Email", type: "email", auto: "email" },
+    { name: "password", label: "Password", type: "password", auto: mode === "login" ? "current-password" : "new-password" },
+  ];
 
   return (
-    <Card className="w-full max-w-sm" data-testid={`${mode}-card`}>
-      <CardHeader>
-        <CardTitle>{c.title}</CardTitle>
-        <CardDescription>{c.desc}</CardDescription>
-      </CardHeader>
-      <form action={formAction} noValidate data-testid={`${mode}-form`}>
-        <CardContent className="grid gap-4">
-          {mode === "signup" && field("name", "Name", "text", "name")}
-          {field("email", "Email", "email", "email")}
-          {field("password", "Password", "password", mode === "login" ? "current-password" : "new-password")}
+    <div className="w-full max-w-[400px]" data-testid={`${mode}-card`}>
+      <h1 className="font-heading text-[36px] leading-none font-extrabold tracking-tight">{c.title}</h1>
+      <p className="mt-3 text-[15px] text-muted-foreground">{c.desc}</p>
+      <form action={formAction} noValidate data-testid={`${mode}-form`} className="mt-8">
+        {/* Stacked fields that read as one control: the labels live inside it. */}
+        <div className="divide-y divide-input overflow-hidden rounded-2xl border border-input bg-card">
+          {fields.map((f) => (
+            <div key={f.name} className={cn("px-4 py-2.5 transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-inset", fe[f.name] && "bg-destructive-soft ring-2 ring-destructive ring-inset")}>
+              <label htmlFor={`${mode}-${f.name}`} className="block text-xs font-semibold text-muted-foreground">
+                {f.label}
+              </label>
+              <input
+                id={`${mode}-${f.name}`}
+                name={f.name}
+                type={f.type}
+                autoComplete={f.auto}
+                aria-invalid={fe[f.name] ? true : undefined}
+                aria-describedby={fe[f.name] ? `${mode}-${f.name}-error` : undefined}
+                data-testid={`${mode}-${f.name}-input`}
+                defaultValue={f.type === "password" ? undefined : values[f.name]}
+                required
+                className="mt-0.5 w-full bg-transparent text-base outline-none"
+              />
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 grid gap-1 empty:hidden">
+          {fields.map(
+            (f) =>
+              fe[f.name] && (
+                <p key={f.name} id={`${mode}-${f.name}-error`} className="text-sm text-destructive" data-testid={`${mode}-${f.name}-error`}>
+                  {fe[f.name]}
+                </p>
+              ),
+          )}
           {state?.error && (
             <p role="alert" className="text-sm text-destructive" data-testid={`${mode}-form-error`}>
               {state.error}
             </p>
           )}
-        </CardContent>
-        <CardFooter className="mt-6 flex flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={pending} data-testid={`${mode}-submit`}>
-            {pending ? "Please wait…" : c.cta}
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            {c.alt}{" "}
-            <Link href={c.altHref} className="text-foreground underline underline-offset-4" data-testid={`${mode}-alt-link`}>
-              {c.altLink}
-            </Link>
-          </p>
-        </CardFooter>
+        </div>
+        <Button type="submit" size="lg" className="mt-5 w-full" disabled={pending} data-testid={`${mode}-submit`}>
+          {pending ? "Please wait…" : c.cta}
+        </Button>
       </form>
-    </Card>
+      <p className="mt-6 text-sm text-muted-foreground">
+        {c.alt}{" "}
+        <Link href={c.altHref} className="font-semibold text-foreground underline underline-offset-4" data-testid={`${mode}-alt-link`}>
+          {c.altLink}
+        </Link>
+      </p>
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { Money } from "@/components/money";
 import { PayFlow } from "@/components/pay/pay-flow";
+import { PropertyCover } from "@/components/property-cover";
 import { StatusPill } from "@/components/status-pill";
 import { getPublicInvoice } from "@/lib/db/invoices";
 import { oneClickMode } from "@/lib/intents/provider";
@@ -17,8 +18,8 @@ const KIND = { booking: "Booking", extension: "Stay extension", penalty: "Charge
 
 export default function PayPage({ params }: PageProps<"/pay/[publicId]">) {
   return (
-    <main className="flex flex-1 justify-center bg-muted/30 px-4 py-10">
-      <div className="w-full max-w-[440px]">
+    <main className="flex flex-1 justify-center px-4 py-10">
+      <div className="w-full max-w-[460px]">
         <Suspense fallback={<p className="text-center text-sm text-muted-foreground">Loading…</p>}>
           <Invoice params={params} />
         </Suspense>
@@ -37,21 +38,22 @@ async function Invoice({ params }: { params: Promise<{ publicId: string }> }) {
   const mockMode = process.env.NODE_ENV !== "production" && oneClickMode() === "mock";
 
   return (
-    <article className="rounded-[10px] border bg-card shadow-sm" data-testid="pay-invoice">
+    <article className="overflow-hidden rounded-3xl border bg-card shadow-lift" data-testid="pay-invoice">
       {networkId() === "testnet" && (
-        <p className="rounded-t-[10px] bg-warning-soft px-4 py-1 text-center text-xs font-medium text-warning" data-testid="pay-test-mode">
+        <p className="label-caps bg-warning-soft px-4 py-1.5 text-center text-warning" data-testid="pay-test-mode">
           Test mode: no real money moves
         </p>
       )}
-      <header className="border-b p-5">
-        <p className="text-sm text-muted-foreground" data-testid="pay-business">
+      {inv.propertyName && <PropertyCover name={inv.propertyName} className="aspect-[5/2]" />}
+      <header className="border-b p-6">
+        <p className="text-sm font-semibold" data-testid="pay-business">
           {inv.businessName}
         </p>
-        <p className="mt-3 text-sm text-muted-foreground">{KIND[inv.type]}</p>
-        <p className="tabular text-[34px] leading-tight font-semibold" data-testid="pay-amount">
+        <p className="label-caps mt-4 text-muted-foreground">{KIND[inv.type]}</p>
+        <p className="tabular mt-1 font-heading text-[44px] leading-none font-extrabold tracking-tight" data-testid="pay-amount">
           <Money raw={inv.amountRaw} />
         </p>
-        <p className="mt-1 font-medium" data-testid="pay-description">
+        <p className="mt-3 font-semibold" data-testid="pay-description">
           {inv.description}
         </p>
         {inv.propertyName && (
@@ -61,7 +63,7 @@ async function Invoice({ params }: { params: Promise<{ publicId: string }> }) {
           </p>
         )}
       </header>
-      <div className="p-5">
+      <div className="p-6">
         {inv.status === "paid" || inv.status === "overpaid" ? (
           <div className="flex items-center gap-2" data-testid="pay-already-paid">
             <StatusPill kind="invoice" status={inv.status} />

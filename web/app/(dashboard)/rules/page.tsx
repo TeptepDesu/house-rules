@@ -48,7 +48,7 @@ function RuleCard({
   tone?: "default" | "bad";
 }) {
   return (
-    <section className={cn("rounded-[10px] border bg-card p-4", tone === "bad" && "border-destructive/40")} data-testid={testid}>
+    <section className={cn("rounded-2xl border bg-card p-4", tone === "bad" && "border-destructive/40")} data-testid={testid}>
       <div className="flex items-start gap-3">
         <span className={cn("mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary", tone === "bad" && "bg-destructive-soft text-destructive")}>
           <Icon aria-hidden className="size-4" />
@@ -82,7 +82,7 @@ async function RulesContent() {
   }
   if (v.state === "unreachable") {
     return (
-      <p role="alert" className="rounded-[10px] border px-4 py-3 text-sm text-destructive" data-testid="rules-unreachable">
+      <p role="alert" className="rounded-2xl border px-4 py-3 text-sm text-destructive" data-testid="rules-unreachable">
         {v.message} ({v.vaultAccount})
       </p>
     );
@@ -93,7 +93,7 @@ async function RulesContent() {
 
   return (
     <div className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border bg-card px-4 py-3 text-sm" data-testid="rules-vault">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 text-sm" data-testid="rules-vault">
         <div>
           <span className="text-muted-foreground">Vault </span>
           <span className="font-mono">{v.vaultAccount}</span>
@@ -145,7 +145,7 @@ async function RulesContent() {
         title={v.agentKey.ok ? "The agent can only call settle" : "The agent key needs attention"}
         detail={v.agentKey.ok ? `${v.agentKey.detail}. It can't withdraw, add payees, or change these rules: those need your wallet.` : v.agentKey.detail}
       />
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-[10px] border bg-card px-4 py-3" data-testid="vault-controls">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3" data-testid="vault-controls">
         <div className="min-w-0">
           <h2 className="font-semibold">Your controls</h2>
           <p className="text-sm text-muted-foreground">Only your wallet can change the limits or move money out of the vault.</p>

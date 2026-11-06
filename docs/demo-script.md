@@ -20,7 +20,7 @@ For recording on **Nov 13**. Follows plan §11, matched to what the app actually
   - three properties: Casa Azul, Loft 21, Seaside Cottage ($80 cleaning, 15%);
   - the vault connected in Settings.
 - **Don't import yet.** The import is part of the demo.
-- **Window:** browser at 1280×800 and zoom 110%. The sidebar shows the full nav.
+- **Window:** browser at 1280×800 and zoom 110%. The top bar shows the full nav.
 - **Tabs:** (1) the app on **Invoices**; (2) a private window for the guest; (3) a terminal for the "try to break it" commands.
 - **Voice:** calm, short sentences, never read the screen out word for word.
 

@@ -32,10 +32,16 @@ const OPEN = new Set(["open", "pending", "expired"]);
 const isOverdue = (i: OverviewInput["invoices"][number], today: string) => OPEN.has(i.status) && i.dueDate < today;
 const isShort = (i: OverviewInput["invoices"][number]) => i.status === "underpaid";
 
+/** What a booking really collected. Every Overview figure counts money through this. */
+const bookingMoney = (b: { collected: bigint; penaltiesCollected: bigint }) => {
+  const amount = b.collected + b.penaltiesCollected;
+  return amount > 0n ? amount : 0n;
+};
+
 export function overviewMetrics(i: OverviewInput) {
-  const withMoney = i.bookings.filter((b) => b.collected + b.penaltiesCollected > 0n);
+  const withMoney = i.bookings.filter((b) => bookingMoney(b) > 0n);
   return {
-    collected: withMoney.reduce((a, b) => a + b.collected + b.penaltiesCollected, 0n),
+    collected: withMoney.reduce((a, b) => a + bookingMoney(b), 0n),
     collectedBookings: withMoney.length,
     readyToPay: i.readyToPay,
     readyCount: i.readyCount,
@@ -97,8 +103,8 @@ const isoDay = (t: number) => new Date(t).toISOString().slice(0, 10);
 export function weeklyCollected(rows: { checkIn: string; collected: bigint; penaltiesCollected: bigint }[], maxWeeks = 8): WeekCollected[] {
   const weeks = new Map<number, { collected: bigint; bookings: number }>();
   for (const r of rows) {
-    const amount = r.collected + r.penaltiesCollected;
-    if (amount <= 0n) continue;
+    const amount = bookingMoney(r);
+    if (amount === 0n) continue;
     const w = weeks.get(mondayOf(r.checkIn)) ?? { collected: 0n, bookings: 0 };
     weeks.set(mondayOf(r.checkIn), { collected: w.collected + amount, bookings: w.bookings + 1 });
   }
@@ -117,4 +123,17 @@ export function weeklyCollected(rows: { checkIn: string; collected: bigint; pena
 /** A bar's height in thousandths of the tallest one. Integer maths: amounts never become floats. */
 export function barPermille(value: bigint, max: bigint): number {
   return max > 0n ? Number((value * 1000n) / max) : 0;
+}
+
+export type HomeSummary = { collected: bigint; stays: number };
+
+/** Each home's collected money and stays. Same money rule as overviewMetrics, so homes add up to "Collected". */
+export function homeSummaries(homes: { name: string }[], rows: { propertyName: string; collected: bigint; penaltiesCollected: bigint }[]): Map<string, HomeSummary> {
+  const out = new Map<string, HomeSummary>(homes.map((h) => [h.name, { collected: 0n, stays: 0 }]));
+  for (const r of rows) {
+    const home = out.get(r.propertyName);
+    if (!home) continue;
+    out.set(r.propertyName, { collected: home.collected + bookingMoney(r), stays: home.stays + 1 });
+  }
+  return out;
 }

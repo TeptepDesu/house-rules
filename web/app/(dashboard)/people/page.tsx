@@ -4,6 +4,7 @@ import { AccountName } from "@/components/account-name";
 import { EmptyState } from "@/components/empty-state";
 import { Money } from "@/components/money";
 import { PageHeader } from "@/components/page-header";
+import { PropertyCover } from "@/components/property-cover";
 import { ApprovePayee } from "@/components/people/approve-payee";
 import { EditPropertyPeople } from "@/components/people/edit-property-people";
 import { ManagePayee } from "@/components/people/manage-payee";
@@ -19,14 +20,14 @@ import { agentMode } from "@/lib/agent/vault-factory";
 import { getVaultAccount } from "@/lib/db/invoices";
 import { refreshWaitingPayees } from "@/lib/vault/load";
 
-export const metadata: Metadata = { title: "People & properties · House Rules" };
+export const metadata: Metadata = { title: "Homes & people · House Rules" };
 
 const ROLE = { owner: "Owner", cleaner: "Cleaner" } as const;
 /** 800_000_000n → "800.00" for an editable input (display elsewhere goes through formatUsd). */
 export default function PeoplePage() {
   return (
     <>
-      <PageHeader title="People & properties" description="Who the vault may pay, how much at most, and which property each payout belongs to." />
+      <PageHeader title="Homes & people" description="Who the vault may pay, how much at most, and which property each payout belongs to." />
       <Suspense fallback={<p className="text-sm text-muted-foreground" data-testid="people-loading">Loading…</p>}>
         <PeopleContent />
       </Suspense>
@@ -46,7 +47,7 @@ async function PeopleContent() {
     <div className="grid gap-10">
       <section aria-labelledby="payees-title" className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0">
-          <h2 id="payees-title" className="mb-3 text-[15px] font-semibold">
+          <h2 id="payees-title" className="mb-3 text-[20px] font-bold tracking-tight">
             Payees
           </h2>
           {payees.length === 0 ? (
@@ -56,7 +57,7 @@ async function PeopleContent() {
               body="Add the owners and cleaners you pay. The vault will only ever pay people on this list, up to their limit."
             />
           ) : (
-            <div className="rounded-[10px] border">
+            <div className="rounded-2xl border">
               <Table data-testid="payees-table">
                 <TableHeader>
                   <TableRow>
@@ -100,7 +101,7 @@ async function PeopleContent() {
             </div>
           )}
         </div>
-        <div className="rounded-[10px] border bg-card p-4">
+        <div className="rounded-2xl border bg-card p-4">
           <h3 className="mb-3 text-sm font-semibold">Add a payee</h3>
           <PayeeForm network={networkId()} />
         </div>
@@ -108,7 +109,7 @@ async function PeopleContent() {
 
       <section aria-labelledby="properties-title" className="grid gap-4 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0">
-          <h2 id="properties-title" className="mb-3 text-[15px] font-semibold">
+          <h2 id="properties-title" className="mb-3 text-[20px] font-bold tracking-tight">
             Properties
           </h2>
           {properties.length === 0 ? (
@@ -118,7 +119,7 @@ async function PeopleContent() {
               body="Each property sets who gets paid for a stay: the cleaner's flat fee, your management %, and the owner gets the rest."
             />
           ) : (
-            <div className="rounded-[10px] border">
+            <div className="rounded-2xl border">
               <Table data-testid="properties-table">
                 <TableHeader>
                   <TableRow>
@@ -133,8 +134,11 @@ async function PeopleContent() {
                   {properties.map((p) => (
                     <TableRow key={p.id} data-testid={`property-row-${p.id}`}>
                       <TableCell>
-                        <div className="font-medium">{p.name}</div>
-                        <div className="mt-0.5 text-xs text-muted-foreground md:hidden">
+                        <div className="flex items-center gap-3">
+                          <PropertyCover name={p.name} className="h-12 w-[72px] shrink-0 rounded-xl" />
+                          <div className="font-heading text-[15px] font-bold tracking-tight">{p.name}</div>
+                        </div>
+                        <div className="mt-2 text-xs text-muted-foreground md:hidden">
                           Owner: {p.ownerName ?? "not set"} · Cleaner: {p.cleanerName ?? "not set"}
                         </div>
                         <div className="mt-2">
@@ -165,7 +169,7 @@ async function PeopleContent() {
             </div>
           )}
         </div>
-        <div className="rounded-[10px] border bg-card p-4">
+        <div className="rounded-2xl border bg-card p-4">
           <h3 className="mb-3 text-sm font-semibold">Add a property</h3>
           <PropertyForm owners={owners.map(({ id, name }) => ({ id, name }))} cleaners={cleaners.map(({ id, name }) => ({ id, name }))} />
         </div>

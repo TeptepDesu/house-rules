@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowRight, Check } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
-import { MetricCard } from "@/components/metric-card";
+import { HomeCard } from "@/components/home-card";
+import { MetricBand, MetricCard } from "@/components/metric-card";
 import { Money } from "@/components/money";
 import { PageHeader } from "@/components/page-header";
 import { StatusPill } from "@/components/status-pill";
@@ -13,8 +14,8 @@ import { requireUser } from "@/lib/auth/dal";
 import { listRunsWithTxs, loadAgentInputs, paidTotals, unpaidSplits } from "@/lib/db/agent";
 import { listBookingsWithRecon } from "@/lib/db/bookings";
 import { listInvoices } from "@/lib/db/invoices";
-import { setupCounts } from "@/lib/db/people";
-import { attentionItems, overviewMetrics, weeklyCollected } from "@/lib/overview";
+import { listProperties, setupCounts } from "@/lib/db/people";
+import { attentionItems, homeSummaries, overviewMetrics, weeklyCollected } from "@/lib/overview";
 import { cn } from "@/lib/utils";
 
 const when = (d: Date) => d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
@@ -33,8 +34,9 @@ export default function OverviewPage() {
 
 async function Overview() {
   const user = await requireUser();
-  const [counts, bookings, invoices, held, runs, paid, { ready, terms }] = await Promise.all([
+  const [counts, homes, bookings, invoices, held, runs, paid, { ready, terms }] = await Promise.all([
     setupCounts(user.id),
+    listProperties(user.id),
     listBookingsWithRecon(user.id),
     listInvoices(user.id),
     unpaidSplits(user.id),
@@ -65,24 +67,43 @@ async function Overview() {
   const m = overviewMetrics(input);
   const items = attentionItems(input);
   const weeks = weeklyCollected(bookings.map((b) => ({ checkIn: b.checkIn, collected: b.recon.collected, penaltiesCollected: b.recon.penaltiesCollected })));
+  const earned = homeSummaries(homes, input.bookings);
   const setupDone = counts.payees > 0 && counts.activePayees > 0 && counts.properties > 0;
 
   return (
-    <div className="grid gap-8">
+    <div className="grid gap-10">
       {!setupDone && <SetupChecklist counts={counts} />}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-testid="overview-metrics">
-        <MetricCard label="Collected" value={<Money raw={m.collected} />} context={plural(m.collectedBookings, "booking")} data-testid="overview-metric-collected" />
-        <MetricCard label="Ready to pay out" value={<Money raw={m.readyToPay} />} context={m.readyCount ? `${plural(m.readyCount, "booking")}, owners + cleaners` : "Nothing waiting"} data-testid="overview-metric-ready" />
-        <MetricCard label="Paid out" value={<Money raw={m.paidOut} />} context={`in ${plural(m.paidRuns, "run")}`} data-testid="overview-metric-paid" />
-        <MetricCard label="Needs attention" value={m.attention} context={m.attention ? "Blocked, held back or overdue" : "Nothing right now"} data-testid="overview-metric-attention" />
-      </div>
+      <MetricBand data-testid="overview-metrics">
+        <MetricCard band label="Collected" value={<Money raw={m.collected} />} context={plural(m.collectedBookings, "booking")} data-testid="overview-metric-collected" />
+        <MetricCard band label="Ready to pay out" value={<Money raw={m.readyToPay} />} context={m.readyCount ? `${plural(m.readyCount, "booking")}, owners + cleaners` : "Nothing waiting"} data-testid="overview-metric-ready" />
+        <MetricCard band label="Paid out" value={<Money raw={m.paidOut} />} context={`in ${plural(m.paidRuns, "run")}`} data-testid="overview-metric-paid" />
+        <MetricCard band label="Needs attention" value={m.attention} context={m.attention ? "Blocked, held back or overdue" : "Nothing right now"} data-testid="overview-metric-attention" />
+      </MetricBand>
+
+      {homes.length > 0 && (
+        <section aria-labelledby="homes-title">
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 id="homes-title" className="text-[20px] font-bold tracking-tight">
+              Your homes
+            </h2>
+            <Link href="/people" className="text-sm font-semibold underline underline-offset-4" data-testid="overview-homes-all">
+              Manage
+            </Link>
+          </div>
+          <div className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3" data-testid="overview-homes">
+            {homes.map((h) => (
+              <HomeCard key={h.id} id={h.id} name={h.name} ownerName={h.ownerName} cleanerName={h.cleanerName} collected={earned.get(h.name)?.collected ?? 0n} stays={earned.get(h.name)?.stays ?? 0} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {weeks.length > 0 && <WeeklyCollectedChart weeks={weeks} />}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <section aria-labelledby="attention-title" className="min-w-0">
-          <h2 id="attention-title" className="mb-3 text-[15px] font-semibold">
+          <h2 id="attention-title" className="mb-3 text-[20px] font-bold tracking-tight">
             Needs attention
           </h2>
           {items.length === 0 ? (
@@ -92,7 +113,7 @@ async function Overview() {
               body="Blocked bookings, payouts the vault's rules held back and overdue invoices show up here."
             />
           ) : (
-            <ul className="divide-y rounded-[10px] border" data-testid="overview-attention">
+            <ul className="divide-y rounded-2xl border" data-testid="overview-attention">
               {items.map((it) => (
                 <li key={it.key} data-testid={`overview-attention-${it.key}`}>
                   <Link href={it.href} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none">
@@ -115,7 +136,7 @@ async function Overview() {
 
         <section aria-labelledby="runs-title" className="min-w-0">
           <div className="mb-3 flex items-baseline justify-between">
-            <h2 id="runs-title" className="text-[15px] font-semibold">
+            <h2 id="runs-title" className="text-[20px] font-bold tracking-tight">
               Recent payout runs
             </h2>
             <Link href="/payouts" className="text-sm text-primary underline-offset-4 hover:underline" data-testid="overview-runs-all">
@@ -125,7 +146,7 @@ async function Overview() {
           {runs.length === 0 ? (
             <EmptyState data-testid="overview-runs-empty" title="No runs yet" body="Run the agent from Payouts once bookings are ready." />
           ) : (
-            <ul className="divide-y rounded-[10px] border" data-testid="overview-runs">
+            <ul className="divide-y rounded-2xl border" data-testid="overview-runs">
               {runs.map((r) => (
                 <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3" data-testid={`overview-run-${r.id}`}>
                   <span className="min-w-0">
@@ -162,9 +183,9 @@ function SetupChecklist({ counts: c }: { counts: Awaited<ReturnType<typeof setup
   const next = steps.find((s) => !s.done);
 
   return (
-    <section aria-labelledby="setup-title" className="max-w-2xl rounded-[10px] border bg-card" data-testid="setup-checklist">
+    <section aria-labelledby="setup-title" className="max-w-2xl rounded-2xl border bg-card" data-testid="setup-checklist">
       <div className="border-b px-4 py-3">
-        <h2 id="setup-title" className="text-[15px] font-semibold">
+        <h2 id="setup-title" className="text-[20px] font-bold tracking-tight">
           {next ? "Get set up" : "You're set up"}
         </h2>
         <p className="text-sm text-muted-foreground">

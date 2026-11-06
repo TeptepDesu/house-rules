@@ -96,6 +96,8 @@ Postgres (PGlite locally, hosted Postgres in prod) + Drizzle · Tailwind + shadc
 
 ### UI references (structure and patterns only, never branding, colors, or logos)
 
+_Superseded 2026-11-06: the UI now follows the Airbnb app and the NEAR HACKATHON site. `design.md` is current; this table is kept as history._
+
 | Screen | Reference | What to take |
 |---|---|---|
 | Home | Stripe Dashboard balance/payouts overview | Vault balance, collected this week, pending payouts, blocked bookings |

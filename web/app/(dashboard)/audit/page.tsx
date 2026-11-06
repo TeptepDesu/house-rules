@@ -60,7 +60,7 @@ async function AuditContent({ searchParams }: { searchParams: Promise<Record<str
       {rows.length === 0 ? (
         <EmptyState data-testid="audit-empty" title="Nothing here yet" body="Payouts, payee approvals and limit changes in your vault will appear here, each with a link to the chain." />
       ) : (
-        <ol className="divide-y rounded-[10px] border" data-testid="audit-feed">
+        <ol className="divide-y rounded-2xl border" data-testid="audit-feed">
           {rows.map((r) => (
             <Row key={`${r.kind}-${r.id}`} r={r} names={names} />
           ))}

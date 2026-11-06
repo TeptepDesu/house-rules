@@ -51,7 +51,7 @@ async function PayoutsContent() {
   return (
     <div className="grid gap-8">
       {mode === "mock" && (
-        <p className="rounded-[10px] border border-dashed px-4 py-2 text-sm text-muted-foreground" data-testid="payouts-rehearsal">
+        <p className="rounded-2xl border border-dashed px-4 py-2 text-sm text-muted-foreground" data-testid="payouts-rehearsal">
           Rehearsal mode: payouts go to a simulated vault on this server. Set AGENT_MODE=live to pay through your real vault.
         </p>
       )}
@@ -62,7 +62,7 @@ async function PayoutsContent() {
       </div>
 
       <section aria-labelledby="run-title" className="grid gap-2">
-        <h2 id="run-title" className="text-[15px] font-semibold">
+        <h2 id="run-title" className="text-[20px] font-bold tracking-tight">
           Pay out now
         </h2>
         {!vault ? (
@@ -84,10 +84,10 @@ async function PayoutsContent() {
 
       {(held.length > 0 || blocked.length > 0) && (
         <section aria-labelledby="held-title">
-          <h2 id="held-title" className="mb-3 text-[15px] font-semibold">
+          <h2 id="held-title" className="mb-3 text-[20px] font-bold tracking-tight">
             Held back
           </h2>
-          <ul className="divide-y rounded-[10px] border" data-testid="payouts-held">
+          <ul className="divide-y rounded-2xl border" data-testid="payouts-held">
             {held.map((h) => (
               <li key={`${h.bookingId}:${h.role}`} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3" data-testid={`held-${h.bookingId}-${h.role}`}>
                 <div className="min-w-0">
@@ -109,13 +109,13 @@ async function PayoutsContent() {
       )}
 
       <section aria-labelledby="history-title">
-        <h2 id="history-title" className="mb-3 text-[15px] font-semibold">
+        <h2 id="history-title" className="mb-3 text-[20px] font-bold tracking-tight">
           Recent runs
         </h2>
         {runs.length === 0 ? (
           <EmptyState data-testid="payouts-runs-empty" title="No runs yet" body="Each run checks your rules, then pays every ready booking in as few transactions as possible." />
         ) : (
-          <div className="overflow-hidden rounded-[10px] border">
+          <div className="overflow-hidden rounded-2xl border">
             <Table data-testid="payouts-runs-table">
               <TableHeader>
                 <TableRow>

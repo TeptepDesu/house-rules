@@ -29,8 +29,8 @@ async function SettingsContent() {
   const live = agentMode() === "live";
   return (
     <div className="grid max-w-xl gap-4">
-      <section aria-labelledby="wallet-title" className="rounded-[10px] border bg-card p-4">
-        <h2 id="wallet-title" className="text-[15px] font-semibold">
+      <section aria-labelledby="wallet-title" className="rounded-2xl border bg-card p-4">
+        <h2 id="wallet-title" className="text-[20px] font-bold tracking-tight">
           Your NEAR wallet
         </h2>
         <p className="mt-1 mb-4 text-sm text-muted-foreground">
@@ -44,8 +44,8 @@ async function SettingsContent() {
           </p>
         )}
       </section>
-      <section aria-labelledby="vault-title" className="rounded-[10px] border bg-card p-4">
-        <h2 id="vault-title" className="text-[15px] font-semibold">
+      <section aria-labelledby="vault-title" className="rounded-2xl border bg-card p-4">
+        <h2 id="vault-title" className="text-[20px] font-bold tracking-tight">
           Your vault
         </h2>
         <p className="mt-1 mb-4 text-sm text-muted-foreground">

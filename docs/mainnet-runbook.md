@@ -99,7 +99,7 @@ On Vercel, put the same values in the project's environment variables instead (`
 
 In the app, on a new account:
 1. **Settings:** link your wallet (`$OP` in Meteor) and connect the vault (`$VAULT`).
-2. **People & properties:** add the owner and the cleaner, then **Approve in vault** for each. Your wallet signs `add_payee`.
+2. **Homes & people:** add the owner and the cleaner, then **Approve in vault** for each. Your wallet signs `add_payee`.
 3. Add three properties named **Casa Azul**, **Loft 21** and **Seaside Cottage**, with owner and cleaner set, a **$1** cleaning fee and **15%** management.
 4. Set each payee's limit to fit the small report: **$10** for the owner, **$2** for the cleaner.
 

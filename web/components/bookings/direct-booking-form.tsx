@@ -18,7 +18,7 @@ export function DirectBookingForm({ properties, defaultDue, canTakePayment }: { 
 
   if (state?.ok) {
     return (
-      <div className="grid max-w-xl gap-3 rounded-[10px] border bg-card p-5" data-testid="direct-booking-created">
+      <div className="grid max-w-xl gap-3 rounded-2xl border bg-card p-5" data-testid="direct-booking-created">
         <p className="font-medium">
           Booking <span className="font-mono">{state.externalRef}</span> created for {state.guestName}
         </p>
@@ -43,7 +43,7 @@ export function DirectBookingForm({ properties, defaultDue, canTakePayment }: { 
   const fe = state?.fieldErrors ?? {};
   const v = state?.values ?? {};
   return (
-    <form action={action} noValidate className="grid max-w-xl gap-3 rounded-[10px] border bg-card p-5" data-testid="direct-booking-form">
+    <form action={action} noValidate className="grid max-w-xl gap-3 rounded-2xl border bg-card p-5" data-testid="direct-booking-form">
       <FormField id="direct-guest" label="Guest name" error={fe.guestName}>
         {(p) => <Input name="guestName" autoComplete="off" defaultValue={v.guestName} {...p} />}
       </FormField>

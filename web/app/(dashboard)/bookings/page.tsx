@@ -10,6 +10,7 @@ import { FollowUp } from "@/components/bookings/follow-up";
 import { formatUsd } from "@/lib/money";
 import { StatusPill } from "@/components/status-pill";
 import { buttonVariants } from "@/components/ui/button";
+import { PropertyCover } from "@/components/property-cover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireUser } from "@/lib/auth/dal";
 import { listBookingsWithRecon } from "@/lib/db/bookings";
@@ -80,7 +81,7 @@ async function BookingsContent() {
         <MetricCard label="Blocked" value={blocked.length} context="Need a decision before payout" data-testid="metric-blocked" />
         <MetricCard label="Waiting for payment" value={waiting.length} context="Not due or not reported yet" data-testid="metric-waiting" />
       </div>
-      <div className="overflow-hidden rounded-[10px] border">
+      <div className="overflow-hidden rounded-2xl border">
         <Table data-testid="bookings-table">
           <TableHeader>
             <TableRow>
@@ -100,7 +101,12 @@ async function BookingsContent() {
                     {CHANNEL[r.channel]} · <span className="font-mono">{r.externalRef}</span>
                   </div>
                 </TableCell>
-                <TableCell className="hidden align-top md:table-cell">{r.propertyName}</TableCell>
+                <TableCell className="hidden align-top md:table-cell">
+                  <span className="flex items-center gap-2.5">
+                    <PropertyCover name={r.propertyName} className="size-9 shrink-0 rounded-lg" />
+                    {r.propertyName}
+                  </span>
+                </TableCell>
                 <TableCell className="tabular hidden align-top whitespace-nowrap sm:table-cell">
                   {stayRange(r.checkIn, r.checkOut)}
                 </TableCell>

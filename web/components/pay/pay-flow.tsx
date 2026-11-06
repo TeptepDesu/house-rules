@@ -121,7 +121,7 @@ export function PayFlow({
     const amountIn = formatUnits(quote.amountIn, token.decimals);
     return (
       <div className="grid gap-4" data-testid="pay-deposit">
-        <div className="rounded-[10px] border bg-muted/40 p-4 text-sm">
+        <div className="rounded-2xl border bg-muted/40 p-4 text-sm">
           Send exactly{" "}
           <strong className="tabular" data-testid="pay-amount-in">
             {amountIn} {token.symbol}

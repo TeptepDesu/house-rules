@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type OverviewInput, attentionItems, barPermille, overviewMetrics, weeklyCollected } from "./index";
+import { type OverviewInput, attentionItems, barPermille, homeSummaries, overviewMetrics, weeklyCollected } from "./index";
 
 const U = 1_000_000n;
 const booking = (id: string, o: Partial<OverviewInput["bookings"][number]> = {}): OverviewInput["bookings"][number] => ({
@@ -118,5 +118,37 @@ describe("barPermille", () => {
   it("keeps full precision past Number.MAX_SAFE_INTEGER", () => {
     const huge = 2n ** 80n;
     expect(barPermille(huge / 2n, huge)).toBe(500);
+  });
+});
+
+describe("homeSummaries", () => {
+  const homes = [{ name: "Casa Azul" }, { name: "Loft 21" }];
+
+  it("adds up each home's collected money and stays, penalties included", () => {
+    const out = homeSummaries(homes, [
+      { propertyName: "Casa Azul", collected: 500_000000n, penaltiesCollected: 200_000000n },
+      { propertyName: "Casa Azul", collected: 100_000000n, penaltiesCollected: 0n },
+      { propertyName: "Loft 21", collected: 300_000000n, penaltiesCollected: 0n },
+    ]);
+    expect(out.get("Casa Azul")).toEqual({ collected: 800_000000n, stays: 2 });
+    expect(out.get("Loft 21")).toEqual({ collected: 300_000000n, stays: 1 });
+  });
+
+  it("shows a home with no bookings as zero, not missing", () => {
+    expect(homeSummaries(homes, []).get("Loft 21")).toEqual({ collected: 0n, stays: 0 });
+  });
+
+  it("does not count a stay with nothing collected as earning, but still as a stay", () => {
+    expect(homeSummaries(homes, [{ propertyName: "Loft 21", collected: 0n, penaltiesCollected: 0n }]).get("Loft 21")).toEqual({ collected: 0n, stays: 1 });
+  });
+
+  it("adds up to the Overview's Collected figure, even with a negative adjustment", () => {
+    const bookings = [booking("a", { collected: 100n * U }), booking("b", { collected: 50n * U, penaltiesCollected: 20n * U }), booking("c", { collected: -5n * U })];
+    const home = homeSummaries([{ name: "Casa Azul" }], bookings).get("Casa Azul");
+    expect(home?.collected).toBe(overviewMetrics({ ...base, bookings }).collected);
+  });
+
+  it("ignores bookings for a home that isn't listed", () => {
+    expect(homeSummaries(homes, [{ propertyName: "Gone", collected: 1n, penaltiesCollected: 0n }]).has("Gone")).toBe(false);
   });
 });
