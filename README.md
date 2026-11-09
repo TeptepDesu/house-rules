@@ -77,6 +77,7 @@ pnpm --filter web dev        # http://localhost:3000
 | **12.** **Vault rules** | *Pays only these 2 people · At most $800.00 per payout · Up to $20,000.00 per day · New payees wait 24 hours · Each booking is paid once · The agent can only call settle* |
 | **13.** **Audit log** | *Payout batch sent: 40 payouts, $9,917.37* → *Paid $9,917.37 in 40 payouts* (simulated in rehearsal; *On-chain* with a link when live), plus every in-app action |
 | **14.** **Overview** | **Collected $12,877.30** (22 bookings) · **Ready to pay out $0.00** · **Paid out $9,917.37** in 1 run · **Needs attention 3**: the $20-short booking, and Owen's and Maria's payouts for Diego, each with its reason and a link |
+| **15.** **Homes & people** → **Statement link** on Owen → open the copied link in a private window | Owen's own **payout statement**, no sign-in: *Paid to you $8,497.37 · Held $816.85*, a line per stay, and Diego's stay *Held: Above your per-payout limit*. No guest names, and nobody else's payouts. Every owner and cleaner gets one |
 
 This whole walkthrough is a browser test, [`web/e2e/readme.spec.ts`](web/e2e/readme.spec.ts), which asserts what each step says you'll see. If the README and the app ever disagree, that test fails.
 
@@ -191,7 +192,7 @@ Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p 
 
 | | |
 |---|---|
-| ✅ Done and tested | Vault contract; import and reconciliation; splits; settlement agent; guest pay flow; every screen; audit log |
+| ✅ Done and tested | Vault contract; import and reconciliation; splits; settlement agent; guest pay flow; owner and cleaner payout statements; every screen; audit log |
 | ✅ Testnet | Vault + mock USDC deployed, payees approved, settle-only agent key. **The app's own agent paid live through the testnet vault**, a payee was **approved with a real browser wallet**, and the stolen-key attacks in "Proof on a real chain" were all refused. Accounts and tx hashes: [`docs/testnet-deployment.md`](docs/testnet-deployment.md) |
 | ⏳ Before submission | Mainnet deploy and full loop with small real amounts |
 | ⏳ Before submission | **A real 1Click payment** on mainnet (the client is checked against the API docs; live delivery is unproven so far) |

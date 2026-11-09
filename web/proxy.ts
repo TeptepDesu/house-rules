@@ -17,6 +17,7 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Skip API routes (they authenticate themselves), the public guest pay page, and static assets.
-  matcher: ["/((?!api(?:/|$)|pay(?:/|$)|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  // Skip API routes (they authenticate themselves), the public guest pay page, the public payee
+  // statement page (both looked up by an unguessable token only), and static assets.
+  matcher: ["/((?!api(?:/|$)|pay(?:/|$)|statement(?:/|$)|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

@@ -67,6 +67,8 @@ export const payees = pgTable(
     capRaw: money("cap_raw").notNull(),
     vaultStatus: payeeVaultStatus("vault_status").notNull().default("pending_signature"),
     addedTx: text("added_tx"),
+    /** Unguessable id for the payee's read-only statement page (/statement/[token]); null until shared. */
+    statementToken: text("statement_token").unique(),
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("payees_user_account_uq").on(t.userId, t.nearAccount)],

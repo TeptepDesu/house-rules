@@ -8,6 +8,7 @@ import { PropertyCover } from "@/components/property-cover";
 import { ApprovePayee } from "@/components/people/approve-payee";
 import { EditPropertyPeople } from "@/components/people/edit-property-people";
 import { ManagePayee } from "@/components/people/manage-payee";
+import { StatementLink } from "@/components/people/statement-link";
 import { PayeeForm } from "@/components/people/payee-form";
 import { PropertyForm } from "@/components/people/property-form";
 import { StatusPill } from "@/components/status-pill";
@@ -82,6 +83,7 @@ async function PeopleContent() {
                           <div className="mt-2 flex flex-wrap items-start gap-2">
                             {p.vaultStatus === "pending_signature" && vault && <ApprovePayee payeeId={p.id} rehearsal={rehearsal} />}
                             <ManagePayee payeeId={p.id} name={p.name} account={p.nearAccount} cap={usdInput(p.capRaw)} onVault={p.vaultStatus !== "pending_signature"} rehearsal={rehearsal} />
+                            <StatementLink payeeId={p.id} />
                           </div>
                         )}
                       </TableCell>

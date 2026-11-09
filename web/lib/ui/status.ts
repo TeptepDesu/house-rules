@@ -43,6 +43,11 @@ const MAPS = {
     retained: { label: "Kept in vault", tone: "neutral" },
     rejected: { label: "Rejected", tone: "destructive" },
   },
+  statement: {
+    paid: { label: "Paid", tone: "success" },
+    held: { label: "Held", tone: "warning" },
+    processing: { label: "Being paid", tone: "info" },
+  },
   run: {
     running: { label: "Running", tone: "warning" },
     succeeded: { label: "Completed", tone: "success" },

@@ -66,6 +66,8 @@ export function describeActivity(action: string, m: Record<string, unknown>): st
       return `Set the daily limit to ${usd(m.dailyLimit)} and the new-payee wait to ${Number(BigInt(String(m.payeeDelayNs)) / 3_600_000_000_000n)} hours (signed with your wallet)`;
     case "vault.withdraw":
       return `Withdrew ${usd(m.amount)} to ${String(m.to)} (signed with your wallet)`;
+    case "payee.statement_link":
+      return `Shared ${String(m.name)}'s payout statement link (${String(m.nearAccount)})`;
     case "payee.approve_rehearsal":
       return `Approved ${String(m.nearAccount)} (rehearsal, not on-chain)`;
     case "property.create":

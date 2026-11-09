@@ -34,6 +34,7 @@ describe("describeActivity", () => {
     ["vault.limits_change", { dailyLimit: "5000000000", payeeDelayNs: "86400000000000" }, "Set the daily limit to $5,000.00 and the new-payee wait to 24 hours (signed with your wallet)"],
     ["vault.withdraw", { amount: "126000000", to: "op.testnet" }, "Withdrew $126.00 to op.testnet (signed with your wallet)"],
     ["payee.create", { role: "cleaner", nearAccount: "maria.testnet" }, "Added cleaner maria.testnet (needs vault approval)"],
+    ["payee.statement_link", { name: "Maria Lopez", nearAccount: "maria.testnet" }, "Shared Maria Lopez's payout statement link (maria.testnet)"],
     ["property.create", { name: "Casa Azul" }, "Added property Casa Azul"],
     ["payee.approve", { nearAccount: "owen.testnet" }, "Approved owen.testnet in the vault (signed with your wallet)"],
     ["payee.approve_rehearsal", { nearAccount: "owen.testnet" }, "Approved owen.testnet (rehearsal, not on-chain)"],

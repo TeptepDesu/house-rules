@@ -4,6 +4,8 @@ import { FIXTURES, addPayee, approveAllPayees } from "./helpers";
 // Follows README.md "Try it in 5 minutes" step by step and checks what it says you'll see.
 // If this fails, the README is wrong: fix the README (or the app), not this test.
 
+test.use({ permissions: ["clipboard-read", "clipboard-write"] }); // step 15 copies a statement link
+
 test("README walkthrough", async ({ page, browser }) => {
   test.setTimeout(150_000);
   const email = `readme.${Date.now()}@example.com`;
@@ -127,4 +129,16 @@ test("README walkthrough", async ({ page, browser }) => {
   await expect(attention).toContainText("($20.00 short)");
   await expect(attention).toContainText("Owen for Diego Santos");
   await expect(attention).toContainText("Above this payee's per-payout limit · $816.85");
+
+  // 15. Owen's own statement, opened signed out
+  await page.goto("/people");
+  const owenRow = page.getByTestId("payees-table").getByRole("row").filter({ hasText: "owen.testnet" });
+  await owenRow.locator('[data-testid^="payee-statement-link-"]').click();
+  await expect(owenRow.locator('[data-testid^="payee-statement-link-"]')).toContainText("Link copied");
+  const owen = await (await browser.newContext()).newPage();
+  await owen.goto(await page.evaluate(() => navigator.clipboard.readText()));
+  await expect(owen.getByTestId("statement-payee")).toHaveText("Owen");
+  await expect(owen.getByTestId("statement-paid-total")).toHaveText("$8,497.37");
+  await expect(owen.getByTestId("statement-held-total")).toHaveText("$816.85");
+  await expect(owen.locator('[data-state="held"]')).toContainText("Above your per-payout limit");
 });
