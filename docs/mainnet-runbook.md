@@ -1,5 +1,7 @@
 # Mainnet runbook
 
+> **Not used for this submission** (Joseph, 2026-11-09: testnet only). Kept for after the hackathon.
+
 Exact steps from "wallet funded" to "full loop proven on mainnet". **Real money.** Every signing step needs Joseph's explicit OK (CLAUDE.md). Nothing here has been run on mainnet yet. The same sequence was run on testnet (`docs/testnet-deployment.md`), and the preflight script has been checked against mainnet's USDC and 1Click, read-only.
 
 Commands use near-cli-rs 0.30.1 syntax, from its bundled guide. Run them from the repo root in your own terminal, so the keys stay in your Keychain.
@@ -149,4 +151,4 @@ One more check, for `docs/notes.md`: does 1Click batch several deliveries into o
 
 ## If something blocks it
 
-Mainnet is required for this submission (Joseph, 2026-11-09; `plan.md` §9), even though the rules would accept testnet (`HACKATHON.md`, Q-010). There's no testnet fallback. If a step fails, stop, record what happened in `docs/notes.md`, and fix it before Nov 12's code freeze. Steps 8 and 9 are the priority: a real 1Click payment into the vault, then the agent's payout from it.
+Not part of this submission (see the note at the top). When it is run later, stop at any failed step, record what happened in `docs/notes.md`, and fix it first. Steps 8 and 9 matter most: a real 1Click payment into the vault, then the agent's payout from it.

@@ -25,7 +25,7 @@ Never guessed or filled in by an agent:
 |---|---|
 | `leadName` | 2–80 characters |
 | `email` | Contact email |
-| `nearAddress` | **Mainnet** account for the prize payout, e.g. `team.near`. It must exist already. Create it in any NEAR wallet. It can be the operator account from the runbook |
+| `nearAddress` | **Mainnet** account for the prize payout, e.g. `team.near`. It must exist already. Create it in any NEAR wallet. It only receives the prize; nothing else uses it |
 | `demoUrl` | Link to the public X post, once published |
 | `consent` | Joseph must agree to this notice, word for word: *"I agree that the organizers may use these details to review our submission and contact us about this hackathon."* |
 

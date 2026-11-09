@@ -47,7 +47,7 @@ Rental operators collect money from many places (Airbnb/Booking.com payouts, dir
 | Fact | Implication |
 |---|---|
 | 1Click: unique single-use deposit address per quote + status endpoint; `EXACT_OUTPUT` delivers an exact amount to a recipient. | One quote per invoice payment; the deposit address is the match key. The recipient is the **vault contract**. |
-| **No Intents testnet.** 1Click is mainnet-only. Origin minimums vary. | Demo inflow on mainnet with small amounts. E2E mocks 1Click. |
+| **No Intents testnet.** 1Click is mainnet-only. Origin minimums vary. | Testnet only (Joseph, 2026-11-09): the demo's guest deposits are simulated and say so; the client is checked against the API docs and recorded responses. E2E mocks 1Click. |
 | 1Click JWT optional; without it, 0.2% fee. | Apply in prep; env var only. |
 | **Function-call access keys can't transfer NEAR and can only call listed methods on one receiver.** They also can't attach deposits. | The agent key is scoped to `vault.settle`. It can't withdraw, add payees, or change limits. |
 | `ft_transfer` requires exactly 1 yoctoNEAR attached. | The **vault attaches the 1 yocto from its own balance** when it pays. That's why a contract is needed: the agent's key calls `settle` with 0 deposit. |
@@ -58,7 +58,7 @@ Rental operators collect money from many places (Airbnb/Booking.com payouts, dir
 | JS contract SDK is alpha and not recommended for value-holding contracts; **Rust SDK is recommended**. | Vault in **Rust** (`near-sdk-rs` + `cargo-near`), tested with `near-workspaces`. Small surface, AI-assisted. |
 | **Confidential Intents** is publicly available via a 1Click parameter; settlement into a confidential balance is possible. | Stretch "private revenue" mode, spiked on Oct 29. Not core: confidential balances live inside Intents, not in the vault. |
 
-**Networks:** dev + E2E on testnet with a mock FT standing in for USDC; **demo on mainnet** with $3–10 invoices so the same USDC is collected, reconciled, and paid out on camera. `NEAR_NETWORK` env var switches contract IDs and RPC.
+**Networks:** dev, E2E and the demo on testnet, with a mock FT standing in for USDC. **No mainnet in this submission** (Joseph, 2026-11-09); `NEAR_NETWORK` still switches contract IDs and RPC, and `docs/mainnet-runbook.md` is kept for later.
 
 ---
 
@@ -315,16 +315,16 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 
 | Date | Do | Who | Exit criteria |
 |---|---|---|---|
-| **By Nov 8** | Push. Fund the mainnet account and the Base wallet | Joseph | Funds in the wallets |
-| **By Nov 9** | Hosted Postgres + Vercel, `db:migrate` (`0000`–`0006`), smoke-test sign-in | Joseph, Claude runs the migrate | Hosted app signs in |
-| **By Nov 11** | **Required.** `docs/mainnet-runbook.md`: deploy, payees, first real $1 payment, full loop. Fix what it turns up | Joseph signs, Claude supports | Demo path works end to end on mainnet |
+| **By Nov 13** | Create a NEAR **mainnet** account for the prize payout (the form requires one; no funds needed beyond what the wallet asks to create it) | Joseph | Account exists |
+| ~~By Nov 9~~ | ~~Hosted Postgres + Vercel~~ **Dropped:** a production deploy refuses rehearsal mode, so it would have to be mainnet. Hosting is only a plus (Q-012) | | |
+| ~~By Nov 11~~ | ~~`docs/mainnet-runbook.md`~~ **Dropped (Joseph, 2026-11-09): no mainnet.** Testnet is eligible in every track (Q-010) | | |
 | **Nov 12** | **Code freeze.** Fixes only. Full suites, agentshield, dry run of `docs/demo-script.md` | Claude, Joseph for the dry run | Everything green; script runs clean |
-| **Nov 13** | Rehearsal $1 payment about an hour before recording, record the demo, publish the X post | Joseph | Video and post live |
+| **Nov 13** | Record the demo (`docs/demo-script.md`), publish the X post | Joseph | Video and post live |
 | **Nov 14** | Repo public, then submit with `realworld` + `security` + `business`. **Aim for 12:00 UTC.** Hard deadline 23:59 UTC | Joseph approves, Claude sends | Submitted |
 
-**Mainnet is required (Joseph, 2026-11-09).** The rules would accept testnet (`HACKATHON.md`, Q-010), but the submission must show the full loop on mainnet: a real guest payment through 1Click into the vault, then the agent's payout. 1Click has no testnet (Q-007), so only mainnet proves it. The demo is recorded on mainnet.
+**Testnet only (Joseph, 2026-11-09).** This replaces the earlier decision the same day to require mainnet. The vault, the scoped agent key, payouts, payee approval and the stolen-key attacks are live on testnet. The guest's 1Click deposit can't be: 1Click has no testnet (Q-007), so the demo simulates it and says so, and the README lists the real 1Click path as unproven.
 
-**If time runs short:** the Nov 14 row, the video, and the mainnet loop (Nov 11 row) are required. Only hosting can be cut (Q-012).
+**If time runs short:** only the Nov 14 row, the video and the payout account are required (Q-012).
 
 **Enhancement backlog: outcome, Nov 5**
 1. **NEAR AI rewording live:** waiting on a cloud.near.ai key (optional). The feature stays off without one.
@@ -340,14 +340,14 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 - [ ] Private GitHub repo with MIT `LICENSE`
 - [ ] Postgres (any standard PostgreSQL 13+) for production + Vercel project. Local dev needs nothing: PGlite
 - [ ] Testnet + mainnet accounts; keys in a password manager, never in the repo
-- [ ] Mainnet: a few NEAR (vault deploy storage + gas + payee storage deposits) + ~$30 USDC for demo
+- ~~Mainnet: a few NEAR + ~$30 USDC for demo~~ (no mainnet in this submission)
 - [ ] 1Click JWT (or accept 0.2%)
 - [ ] `docs/` complete: vault spec, schema, edge cases, wireframes, fixtures, demo script
 - [ ] Spike learnings in `docs/notes.md` (prose, not code)
 
 ---
 
-## 11. Demo script (2 minutes, mainnet)
+## 11. Demo script (2 minutes, testnet)
 
 1. **Hook (10s):** "Rental operators reconcile in spreadsheets and pay owners by hand, because automating payouts means trusting software with the bank account. House Rules makes that safe."
 2. **Collect (20s):** Guest pays a damage invoice from another chain through NEAR Intents. Exact USDC lands in the vault.

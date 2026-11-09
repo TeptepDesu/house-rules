@@ -194,8 +194,8 @@ Also: `pnpm --filter web typecheck`, `pnpm --filter web lint`, `cargo clippy -p 
 |---|---|
 | ✅ Done and tested | Vault contract; import and reconciliation; splits; settlement agent; guest pay flow; owner and cleaner payout statements; every screen; audit log |
 | ✅ Testnet | Vault + mock USDC deployed, payees approved, settle-only agent key. **The app's own agent paid live through the testnet vault**, a payee was **approved with a real browser wallet**, and the stolen-key attacks in "Proof on a real chain" were all refused. Accounts and tx hashes: [`docs/testnet-deployment.md`](docs/testnet-deployment.md) |
-| ⏳ Before submission | Mainnet deploy and full loop with small real amounts |
-| ⏳ Before submission | **A real 1Click payment** on mainnet (the client is checked against the API docs; live delivery is unproven so far) |
+| Not in this submission | **Mainnet.** Everything on-chain in this submission runs on NEAR testnet. A read-only preflight (`pnpm --filter web preflight`) and a runbook for mainnet are ready, but nothing has been deployed or paid there |
+| Not proven | **A real 1Click payment.** 1Click has no testnet, so guest deposits are simulated in the demo. The client is checked against the API docs, and the app only marks an invoice paid after reading the USDC credit to the vault on-chain |
 | ✅ Stretch, built | Guest follow-up messages for blocked bookings, with optional rewording on NEAR AI Cloud (private inference). The guard that rejects unsafe rewrites is unit-tested; **a live NEAR AI call hasn't been made yet** (no key) |
 | Stretch, dropped | Confidential Intents for private revenue: 1Click requires user authentication for confidential quotes, so it isn't the one-parameter change the plan allowed for ([`docs/notes.md`](docs/notes.md)). Cross-chain owner payouts: they'd need a vault contract change |
 
