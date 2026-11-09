@@ -18,7 +18,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/pay/[publicI
     return Response.json({ paymentStatus: payment.status, invoiceStatus: inv.status, amountReceived: payment.amountReceivedRaw.toString() });
   }
   try {
-    const r = await pollPayment(paymentDeps(inv.vaultAccount ?? ""), { depositAddress, deadline: payment.quoteDeadline, invoiceAmount: inv.amountRaw });
+    const r = await pollPayment(paymentDeps(inv.vaultAccount ?? ""), { depositAddress, depositMemo: payment.depositMemo, deadline: payment.quoteDeadline, invoiceAmount: inv.amountRaw });
     await applyPaymentUpdate(inv.id, payment.id, r);
     const fresh = await getPublicInvoice(publicId);
     return Response.json({ paymentStatus: r.paymentStatus, invoiceStatus: fresh?.status ?? r.invoiceStatus, amountReceived: r.amountReceived.toString() });

@@ -13,6 +13,7 @@ import { verifyPayeeAdded } from "@/lib/near/payee-approval";
 import { fetchTxOutcome, rpcUrl } from "@/lib/near/rpc";
 import { createVaultReader } from "@/lib/near/vault";
 import { checkVaultBinding } from "@/lib/vault/binding";
+import { untilOnChain } from "@/lib/vault/owner-actions";
 import { payeeVaultStatus } from "@/lib/vault/rules";
 
 // Approving a payee = the operator's VERIFIED wallet (the vault's on-chain owner) signs
@@ -67,7 +68,16 @@ export async function confirmApproval(payeeId: string, txHash?: string): Promise
   const binding = await checkVaultBinding(c.vault, owner);
   if (!binding.ok || !owner) return { ok: false, error: binding.ok ? "Link your NEAR wallet in Settings first." : binding.error };
   try {
-    const chain = await createVaultReader(rpcUrl(), c.vault).getPayee(c.payee.nearAccount);
+    // A just-signed add_payee can take a moment to show (the RPC node may be a block behind), and a
+    // re-added payee shows its old, removed record until then: re-read for a few seconds until the
+    // vault matches, then judge the last read.
+    const reader = createVaultReader(rpcUrl(), c.vault);
+    const last = { payee: null as Awaited<ReturnType<typeof reader.getPayee>> };
+    await untilOnChain(async () => {
+      const p = (last.payee = await reader.getPayee(c.payee.nearAccount));
+      return !!p && p.active && p.role === c.payee.role && p.capPerPayout === c.payee.capRaw;
+    });
+    const chain = last.payee;
     if (!chain) return { ok: false, retry: true, error: "Your vault doesn't show this payee yet. Check again in a moment." };
     if (chain.role !== c.payee.role || chain.capPerPayout !== c.payee.capRaw) {
       return { ok: false, error: "Your vault has this payee with a different role or limit than here. Fix one so they match." };

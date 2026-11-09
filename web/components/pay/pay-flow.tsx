@@ -9,22 +9,13 @@ import { StatusPill } from "@/components/status-pill";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import { GUEST_CHAINS } from "@/lib/intents/chains";
 import { formatUnits } from "@/lib/intents/format";
 
 type Token = { assetId: string; symbol: string; blockchain: string; decimals: number };
 type Quote = { depositAddress: string; depositMemo: string | null; amountIn: string; deadline: string };
 type Status = { paymentStatus: string; invoiceStatus: string; amountReceived: string };
 
-const CHAIN: Record<string, string> = {
-  arb: "Arbitrum",
-  base: "Base",
-  eth: "Ethereum",
-  sol: "Solana",
-  near: "NEAR",
-  btc: "Bitcoin",
-  bsc: "BNB Chain",
-  pol: "Polygon",
-};
 const POLL_MS = 3000;
 const FINAL = ["verified", "refunded", "expired", "failed"];
 
@@ -126,7 +117,7 @@ export function PayFlow({
           <strong className="tabular" data-testid="pay-amount-in">
             {amountIn} {token.symbol}
           </strong>{" "}
-          on <strong>{CHAIN[token.blockchain] ?? token.blockchain}</strong> to this address. {businessName} receives exactly{" "}
+          on <strong>{GUEST_CHAINS[token.blockchain] ?? token.blockchain}</strong> to this address. {businessName} receives exactly{" "}
           <Money raw={BigInt(amountRaw)} />.
         </div>
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-start">
@@ -191,7 +182,7 @@ export function PayFlow({
             {!tokens && <option>Loading…</option>}
             {tokens?.map((t) => (
               <option key={t.assetId} value={t.assetId}>
-                {t.symbol} on {CHAIN[t.blockchain] ?? t.blockchain}
+                {t.symbol} on {GUEST_CHAINS[t.blockchain] ?? t.blockchain}
               </option>
             ))}
           </NativeSelect>

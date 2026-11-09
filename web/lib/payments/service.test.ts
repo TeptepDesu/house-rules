@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { StatusResponse } from "@/lib/intents/client";
 import { createMockOneClick } from "@/lib/intents/mock";
 import { oneClickMode } from "@/lib/intents/provider";
-import { pollPayment, startPayment } from "./service";
+import { type PaymentDeps, pollPayment, startPayment } from "./service";
 
 const U = 1_000_000n;
 const NOW = new Date("2026-11-06T12:00:00Z");
@@ -101,5 +102,85 @@ describe("pollPayment", () => {
 
   it("unknown deposit address → error, never paid", async () => {
     await expect(pollPayment(deps(), { depositAddress: "nope", deadline: NOW, invoiceAmount: 1n })).rejects.toThrow();
+  });
+});
+
+describe("pollPayment: what it asks 1Click and which txs it verifies", () => {
+  const LATER = new Date(NOW.getTime() + 60_000);
+  const success = (sd: Partial<StatusResponse["swapDetails"]>): StatusResponse => ({
+    correlationId: "c",
+    quoteResponse: {},
+    status: "SUCCESS",
+    updatedAt: NOW.toISOString(),
+    swapDetails: { intentHashes: [], nearTxHashes: [], originChainTxHashes: [], destinationChainTxHashes: [], ...sd },
+  });
+  function stub(res: StatusResponse, credit: (hash: string) => bigint = () => 200n * U) {
+    const asked: [string, string | undefined][] = [];
+    const verified: string[][] = [];
+    const d: PaymentDeps = {
+      oneClick: {
+        quote: async () => {
+          throw new Error("not used");
+        },
+        status: async (addr, memo) => {
+          asked.push([addr, memo]);
+          return res;
+        },
+      },
+      verifyDelivery: async (h) => {
+        verified.push(h);
+        return h.reduce((a, x) => a + credit(x), 0n);
+      },
+      now: () => NOW,
+    };
+    return { d, asked, verified };
+  }
+  const tx = (hash: string) => ({ hash, explorerUrl: "" });
+
+  it("sends the deposit memo with the status check (1Click requires it when the quote had one)", async () => {
+    const s = stub(success({ destinationChainTxHashes: [tx("d1")] }));
+    await pollPayment(s.d, { depositAddress: "addr", depositMemo: "m-42", deadline: LATER, invoiceAmount: 200n * U });
+    expect(s.asked).toEqual([["addr", "m-42"]]);
+  });
+
+  it("no memo on the payment → none sent", async () => {
+    const s = stub(success({ destinationChainTxHashes: [tx("d1")] }));
+    await pollPayment(s.d, { depositAddress: "addr", depositMemo: null, deadline: LATER, invoiceAmount: 200n * U });
+    expect(s.asked).toEqual([["addr", undefined]]);
+  });
+
+  it("verifies the destination-chain txs, not the other NEAR txs of the swap", async () => {
+    const s = stub(success({ destinationChainTxHashes: [tx("d1")], nearTxHashes: ["n1", "d1"] }));
+    const r = await pollPayment(s.d, { depositAddress: "addr", deadline: LATER, invoiceAmount: 200n * U });
+    expect(s.verified).toEqual([["d1"]]);
+    expect(r).toMatchObject({ paymentStatus: "verified", invoiceStatus: "paid", destinationTx: "d1" });
+  });
+
+  it("no destination tx listed → falls back to the swap's NEAR txs and records the one that credited the vault", async () => {
+    // e.g. n1 is the deposit into intents, n2 the delivery to the vault
+    const s = stub(success({ nearTxHashes: ["n1", "n2"] }), (h) => (h === "n2" ? 200n * U : 0n));
+    const r = await pollPayment(s.d, { depositAddress: "addr", deadline: LATER, invoiceAmount: 200n * U });
+    expect(s.verified).toEqual([["n1"], ["n2"]]);
+    expect(r).toMatchObject({ paymentStatus: "verified", invoiceStatus: "paid", amountReceived: 200n * U, destinationTx: "n2" });
+  });
+
+  it("fallback txs that credit nothing aren't recorded as the delivery (one tx can only ever pay one payment)", async () => {
+    const s = stub(success({ nearTxHashes: ["n1"] }), () => 0n);
+    const r = await pollPayment(s.d, { depositAddress: "addr", deadline: LATER, invoiceAmount: 200n * U });
+    expect(r).toMatchObject({ paymentStatus: "delivered_unverified", amountReceived: 0n });
+    expect(r.destinationTx).toBeUndefined();
+  });
+
+  it("a tx listed twice is verified once, so its credit can't be counted twice", async () => {
+    const s = stub(success({ destinationChainTxHashes: [tx("d1"), tx("d1")] }));
+    await pollPayment(s.d, { depositAddress: "addr", deadline: LATER, invoiceAmount: 200n * U });
+    expect(s.verified).toEqual([["d1"]]);
+  });
+
+  it("SUCCESS with no tx at all stays unverified: nothing is paid on 1Click's word alone", async () => {
+    const s = stub(success({}));
+    const r = await pollPayment(s.d, { depositAddress: "addr", deadline: LATER, invoiceAmount: 200n * U });
+    expect(s.verified).toEqual([]);
+    expect(r).toMatchObject({ paymentStatus: "delivered_unverified", invoiceStatus: "pending", amountReceived: 0n });
   });
 });

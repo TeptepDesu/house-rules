@@ -138,7 +138,14 @@ const UNFINISHED: PaymentStatus[] = ["awaiting_deposit", ...IN_FLIGHT];
 export async function paymentsToSync(userId: string, o: { publicId?: string; deadlineAfter: Date; limit: number }) {
   const scope = o.publicId ? eq(invoices.publicId, o.publicId) : or(gt(payments.quoteDeadline, o.deadlineAfter), inArray(payments.status, IN_FLIGHT));
   return (await db())
-    .select({ id: payments.id, invoiceId: payments.invoiceId, depositAddress: payments.depositAddress, deadline: payments.quoteDeadline, invoiceAmount: invoices.amountRaw })
+    .select({
+      id: payments.id,
+      invoiceId: payments.invoiceId,
+      depositAddress: payments.depositAddress,
+      depositMemo: payments.depositMemo,
+      deadline: payments.quoteDeadline,
+      invoiceAmount: invoices.amountRaw,
+    })
     .from(payments)
     .innerJoin(invoices, eq(invoices.id, payments.invoiceId))
     .where(and(eq(invoices.userId, userId), inArray(payments.status, UNFINISHED), scope))

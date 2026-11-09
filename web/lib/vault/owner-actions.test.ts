@@ -11,9 +11,24 @@ import {
   removedOnChain,
   setLimitsCalls,
   delayMinutesInput,
+  untilOnChain,
   withdrawCalls,
   withdrawalOutcome,
 } from "./owner-actions";
+
+describe("untilOnChain: re-read until the vault shows a just-signed change", () => {
+  it("stops at the first read that shows it", async () => {
+    let reads = 0;
+    expect(await untilOnChain(async () => ++reads === 3, 6, 0)).toBe(true);
+    expect(reads).toBe(3);
+  });
+
+  it("gives up after the last try, so the UI can offer Check again", async () => {
+    let reads = 0;
+    expect(await untilOnChain(async () => (reads++, false), 4, 0)).toBe(false);
+    expect(reads).toBe(4);
+  });
+});
 
 const U = 1_000_000n;
 const H = 3_600n * 1_000_000_000n;

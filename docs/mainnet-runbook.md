@@ -33,7 +33,11 @@ pnpm --filter web preflight -- --account $OP --payee $OWNER --payee $CLEANER
 
 Fix anything marked ✗. Payees that aren't registered on USDC are fine at this point: `add_payee` registers them.
 
-If `rpc.mainnet.near.org` rate-limits you, set `NEAR_RPC_URL` to another provider from https://docs.near.org/api/rpc/providers.
+**Use a dedicated RPC; don't rely on the default.** On 2026-11-09, `rpc.mainnet.near.org` answered 4 of 6 `tx` lookups with HTTP 429. The app treats a refused lookup as "tx not found", so a guest payment stays unverified and a payee approval loses its audit entry. `https://free.rpc.fastnear.com` answered all 6. Export it before the preflight, and put it in the env file in step 5 (or pick another provider from https://docs.near.org/api/rpc/providers):
+
+```bash
+export NEAR_RPC_URL=https://free.rpc.fastnear.com
+```
 
 ## 1. Put your operator key on this machine
 
@@ -76,6 +80,7 @@ Create `web/.env.mainnet.local` (gitignored). Agents can't read it, and shouldn'
 
 ```
 NEAR_NETWORK=mainnet
+NEAR_RPC_URL=https://free.rpc.fastnear.com
 AGENT_MODE=live
 AGENT_ACCOUNT=<the $AGENT value>
 AGENT_PRIVATE_KEY=ed25519:<the settle-only private key>
@@ -85,7 +90,7 @@ USDC_TOKEN_ACCOUNT=17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e3613
 INTENTS_SENDERS=intents.near
 ```
 
-`USDC_ASSET_ID` and `USDC_TOKEN_ACCOUNT` were confirmed read-only on 2026-11-02. `INTENTS_SENDERS` is **not** confirmed: it's the code's default, and the first real payment settles it (step 8).
+`USDC_ASSET_ID` and `USDC_TOKEN_ACCOUNT` were confirmed read-only on 2026-11-02. `INTENTS_SENDERS` matters less than it looks. On 2026-11-09, both mainnet RPCs returned the tx for any `sender_account_id`, even a made-up one. Also, 8 of 9 recent txs to `intents.near` were signed by `intents.near` itself. The first real payment confirms it (step 8).
 
 Run it locally:
 
@@ -120,7 +125,14 @@ Everything must pass. In particular, the vault must be registered on USDC, or 1C
 3. Send the exact amount from MetaMask (about $1.01).
 4. It should show **Paid** in about 35 seconds. The audit log should show it, and the preflight's vault balance should go up by $1.
 
-If the invoice stays unverified after 1Click reports success, read `destinationChainTxHashes` from the status response. `usdcCreditedTo()` needs the signer in `INTENTS_SENDERS`, so update that value and record what you found in `docs/notes.md`.
+Whether it works or not, save the raw status response (the payment's row keeps it) and record in `docs/notes.md` which list held the delivery tx. The app checks `destinationChainTxHashes`, or `nearTxHashes` when the first is empty.
+
+If the invoice stays unverified after 1Click reports success:
+1. Check that `NEAR_RPC_URL` is set. A rate-limited RPC looks exactly like a missing tx.
+2. Open the tx hashes from the status response on nearblocks.io. Check for a USDC `ft_transfer` to the vault in a successful receipt.
+3. Only if the RPC can't find the tx at all, set `INTENTS_SENDERS` to its signer.
+
+One more check, for `docs/notes.md`: does 1Click batch several deliveries into one tx? A tx can only pay one payment (`destination_tx` is unique). If one tx credits two invoices, the second invoice can't be recorded, and the app needs a change.
 
 ## 9. The full loop
 
@@ -135,6 +147,6 @@ If the invoice stays unverified after 1Click reports success, read `destinationC
 - `withdraw` sends leftover USDC to your own account, signed by your wallet from **Vault rules**. Register your account on USDC first if the preflight says so.
 - **Optional, irreversible:** delete the full-access key on `$VAULT`, so nobody can ever replace the contract. That's the strongest security story, but it also means no upgrades. Only do it after the full loop works.
 
-## Fallback
+## If something blocks it
 
-The rules don't require mainnet here. Testnet-only projects are eligible, and mainnet applies only where the integration is mainnet-only (`HACKATHON.md`, Q-010). If mainnet runs out of time, record on testnet, as `docs/demo-script.md` describes, and show the real 1Click payment on its own.
+Mainnet is required for this submission (Joseph, 2026-11-09; `plan.md` §9), even though the rules would accept testnet (`HACKATHON.md`, Q-010). There's no testnet fallback. If a step fails, stop, record what happened in `docs/notes.md`, and fix it before Nov 12's code freeze. Steps 8 and 9 are the priority: a real 1Click payment into the vault, then the agent's payout from it.

@@ -16,7 +16,7 @@ export async function syncPayments(userId: string, o: { publicId?: string; deps?
   let failed = 0;
   for (const p of rows) {
     try {
-      const r = await pollPayment(deps, { depositAddress: p.depositAddress, deadline: p.deadline, invoiceAmount: p.invoiceAmount });
+      const r = await pollPayment(deps, { depositAddress: p.depositAddress, depositMemo: p.depositMemo, deadline: p.deadline, invoiceAmount: p.invoiceAmount });
       await applyPaymentUpdate(p.invoiceId, p.id, r);
     } catch (e) {
       failed++;

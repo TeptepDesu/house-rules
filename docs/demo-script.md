@@ -2,10 +2,9 @@
 
 For recording on **Nov 13**. Follows plan §11, matched to what the app actually does. Every on-screen claim below is checked by `web/e2e/readme.spec.ts` or the integration tests.
 
-**Which mode to record in:**
-- **Best: live on mainnet.** Needs the mainnet deploy (`docs/mainnet-runbook.md`). Use `web/test/fixtures/payout-reports/airbnb-style-small.csv` for shot 3: the normal demo file is about $11,000, far over the mainnet vault's $50 daily limit. Shots 3 and 4 then show **"4 will match"** and small amounts, so read the numbers off the screen rather than from this script.
-- **Good: live on testnet.** Needs the agent key in `web/.env.testnet.local`. "View on-chain" links then open real testnet transactions.
-- **Fallback: rehearsal mode.** Works today with no setup. Say "rehearsal" out loud; screens show *Simulated*.
+**Record live on mainnet (required, plan §9).** Needs the mainnet deploy (`docs/mainnet-runbook.md`). Use `web/test/fixtures/payout-reports/airbnb-style-small.csv` for shot 3: the normal demo file is about $11,000, far over the mainnet vault's $50 daily limit. Shots 3 and 4 then show **"4 will match"** and small amounts, so read the numbers off the screen rather than from this script.
+
+The one exception is shot 5. `break-it` is testnet only, so nobody risks real money to show the vault saying no. Say "on testnet" during that shot. Testnet and rehearsal modes are no longer recording options for the other shots.
 
 ## About an hour before recording: the real $1 payment
 
@@ -53,7 +52,6 @@ It ends with the vault's balance before and after: nothing moved. Takes about 20
 ## Fallback lines (if something misbehaves on camera)
 
 - **The wallet or 1Click is slow:** "In production this takes about twenty seconds; here's one I ran earlier." Then cut to the Paid state.
-- **In rehearsal mode:** "This is rehearsal mode. The same flow runs against the real vault in our integration tests, and on testnet here." Show `docs/testnet-deployment.md`.
 
 ---
 

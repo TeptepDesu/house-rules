@@ -149,6 +149,18 @@ describe("invoices", () => {
       expect((await syncPayments(a, { publicId: mine, deps: () => deps("SUCCESS", 200n * U) })).checked).toBe(1);
     });
 
+    it("asks 1Click with the deposit memo saved with the quote (memo chains need it)", async () => {
+      const r = await charge(a);
+      if (!r.ok) throw new Error(r.error);
+      const pub = (await inv.getPublicInvoice(r.publicId))!;
+      await inv.recordPaymentStart(pub.id, { depositAddress: "shared-addr", depositMemo: "memo-7", originAsset: "x", quoteDeadline: new Date("2026-11-05T13:00:00Z"), rawQuoteJson: {} });
+      const asked: unknown[][] = [];
+      const base = deps("PENDING_DEPOSIT") as unknown as { oneClick: { status: (...a: unknown[]) => Promise<unknown> } };
+      const spy = () => ({ ...base, oneClick: { ...base.oneClick, status: async (...args: unknown[]) => (asked.push(args), base.oneClick.status()) } }) as never;
+      await syncPayments(a, { deps: spy });
+      expect(asked).toEqual([["shared-addr", "memo-7"]]);
+    });
+
     it("reports a failed check, so a waive can refuse rather than guess", async () => {
       await started();
       const broken = () => ({ ...(deps("SUCCESS") as object), oneClick: { status: async () => { throw new Error("1Click down"); } } }) as never;

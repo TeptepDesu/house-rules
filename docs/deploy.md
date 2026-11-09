@@ -44,7 +44,7 @@ The app talks to **standard PostgreSQL** through `pg` (node-postgres). It uses n
 | `USDC_ASSET_ID`, `USDC_TOKEN_ACCOUNT`, `INTENTS_SENDERS` | confirmed in spike #2; see `web/.env.example` | no |
 | `AGENT_RUN_SECRET` | output of `openssl rand -base64 32`, for the scheduled runs | **yes** |
 | `ONECLICK_API_KEY` | optional; without it 1Click charges 0.2% | **yes** |
-| `NEAR_RPC_URL` | optional; defaults to the public NEAR RPC for `NEAR_NETWORK` | no |
+| `NEAR_RPC_URL` | **set it on mainnet**, e.g. `https://free.rpc.fastnear.com`. The default public NEAR RPC rate-limits (HTTP 429), and the app then can't verify payments (`docs/mainnet-runbook.md`, step 0) | no |
 | `NEAR_AI_API_KEY`, `NEAR_AI_MODEL` | optional; set **both** to show *Polish with NEAR AI* on guest follow-ups (key from cloud.near.ai) | key: **yes** |
 | `NEAR_AI_BASE_URL` | optional; defaults to `https://cloud-api.near.ai/v1` | no |
 

@@ -317,12 +317,14 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 |---|---|---|---|
 | **By Nov 8** | Push. Fund the mainnet account and the Base wallet | Joseph | Funds in the wallets |
 | **By Nov 9** | Hosted Postgres + Vercel, `db:migrate` (`0000`–`0006`), smoke-test sign-in | Joseph, Claude runs the migrate | Hosted app signs in |
-| **By Nov 11** | `docs/mainnet-runbook.md`: deploy, payees, first real $1 payment, full loop. Fix what it turns up | Joseph signs, Claude supports | Demo path works end to end on mainnet |
+| **By Nov 11** | **Required.** `docs/mainnet-runbook.md`: deploy, payees, first real $1 payment, full loop. Fix what it turns up | Joseph signs, Claude supports | Demo path works end to end on mainnet |
 | **Nov 12** | **Code freeze.** Fixes only. Full suites, agentshield, dry run of `docs/demo-script.md` | Claude, Joseph for the dry run | Everything green; script runs clean |
 | **Nov 13** | Rehearsal $1 payment about an hour before recording, record the demo, publish the X post | Joseph | Video and post live |
 | **Nov 14** | Repo public, then submit with `realworld` + `security` + `business`. **Aim for 12:00 UTC.** Hard deadline 23:59 UTC | Joseph approves, Claude sends | Submitted |
 
-**If time runs short:** only the Nov 14 row and the video are required. Hosting and mainnet add points but aren't required (`HACKATHON.md`, Q-010, Q-012).
+**Mainnet is required (Joseph, 2026-11-09).** The rules would accept testnet (`HACKATHON.md`, Q-010), but the submission must show the full loop on mainnet: a real guest payment through 1Click into the vault, then the agent's payout. 1Click has no testnet (Q-007), so only mainnet proves it. The demo is recorded on mainnet.
+
+**If time runs short:** the Nov 14 row, the video, and the mainnet loop (Nov 11 row) are required. Only hosting can be cut (Q-012).
 
 **Enhancement backlog: outcome, Nov 5**
 1. **NEAR AI rewording live:** waiting on a cloud.near.ai key (optional). The feature stays off without one.

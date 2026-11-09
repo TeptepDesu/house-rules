@@ -6,7 +6,7 @@ import { type PaymentStatus, buildInvoiceQuote, invoiceStatusFromPayment, mapSta
 import type { InvoiceStatus } from "@/lib/reconcile";
 
 export type PaymentDeps = {
-  oneClick: { quote(req: QuoteRequest): Promise<QuoteResponse>; status(addr: string): Promise<StatusResponse> };
+  oneClick: { quote(req: QuoteRequest): Promise<QuoteResponse>; status(addr: string, memo?: string): Promise<StatusResponse> };
   /** USDC (raw) credited to the vault by these NEAR tx hashes, read from chain. */
   verifyDelivery(destinationTxHashes: string[]): Promise<bigint>;
   now(): Date;
@@ -61,23 +61,44 @@ export type PollResult = {
   raw: StatusResponse;
 };
 
-export async function pollPayment(d: PaymentDeps, p: { depositAddress: string; deadline: Date; invoiceAmount: bigint }): Promise<PollResult> {
-  const raw = await d.oneClick.status(p.depositAddress);
+/**
+ * The NEAR txs to check for the vault's credit. The destination-chain txs when 1Click lists any;
+ * otherwise the swap's NEAR txs, since 1Click doesn't document which list holds a delivery to NEAR
+ * (confirm on the first mainnet payment, docs/mainnet-runbook.md step 8). Never both, and each tx
+ * once, so one credit can't be counted twice.
+ */
+function deliveryTxs(s: StatusResponse["swapDetails"]): { hashes: string[]; listedAsDelivery: boolean } {
+  const dest = s.destinationChainTxHashes.map((t) => t.hash);
+  return dest.length > 0 ? { hashes: [...new Set(dest)], listedAsDelivery: true } : { hashes: [...new Set(s.nearTxHashes)], listedAsDelivery: false };
+}
+
+export async function pollPayment(
+  d: PaymentDeps,
+  p: { depositAddress: string; depositMemo?: string | null; deadline: Date; invoiceAmount: bigint },
+): Promise<PollResult> {
+  // 1Click requires the memo whenever the quote came with one
+  const raw = await d.oneClick.status(p.depositAddress, p.depositMemo ?? undefined);
   let paymentStatus = mapStatus(raw.status as never, { deadline: p.deadline, now: d.now() });
   let amountReceived = 0n;
-  const destHashes = raw.swapDetails.destinationChainTxHashes.map((t) => t.hash);
-  if (paymentStatus === "delivered_unverified" && destHashes.length > 0) {
-    const credited = await d.verifyDelivery(destHashes);
-    if (credited > 0n) {
-      paymentStatus = "verified";
-      amountReceived = credited;
+  let creditedBy: string | undefined;
+  const { hashes, listedAsDelivery } = deliveryTxs(raw.swapDetails);
+  if (paymentStatus === "delivered_unverified") {
+    // one tx at a time, so the payment records the tx that actually credited the vault (the
+    // destination_tx column is unique: one tx can only ever pay one payment)
+    for (const h of hashes) {
+      const credited = await d.verifyDelivery([h]);
+      if (credited > 0n) {
+        amountReceived += credited;
+        creditedBy ??= h;
+      }
     }
+    if (amountReceived > 0n) paymentStatus = "verified";
   }
   return {
     paymentStatus,
     invoiceStatus: invoiceStatusFromPayment(paymentStatus, amountReceived, p.invoiceAmount),
     amountReceived,
-    destinationTx: destHashes[0],
+    destinationTx: creditedBy ?? (listedAsDelivery ? hashes[0] : undefined),
     originTx: raw.swapDetails.originChainTxHashes[0]?.hash,
     raw,
   };
