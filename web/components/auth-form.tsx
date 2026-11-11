@@ -32,7 +32,8 @@ export function AuthForm({ mode, action }: { mode: Mode; action: (s: AuthState, 
         {/* Stacked fields that read as one control: the labels live inside it. */}
         <div className="divide-y divide-input overflow-hidden rounded-2xl border border-input bg-card">
           {fields.map((f) => (
-            <div key={f.name} className={cn("px-4 py-2.5 transition-colors focus-within:ring-2 focus-within:ring-ring focus-within:ring-inset", fe[f.name] && "bg-destructive-soft ring-2 ring-destructive ring-inset")}>
+            // first/last rows take the box's inner radius (rounded-2xl minus its 1px border) so the inset ring follows the curve
+            <div key={f.name} className={cn("px-4 py-2.5 transition-colors first:rounded-t-[calc(var(--radius-2xl)-1px)] last:rounded-b-[calc(var(--radius-2xl)-1px)] focus-within:ring-2 focus-within:ring-ring focus-within:ring-inset", fe[f.name] && "bg-destructive-soft ring-2 ring-destructive ring-inset")}>
               <label htmlFor={`${mode}-${f.name}`} className="block text-xs font-semibold text-muted-foreground">
                 {f.label}
               </label>

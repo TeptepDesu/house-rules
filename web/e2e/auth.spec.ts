@@ -7,7 +7,10 @@ test("sign up → dashboard → sign out → sign in", async ({ page }) => {
   await expect(page.getByTestId("session-user-name")).toHaveText("Rina Operator");
   await expect(page.getByTestId("network-banner-testnet")).toContainText("Test mode");
 
-  await page.getByRole("button", { name: "Sign out" }).click();
+  // desktop: Sign out lives in the avatar menu, under who's signed in
+  await page.getByRole("button", { name: "Account menu for Rina Operator" }).click();
+  await expect(page.getByTestId("session-user-email")).toHaveText(email);
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto("/");
   await expect(page).toHaveURL(/\/login$/);

@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <AppMenu />
         <div className="flex items-center justify-between gap-3 border-t pt-3">
           <Suspense fallback={<div className="h-9 w-24" data-testid="session-mobile-loading" />}>
-            <SessionMenu testidPrefix="session-mobile" />
+            <SessionMenu variant="mobile" />
           </Suspense>
           <ThemeToggle testid="theme-toggle-mobile" />
         </div>
