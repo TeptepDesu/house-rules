@@ -21,7 +21,6 @@ export function ProfileMenu({ name, email, initials }: { name: string; email: st
       <DropdownMenuTrigger
         className="flex min-w-0 items-center gap-2 rounded-full py-1 pr-2.5 pl-1 text-sm outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring data-popup-open:bg-muted"
         data-testid="session-menu-trigger"
-        aria-label={`Account menu for ${name}`}
       >
         <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-primary-foreground">
           {initials}

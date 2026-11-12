@@ -8,7 +8,8 @@ test("sign up → dashboard → sign out → sign in", async ({ page }) => {
   await expect(page.getByTestId("network-banner-testnet")).toContainText("Test mode");
 
   // desktop: Sign out lives in the avatar menu, under who's signed in
-  await page.getByRole("button", { name: "Account menu for Rina Operator" }).click();
+  // the button's name is its visible text (axe label-content-name-mismatch); it's announced as a menu button
+  await page.getByRole("button", { name: "Rina Operator" }).click();
   await expect(page.getByTestId("session-user-email")).toHaveText(email);
   await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login$/);
