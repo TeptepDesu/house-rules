@@ -3,7 +3,7 @@ import { type Page, expect, test } from "@playwright/test";
 import { FIXTURES, addPayee, approveAllPayees, signUp } from "./helpers";
 
 // Payee statements: the owner's and cleaner's own view of their payouts, opened from the link the
-// operator copies on Homes & people. Same setup as the mainnet demo (docs/demo-script.md), in rehearsal.
+// operator copies on Homes & people. Same setup as the demo video, in rehearsal.
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 

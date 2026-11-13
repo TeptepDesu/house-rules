@@ -8,7 +8,7 @@ Deadline: **Nov 14, 23:59 UTC**. **Joseph doesn't work Saturday Nov 14 (Sabbath)
 
 1. [x] **Say "push".** Done 2026-11-05. Later commits need your word again; I check the repo is still private first.
 2. [x] **Create a NEAR mainnet account for the prize payout.** Done 2026-11-13: `teptep18.near` exists on mainnet with one full-access key (checked read-only over RPC). This is the payout account for the submission form.
-3. [ ] **Nov 13: watch the demo video and publish the X post.** The video is made: `house-rules-demo-v8.mp4` on your Desktop (2:18, built with Argo on Nov 13; it explains who an operator is, how it works alongside Airbnb, Booking.com and Agoda, and what owners and cleaners get). Attach it to the post. The post draft is in [demo-script.md](demo-script.md). A video is required if judges can't open a hosted demo (`HACKATHON.md`, Q-012).
+3. [ ] **Nov 13: watch the demo video and publish the X post.** The video is made: `house-rules-demo-v8.mp4` on your Desktop (2:18, built with Argo on Nov 13; it explains who an operator is, how it works alongside Airbnb, Booking.com and Agoda, and what owners and cleaners get). Attach it to the post. A video is required if judges can't open a hosted demo (`HACKATHON.md`, Q-012).
 4. [ ] **Nov 13 (moved from Nov 14): say "make it public".** I re-run the secret and harness scans first, then you make the repo public.
 5. [ ] **Nov 13 (moved from Nov 14): give me the last form details and approve the submission.** Your name, email, team size, the payout account, the X post link, and your agreement to the contact notice. Everything else is drafted in [submission.md](submission.md). There's only one attempt, so I print the exact payload and wait for your yes.
 

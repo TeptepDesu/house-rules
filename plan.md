@@ -318,8 +318,8 @@ Triggers: a **Run agent now** button (primary), plus a scheduled GitHub Actions 
 | **By Nov 13** | Create a NEAR **mainnet** account for the prize payout (the form requires one; no funds needed beyond what the wallet asks to create it) | Joseph | Account exists |
 | ~~By Nov 9~~ | ~~Hosted Postgres + Vercel~~ **Dropped:** a production deploy refuses rehearsal mode, so it would have to be mainnet. Hosting is only a plus (Q-012) | | |
 | ~~By Nov 11~~ | ~~`docs/mainnet-runbook.md`~~ **Dropped (Joseph, 2026-11-09): no mainnet.** Testnet is eligible in every track (Q-010) | | |
-| **Nov 12** | **Code freeze.** Fixes only. Full suites, agentshield, dry run of `docs/demo-script.md` | Claude, Joseph for the dry run | Everything green; script runs clean |
-| **Nov 13** | Record the demo (`docs/demo-script.md`), publish the X post | Joseph | Video and post live |
+| **Nov 12** | **Code freeze.** Fixes only. Full suites, agentshield, dry run of the demo | Claude, Joseph for the dry run | Everything green; script runs clean |
+| **Nov 13** | Record the demo, publish the X post | Joseph | Video and post live |
 | **Nov 14** | Repo public, then submit with `realworld` + `security` + `business`. **Aim for 12:00 UTC.** Hard deadline 23:59 UTC | Joseph approves, Claude sends | Submitted |
 
 **Testnet only (Joseph, 2026-11-09).** This replaces the earlier decision the same day to require mainnet. The vault, the scoped agent key, payouts, payee approval and the stolen-key attacks are live on testnet. The guest's 1Click deposit can't be: 1Click has no testnet (Q-007), so the demo simulates it and says so, and the README lists the real 1Click path as unproven.
