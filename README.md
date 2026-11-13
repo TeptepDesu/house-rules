@@ -13,9 +13,34 @@ Built at **NEAR HACKATHON** (Oct 19 – Nov 14, 2026). Tracks: `realworld` · `s
 
 ## The problem
 
-A rental operator collects money from Airbnb and Booking.com payouts, direct bookings and damage claims. They reconcile it in spreadsheets, then pay each property owner and cleaner by hand.
+A **rental operator** (a host or property manager) runs short-term rental homes on behalf of their owners. Guests book on sites like Airbnb, Booking.com and Agoda, or directly. Each site pays the operator, and the operator then has to pass the money on: a fee to the cleaner, a share to themselves, the rest to the home's owner.
+
+So the operator collects money from Airbnb and Booking.com payouts, direct bookings and damage claims. They reconcile it in spreadsheets, then pay each property owner and cleaner by hand.
 
 Automating that last step is scary: whatever runs the payouts can drain the account. So operators don't automate it.
+
+### Who it helps
+
+| Who | What changes for them |
+|---|---|
+| **Operators (hosts)** | Payout reports are checked automatically, and one click pays everyone. The automation can't pay anyone, or any amount, outside the rules the operator set |
+| **Owners and cleaners** | Each is paid by the agreed split, in the same batch as everyone else. Each has their own statement link: what was paid, what's held back and why, without asking the operator |
+| **NEAR** | A working example of agent-controlled spending for an ordinary business. It depends on function-call access keys, single-receipt batches and NEAR Intents ([What NEAR enables here](#what-near-enables-here)) |
+
+### Doesn't Airbnb already do this?
+
+House Rules doesn't replace Airbnb or Booking.com. Guests still book and pay there. It handles what happens **after** the platform pays the operator.
+
+- **Each platform only knows its own bookings.** Airbnb can share a payout with co-hosts, but only for guest stays on Airbnb ([Airbnb Help: co-host payouts](https://www.airbnb.com/help/article/3389)). An operator who also sells on Booking.com or Agoda, through a PMS or directly still reconciles and pays the rest by hand.
+- **A report from any platform goes in.** Airbnb, Booking.com and Guesty-style payout reports are recognised from their headers. Any other CSV, such as an Agoda report, is imported by naming its columns once ([`web/lib/importers`](web/lib/importers/index.ts); the manual mapping is covered by `web/e2e/import.spec.ts`).
+- **Nobody checks the platform's payout.** House Rules compares what was collected with what was expected, and blocks a short booking before anyone is paid.
+- **Direct bookings and extra charges have no platform.** The guest gets a pay link for a direct stay, a late checkout or a damage charge.
+- **The split follows the operator's own agreement**, per home: a flat cleaner fee, a management percentage, the rest to the owner, with a statement for each person.
+
+**Limits, said plainly:**
+- A platform's payout arrives in a bank account, not in the vault. The operator funds the vault with USDC before those bookings are paid out. If it's short, the agent pays the bookings the balance covers, never half a booking, and holds the rest back with *Not enough USDC in the vault: top it up*.
+- Owners and cleaners are paid in USDC on NEAR, so each needs a NEAR account.
+- An operator who is only on Airbnb, with a split Airbnb's co-host payouts can express, may not need this.
 
 ## The idea
 
